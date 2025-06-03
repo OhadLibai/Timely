@@ -1,0 +1,14 @@
+CSVs -> ML preprocessing -> ML training/staging DB population -> Backend product sync -> API usage.
+
+Data & ML Pipeline (Updated Flow)
+Raw Data: Instacart CSVs in ml-service/data/.
+Preprocessing (train-model service step 1): data_preprocessing.py creates features.csv, instacart_history.csv, instacart_future.csv, keyset.json in ml-service/data/processed/.
+DB Staging & Model Training/Evaluation (train-model service step 2): train_model.py:
+Uses raw Instacart product/category CSVs to populate main categories table and products_staging table (with placeholder image URLs and UUIDs for categories).
+Uses processed data from step 2 to train EnhancedLightGBMModel.
+Evaluates model on 'test' set from keyset.json.
+Saves evaluation metrics (Precision@K, Recall@K, F1@K, NDCG@K etc.) to model_metrics DB table.
+Saves trained model to ml-service/models/.
+Product Sync (sync-products service): sync-products.ts (backend) reads from products_staging and categories, then creates/updates products in the main products table (with UUID PKs).
+Prediction: Frontend requests -> Backend API -> ML Service API -> Uses loaded model and features (potentially app.state.features_df for demo, or live feature engineering) -> Prediction.
+Admin Monitoring: Admin frontend fetches evaluation metrics from backend, which reads from model_metrics table. Prediction demo page uses dedicated backend/ML endpoints.

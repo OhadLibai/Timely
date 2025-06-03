@@ -93,12 +93,12 @@ app.get('/health', async (req: Request, res: Response) => {
 
 // API Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
+app.use('/api/products', productRoutes); // Public, no global authMiddleware here
 app.use('/api/cart', authMiddleware, cartRoutes);
 app.use('/api/orders', authMiddleware, orderRoutes);
-app.use('/api/user', authMiddleware, userRoutes);
+app.use('/api/user', authMiddleware, userRoutes); // (apply authMiddleware for all user routes)
 app.use('/api/predictions', authMiddleware, predictionRoutes);
-app.use('/api/admin', authMiddleware, adminRoutes);
+app.use('/api/admin', authMiddleware, adminRoutes); // Ensure adminMiddleware is also used within admin.routes.ts
 app.use('/api/delivery', authMiddleware, deliveryRoutes);
 
 // 404 handler
