@@ -41,6 +41,7 @@ const AdminOrders = lazy(() => import('./pages/admin/Orders'));
 const AdminUsers = lazy(() => import('./pages/admin/Users'));
 const AdminMetrics = lazy(() => import('./pages/admin/Metrics'));
 const AdminSettings = lazy(() => import('./pages/admin/Settings'));
+const AdminDemoPredictionPage = lazy(() => import('./pages/admin/DemoPredictionPage'));
 
 // Create a query client
 const queryClient = new QueryClient({
@@ -100,6 +101,7 @@ function App() {
                   <Route path="/admin/users" element={<AdminUsers />} />
                   <Route path="/admin/metrics" element={<AdminMetrics />} />
                   <Route path="/admin/settings" element={<AdminSettings />} />
+                  <Route path="/admin/prediction-demo" element={<AdminDemoPredictionPage />} />
                 </Route>
               </Route>
 

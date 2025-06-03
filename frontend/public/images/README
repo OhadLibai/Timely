@@ -1,0 +1,8 @@
+ Image Display Fixes:
+
+Create Image Directories: In frontend/public/images/, create products/ and categories/.
+Add Default/Generic Images:
+frontend/public/images/products/default.jpg
+frontend/public/images/product-placeholder.png
+Inside frontend/public/images/categories/, add generic images for each department name used by load_data_to_db in training-script.py (e.g., produce.jpg, dairy-eggs.jpg, meat-seafood.jpg, etc.). Make sure the filenames match the lowercase, hyphenated department names. For example, if a department is "Dairy Eggs", the image should be dairy-eggs.jpg.
+Update training-script.py for image_url consistency (if needed): The line products_db['image_url'] = '/images/products/' + products_db['department_name'].str.lower().str.replace(' ', '-').str.replace('&', 'and') + '.jpg' should generate correct paths that match the images you place in frontend/public/images/products/. You might simplify this to just use /images/products/default.jpg if department-specific generic images are too much hassle for now.

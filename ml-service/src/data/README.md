@@ -1,0 +1,1 @@
+In this folder should sit the six files from the dataset of Instacart.

@@ -201,13 +201,17 @@ CREATE TABLE IF NOT EXISTS product_views (
 );
 
 -- Model metrics table
+-- model_metrics table (ensure it matches what training-script.py saves)
 CREATE TABLE IF NOT EXISTS model_metrics (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    metric_type VARCHAR(50) NOT NULL,
-    metric_name VARCHAR(100) NOT NULL,
-    metric_value DECIMAL(10,4) NOT NULL,
-    metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    id SERIAL PRIMARY KEY, -- Changed from UUID to SERIAL for simplicity if preferred
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    precision_at_10 FLOAT,
+    recall_at_10 FLOAT,
+    f1_at_10 FLOAT,
+    ndcg_at_10 FLOAT,
+    hit_rate_at_10 FLOAT,
+    model_version VARCHAR(50),
+    metrics_json JSONB -- Store the full metrics dictionary
 );
 
 -- Create indexes for better performance
