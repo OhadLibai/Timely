@@ -6,7 +6,7 @@ Timely is a full-stack e-commerce application designed to revolutionize your wee
 ## 🏗️ Project Architecture
 
 The Timely application is structured into three main services, containerized using Docker for ease of deployment and scalability:
-
+`
 timely/
 ├── frontend/                    # React TypeScript Frontend
 │   ├── src/
@@ -120,7 +120,7 @@ timely/
 ├── docker-compose.yml           # Docker Compose orchestration
 ├── .gitignore
 └── README.md                    # Updated Project Documentation
-
+`
 
 ## ✨ Features
 
