@@ -5,8 +5,8 @@ Timely is a full-stack e-commerce application designed to revolutionize your wee
 
 ## 🏗️ Project Architecture
 
-The Timely application is structured into three main services, containerized using Docker for ease of deployment and scalability:
-`
+The Timely application is structured into multiple services, containerized using Docker for ease of deployment and scalability. Core services include Frontend (React/Vite), Backend (Node.js/Express), ML Service (Python/FastAPI), PostgreSQL Database, and Redis Cache.
+
 timely/
 ├── frontend/                    # React TypeScript Frontend
 │   ├── src/
@@ -19,108 +19,120 @@ timely/
 │   │   │   ├── admin/          # Admin specific pages
 │   │   │   │   ├── AdminDashboard.tsx
 │   │   │   │   ├── AdminMetricsPage.tsx
-│   │   │   │   └── DemoPredictionsPage.tsx  # New
-│   │   │   └── ... (other pages)
-│   │   ├── layouts/            # Layout components
-│   │   ├── services/           # API service integrations
-│   │   ├── stores/             # Zustand state management
+│   │   │   │   └── DemoPredictionsPage.tsx  # For prediction demo
+│   │   │   └── ... (other pages like Home, Products, Cart, Login, Register)
+│   │   ├── layouts/            # Layout components (MainLayout, AdminLayout, etc.)
+│   │   ├── services/           # API service integrations (auth, product, admin, etc.)
+│   │   ├── stores/             # Zustand state management (authStore, cartStore)
 │   │   ├── hooks/              # Custom React hooks
 │   │   ├── utils/              # Frontend utility functions
 │   │   └── types/              # TypeScript type definitions
 │   ├── public/                 # Static assets (images, icons)
 │   │   └── images/
-│   │       ├── products/       # (Populate with default/generic product images)
-│   │       └── categories/     # (Populate with generic category images)
+│   │       ├── products/       # (Populate with default/generic product images or use URLs)
+│   │       └── categories/     # (Populate with generic category images or use URLs)
 │   ├── vite.config.ts
 │   ├── tailwind.config.js
 │   ├── package.json
 │   ├── .env.example
-│   ├── .env                    # (User managed)
+│   ├── .env                    # (User managed, content provided by user)
 │   └── Dockerfile
 │
 ├── backend/                     # Node.js/Express Backend API
 │   ├── src/
-│   │   ├── routes/             # API route definitions
-│   │   │   ├── auth.routes.ts
-│   │   │   ├── product.routes.ts
-│   │   │   ├── cart.routes.ts
-│   │   │   ├── order.routes.ts
-│   │   │   ├── user.routes.ts      # New/Specified
-│   │   │   ├── prediction.routes.ts
-│   │   │   ├── admin.routes.ts     # New/Specified
-│   │   │   └── delivery.routes.ts
+│   │   ├── config/             # Configuration files (database.config.ts, redis.config.ts)
 │   │   ├── controllers/        # Route controllers
 │   │   │   ├── auth.controller.ts
 │   │   │   ├── product.controller.ts
 │   │   │   ├── cart.controller.ts
-│   │   │   ├── order.controller.ts
-│   │   │   ├── user.controller.ts    # New/Specified
-│   │   │   ├── prediction.controller.ts
-│   │   │   └── admin.controller.ts   # New/Specified
-│   │   ├── models/             # Sequelize ORM models
-│   │   ├── middleware/         # Express middleware
+│   │   │   ├── order.controller.ts     # (Assuming it exists or will be added)
+│   │   │   ├── user.controller.ts      # For user profile, preferences, favorites
+│   │   │   ├── prediction.controller.ts # Backend part of predictions
+│   │   │   ├── admin.controller.ts     # For admin dashboard, ML metrics, demo triggers
+│   │   │   └── delivery.controller.ts  # (Assuming it exists or will be added)
+│   │   ├── database/
+│   │   │   ├── database-seed.ts      # For initial user/basic data seeding
+│   │   │   ├── sync-products.ts      # Syncs products from staging to main products table
+│   │   │   └── migrate.ts            # (If you implement a custom migration script runner)
+│   │   ├── jobs/                 # Background/cron jobs (e.g., scheduled tasks)
+│   │   ├── middleware/           # Express middleware
 │   │   │   ├── auth.middleware.ts
 │   │   │   ├── admin.middleware.ts
-│   │   │   ├── validation.middleware.ts
 │   │   │   ├── error.middleware.ts
-│   │   │   └── upload.middleware.ts
-│   │   ├── services/           # Business logic services (e.g., email.service.ts, upload.service.ts, ml.service.ts)
-│   │   ├── config/             # Configuration files (database.ts, redis.ts)
-│   │   ├── database/
-│   │   │   ├── database-seed.ts
-│   │   │   ├── sync-products.ts    # New
-│   │   │   └── migrate.ts          # (If you have a custom migrate script)
-│   │   ├── jobs/               # Background jobs
-│   │   ├── utils/              # Backend utility functions
-│   │   │   ├── logger.ts         # New/Specified
-│   │   │   └── csv.utils.ts      # (If parsing/generating CSVs in backend)
-│   │   ├── tests/              # Jest E2E and integration tests
-│   │   │   ├── auth.routes.test.ts (Example)
-│   │   │   ├── admin.demo.routes.test.ts (Example)
-│   │   │   └── setup.ts            (Global test setup)
-│   │   └── backend-server.ts   # Main Express server setup
-│   ├── uploads/                # Directory for file uploads
+│   │   │   ├── upload.middleware.ts
+│   │   │   └── validation.middleware.ts
+│   │   ├── models/               # Sequelize ORM models (User, Product, Category, Order, etc.)
+│   │   ├── routes/               # API route definitions
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── product.routes.ts
+│   │   │   ├── cart.routes.ts
+│   │   │   ├── order.routes.ts       # (Assuming it exists or will be added)
+│   │   │   ├── user.routes.ts
+│   │   │   ├── prediction.routes.ts
+│   │   │   ├── admin.routes.ts
+│   │   │   └── delivery.routes.ts    # (Assuming it exists or will be added)
+│   │   ├── services/             # Business logic services (email, file upload, ML service client)
+│   │   │   └── ml.service.ts       # Client for communicating with ML service
+│   │   ├── tests/                # Jest E2E and integration tests
+│   │   │   ├── setup.ts            # Global test setup (e.g., DB connection for tests)
+│   │   │   ├── auth.routes.test.ts
+│   │   │   └── admin.demo.routes.test.ts # Test for demo endpoints
+│   │   ├── utils/                # Backend utility functions
+│   │   │   ├── logger.ts           # Winston logger implementation
+│   │   │   └── csv.utils.ts        # (If CSV operations are done in backend)
+│   │   └── backend-server.ts     # Main Express application setup
+│   ├── uploads/                  # Directory for file uploads (e.g., product images if managed by backend)
 │   ├── package.json
-│   ├── jest.config.js          # (If using Jest)
+│   ├── jest.config.js            # Jest configuration
 │   ├── .env.example
-│   ├── .env                    # (User managed, content provided by user)
+│   ├── .env                      # (User managed, content provided by user)
 │   └── Dockerfile
 │
 ├── ml-service/                  # Python ML Service (FastAPI)
 │   ├── src/
-│   │   ├── api/                # FastAPI endpoints
-│   │   │   ├── main.py           # Main FastAPI app, includes demo endpoints
-│   │   │   └── routes/           # (Sub-routers if main.py gets too big)
+│   │   ├── api/                  # FastAPI endpoints
+│   │   │   ├── main.py             # Main FastAPI app, includes demo endpoints
+│   │   │   └── routes/             # Sub-routers for modularity
 │   │   │       ├── predictions.py
 │   │   │       ├── metrics.py
 │   │   │       └── training.py
-│   │   ├── models/             # ML model implementations (lightgbm_model.py, lightgbm_enhanced.py)
-│   │   ├── preprocessing/      # Data preprocessing (data_preprocessing.py, data_loader.py, feature_engineering.py)
-│   │   ├── training/           # Model training scripts (training-script.py)
-│   │   ├── evaluation/         # Model evaluation (evaluation-module.py)
-│   │   ├── services/           # ML-specific services (prediction_service.py, metrics_service.py)
-│   │   ├── database/           # DB interaction specific to ML (connection.py, models.py for SQLAlchemy if any)
-│   │   ├── utils/              # Python utility functions
-│   │   │   └── logger.py         # New/Specified
-│   │   └── tests/              # Pytest tests
-│   │       └── test_api.py       (Example)
-│   ├── data/                   # Storage for datasets
-│   │   ├── raw/                # (Optional: for truly raw, untouched Instacart CSVs)
-│   │   └── processed/          # (For features.csv, history.csv, future.csv, keyset.json)
-│   ├── models/                 # Storage for trained ML models (e.g., .pkl files)
+│   │   ├── database/             # DB interaction specific to ML (SQLAlchemy connection, models if any)
+│   │   │   └── connection.py
+│   │   ├── evaluation/           # Model evaluation scripts (evaluation-module.py)
+│   │   ├── models/               # ML model implementations (lightgbm_model.py, lightgbm_enhanced.py)
+│   │   ├── preprocessing/        # Data preprocessing
+│   │   │   ├── data_loader.py
+│   │   │   ├── data_preprocessing.py # Generates history, future, features, keyset
+│   │   │   └── feature_engineering.py
+│   │   ├── services/             # ML-specific services (prediction_service.py, metrics_service.py)
+│   │   ├── training/             # Model training scripts (training-script.py)
+│   │   ├── utils/                # Python utility functions
+│   │   │   ├── logger.py           # Python logging setup
+│   │   │   └── redis_client.py     # (If ML service uses Redis directly)
+│   │   └── tests/                # Pytest tests
+│   │       └── test_api.py         # Example API tests for ML service
+│   ├── data/                     # Storage for datasets
+│   │   ├── instacart/            # (Optional: if you want to keep raw Instacart CSVs in a subfolder)
+│   │   │                         #   orders.csv, products.csv, etc. (Expected here or in data/ directly)
+│   │   └── processed/            # Output of data_preprocessing.py
+│   │       ├── features.csv
+│   │       ├── instacart_history.csv
+│   │       ├── instacart_future.csv
+│   │       └── instacart_keyset_0.json
+│   ├── models/                   # Storage for trained ML models (e.g., .pkl files)
 │   ├── requirements.txt
 │   ├── .env.example
-│   ├── .env                    # (User managed, content provided by user)
+│   ├── .env                      # (User managed, content provided by user)
 │   └── Dockerfile
 │
-├── database/                    # Database DDL and migration scripts
-│   ├── init.sql               # Initial database schema
-│   └── migrations/             # (For Sequelize or Alembic migrations)
+├── database/                      # Project-level database scripts
+│   ├── init.sql                 # Initial database schema DDL
+│   └── migrations/               # (For Sequelize CLI or Alembic generated migration files)
 │
-├── docker-compose.yml           # Docker Compose orchestration
+├── docker-compose.yml             # Docker Compose orchestration for all services
 ├── .gitignore
-└── README.md                    # Updated Project Documentation
-`
+└── README.md                      # This file: Project overview and documentation
+
 
 ## ✨ Features
 
