@@ -574,7 +574,7 @@ export class CartController {
         ]
       });
 
-      const count = cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
+      const count = cart?.items.reduce((sum:number, item:CartItem) => sum + item.quantity, 0) || 0;
 
       // Cache for 5 minutes
       await redisClient.set(cacheKey, count.toString(), { EX: 300 });
@@ -639,7 +639,7 @@ export class CartController {
         });
       }
 
-      const subtotal = cart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+      const subtotal = cart.items.reduce((sum:number, item:CartItem) => sum + (item.price * item.quantity), 0);
 
       // Simple shipping calculation
       const rates = {
@@ -762,8 +762,8 @@ export class CartController {
   private calculateCartTotals(cart: Cart) {
     const items = cart.items || [];
     
-    const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const itemCount = items.reduce((sum:number, item:CartItem) => sum + item.quantity, 0);
+    const subtotal = items.reduce((sum:number, item:CartItem) => sum + (item.price * item.quantity), 0);
     const estimatedTax = subtotal * 0.08; // 8% tax
     const estimatedTotal = subtotal + estimatedTax;
 

@@ -10,7 +10,9 @@
     "migrate": "ts-node src/database/migrate.ts",
     "seed": "ts-node src/database/seed.ts",
     "test": "jest",
-    "lint": "eslint src/**/*.ts"
+    "lint": "eslint src/**/*.ts",
+    "sync-products": "ts-node src/database/sync-products.ts",
+    "db:sync-products": "ts-node src/database/sync-products.ts"
   },
   "dependencies": {
     "express": "^4.18.2",
@@ -51,9 +53,5 @@
     "eslint": "^8.46.0",
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "@typescript-eslint/parser": "^6.2.1"
-  },
-  "scripts": {
-  "sync-products": "ts-node src/database/sync-products.ts",
-  "db:sync-products": "ts-node src/database/sync-products.ts"
   }
 }

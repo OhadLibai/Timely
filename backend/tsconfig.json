@@ -7,6 +7,8 @@
     "esModuleInterop": true,                  // Enables compatibility with CommonJS modules
     "forceConsistentCasingInFileNames": true, // Ensures case-sensitive import correctness
     "strict": true,                           // Enables all strict type-checking options
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "skipLibCheck": true,                     // Skips type checking of declaration files
     "resolveJsonModule": true,                // Allows importing JSON files
     "moduleResolution": "node",               // How modules are resolved

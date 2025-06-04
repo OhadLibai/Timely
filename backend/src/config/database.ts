@@ -3,7 +3,7 @@ import { Sequelize } from 'sequelize-typescript';
 import path from 'path';
 import logger from '../utils/logger';
 
-// Import models
+// Import all models
 import { User } from '../models/user.model';
 import { Product } from '../models/product.model';
 import { Category } from '../models/category.model';
@@ -23,7 +23,7 @@ const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://timely_user:timel
 
 export const sequelize = new Sequelize(DATABASE_URL, {
   dialect: 'postgres',
-  logging: (msg) => logger.debug(msg),
+  logging: (msg) => logger.debug(msg), // Pass logger's debug method directly
   pool: {
     max: 5,
     min: 0,
@@ -68,6 +68,8 @@ export const defineAssociations = () => {
 
   // Category associations
   Category.hasMany(Product, { foreignKey: 'categoryId', as: 'products' });
+  Category.belongsTo(Category, { foreignKey: 'parentId', as: 'parentCategory' }); // Self-referencing for parent category
+  Category.hasMany(Category, { foreignKey: 'parentId', as: 'subCategories' });   // Self-referencing for subcategories
 
   // Cart associations
   Cart.belongsTo(User, { foreignKey: 'userId', as: 'user' });
@@ -107,6 +109,8 @@ export const defineAssociations = () => {
   // ProductView associations
   ProductView.belongsTo(User, { foreignKey: 'userId', as: 'user' });
   ProductView.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
+  // ModelMetric has no direct associations with other business models in this context
 };
 
 // Initialize associations
