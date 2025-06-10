@@ -1,0 +1,20 @@
+# Dependency directories
+node_modules
+
+# Build output
+dist
+
+# Logs
+npm-debug.log*
+
+# Environment files
+.env*
+
+# Test coverage reports
+coverage
+
+# OS-specific files
+.DS_Store
+
+# Git folder
+.git

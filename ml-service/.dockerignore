@@ -1,0 +1,20 @@
+# Python caches
+__pycache__/
+*.pyc
+.pytest_cache
+
+# Virtual environment
+venv
+
+# Environment files
+.env
+
+# Data and model artifacts (these are handled by volumes)
+data/processed
+models/*.pkl
+
+# OS-specific files
+.DS_Store
+
+# Git folder
+.git

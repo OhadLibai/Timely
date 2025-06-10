@@ -1,5 +1,5 @@
 // backend/src/database/sync-products.ts
-import { sequelize } from '../config/database';
+import { sequelize } from '../config/database.config';
 import { Product } from '../models/product.model';
 import { Category } from '../models/category.model';
 import logger from '../utils/logger';

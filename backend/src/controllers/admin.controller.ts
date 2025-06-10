@@ -13,6 +13,17 @@ import logger from '../utils/logger'; // Assuming your logger is in utils
 // The ML service demo endpoints will use these IDs to fetch data from those CSVs.
 const DEMO_INSTACART_USER_IDS: string[] = ['1', '7', '13', '25', '31', '42', '55', '60', '78', '92']; // Example IDs
 
+// Define a type for the plain object version of a product
+type PlainProduct = {
+    id: string;
+    sku: string;
+    name: string;
+    imageUrl?: string;
+    price: number;
+    salePrice: number;
+    // Add any other properties you select from the DB and use
+};
+
 // Helper for placeholder images if needed directly in controller (though product.imageUrl should be primary)
 const getSafePlaceholderImageUrlForDemo = (seedText?: string | null, width = 100, height = 100): string => {
     let seed = 0;
@@ -22,7 +33,6 @@ const getSafePlaceholderImageUrlForDemo = (seedText?: string | null, width = 100
     }
     return `https://picsum.photos/seed/${seed + 3000}/${width}/${height}`; // Different seed base
 };
-
 
 export class AdminController {
     /**

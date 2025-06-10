@@ -9,6 +9,12 @@ import { PredictedBasketItem } from '../models/predictedBasketItem.model';
 import { redisClient } from '../config/redis';
 import { mlApiClient } from '../services/ml.service';
 import logger from '../utils/logger';
+import { Op } from 'sequelize'; // Import 'Op' directly
+
+// Define a more specific type for populated cart items for better type safety
+interface CartItemWithProduct extends CartItem {
+  product: Product;
+}
 
 export class CartController {
   // Get current cart
@@ -42,6 +48,7 @@ export class CartController {
       if (!cart) {
         // Create new cart if doesn't exist
         cart = await Cart.create({ userId });
+        // Fetch it again to ensure associations are loaded correctly
         cart = await Cart.findByPk(cart.id, {
           include: [
             {
@@ -186,7 +193,7 @@ export class CartController {
             as: 'product'
           }
         ]
-      });
+      }) as (CartItem & { product: Product }); // Cast to ensure product is available
 
       if (!cartItem) {
         return res.status(404).json({ error: 'Cart item not found' });
@@ -356,7 +363,7 @@ export class CartController {
             ]
           }
         ]
-      });
+      }) as (PredictedBasket & { items: (PredictedBasketItem & { product: Product })[] }); // Cast for type safety
 
       if (!predictedBasket) {
         return res.status(404).json({ error: 'Predicted basket not found' });
@@ -450,7 +457,7 @@ export class CartController {
             ]
           }
         ]
-      });
+      }) as (Cart & { items: CartItemWithProduct[] });
 
       if (!cart || cart.items.length === 0) {
         return res.json({ valid: true, invalidItems: [] });
@@ -484,7 +491,7 @@ export class CartController {
   async mergeGuestCart(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const { items } = req.body;
+      const { items } = req.body; // Assuming items: {productId: string, quantity: number}[]
 
       // Get or create user cart
       let cart = await Cart.findOne({ where: { userId, isActive: true } });
@@ -574,7 +581,7 @@ export class CartController {
         ]
       });
 
-      const count = cart?.items.reduce((sum:number, item:CartItem) => sum + item.quantity, 0) || 0;
+      const count = cart?.items.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
 
       // Cache for 5 minutes
       await redisClient.set(cacheKey, count.toString(), { EX: 300 });
@@ -639,7 +646,7 @@ export class CartController {
         });
       }
 
-      const subtotal = cart.items.reduce((sum:number, item:CartItem) => sum + (item.price * item.quantity), 0);
+      const subtotal = cart.items.reduce((sum: number, item: CartItem) => sum + (item.price * item.quantity), 0);
 
       // Simple shipping calculation
       const rates = {
@@ -692,7 +699,7 @@ export class CartController {
 
       // Get recommendations from ML service
       try {
-        const productIds = cart.items.map(item => item.productId);
+        const productIds = cart.items.map((item: CartItem) => item.productId);
         const response = await mlApiClient.post('/recommendations/cart', {
           userId,
           cartProductIds: productIds,
@@ -718,7 +725,7 @@ export class CartController {
         res.json(products);
       } catch (mlError) {
         // Fallback to category-based recommendations
-        const categories = await CartItem.findAll({
+        const categoriesInCart = await CartItem.findAll({
           where: { cartId: cart.id },
           include: [
             {
@@ -727,17 +734,17 @@ export class CartController {
               attributes: ['categoryId']
             }
           ],
-          attributes: [],
+          attributes: ['product.categoryId'],
           group: ['product.categoryId'],
           raw: true
         });
 
-        const categoryIds = categories.map((c: any) => c['product.categoryId']);
+        const categoryIds = categoriesInCart.map((c: any) => c.categoryId);
 
         const recommendations = await Product.findAll({
           where: {
             categoryId: categoryIds,
-            id: { [Product.sequelize!.Op.notIn]: cart.items.map(i => i.productId) },
+            id: { [Op.notIn]: cart.items.map((i: CartItem) => i.productId) },
             isActive: true
           },
           order: [['purchaseCount', 'DESC']],
@@ -759,18 +766,18 @@ export class CartController {
   }
 
   // Helper methods
-  private calculateCartTotals(cart: Cart) {
+  private calculateCartTotals(cart: Cart & { items?: CartItemWithProduct[] }) {
     const items = cart.items || [];
     
-    const itemCount = items.reduce((sum:number, item:CartItem) => sum + item.quantity, 0);
-    const subtotal = items.reduce((sum:number, item:CartItem) => sum + (item.price * item.quantity), 0);
+    const itemCount = items.reduce((sum: number, item: CartItemWithProduct) => sum + item.quantity, 0);
+    const subtotal = items.reduce((sum: number, item: CartItemWithProduct) => sum + (item.price * item.quantity), 0);
     const estimatedTax = subtotal * 0.08; // 8% tax
     const estimatedTotal = subtotal + estimatedTax;
 
     return {
       id: cart.id,
       userId: cart.userId,
-      items: items.map(item => ({
+      items: items.map((item: CartItemWithProduct) => ({
         id: item.id,
         cartId: item.cartId,
         productId: item.productId,
@@ -793,11 +800,16 @@ export class CartController {
 
   private getEmptyCart() {
     return {
+      id: '',
+      userId: '',
       items: [],
       itemCount: 0,
       subtotal: 0,
       estimatedTax: 0,
-      estimatedTotal: 0
+      estimatedTotal: 0,
+      isActive: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
   }
 

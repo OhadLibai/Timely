@@ -1,0 +1,22 @@
+# Dependency directories
+node_modules
+
+# Build output
+dist
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment files
+.env
+
+# Test files and configs (not needed in production image)
+src/tests
+jest.config.js
+
+# OS-specific files
+.DS_Store
+
+# Git folder
+.git

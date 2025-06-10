@@ -1,4 +1,4 @@
-// backend/src/config/database.ts
+// backend/src/config/database.config.ts
 import { Sequelize } from 'sequelize-typescript';
 import path from 'path';
 import logger from '../utils/logger';
