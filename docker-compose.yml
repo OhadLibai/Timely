@@ -53,7 +53,7 @@ services:
       - ./backend/uploads:/app/uploads
       - ./backend:/app # Mount local backend code for development
       - /app/node_modules # Prevent local node_modules from overwriting container's
-    command: npm run dev # Use 'npm start' for production builds
+    command: npm start # Use 'npm start' for production builds
 
   ml-service:
     build:

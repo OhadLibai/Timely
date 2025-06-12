@@ -190,7 +190,7 @@ export class UserController {
         if (Object.keys(validUpdates).length > 0) {
             const [preferences, created] = await UserPreference.findOrCreate({
                 where: { userId },
-                defaults: { userId, ...validUpdates } as UserPreference,
+                defaults: { userId, ...validUpdates } as any,
             });
             if (!created) {
                 await preferences.update(validUpdates);

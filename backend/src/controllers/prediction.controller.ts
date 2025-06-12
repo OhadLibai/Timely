@@ -11,7 +11,7 @@ import { Order } from '../models/order.model';
 import { OrderItem } from '../models/orderItem.model';
 import { Cart } from '../models/cart.model';
 import { mlApiClient } from '../services/ml.service';
-import { redisClient } from '../config/redis';
+import { redisClient } from '../config/redis.config';
 import logger from '../utils/logger';
 
 export class PredictionController {

@@ -6,7 +6,7 @@ import { Product } from '../models/product.model';
 import { Category } from '../models/category.model';
 import { PredictedBasket } from '../models/predictedBasket.model';
 import { PredictedBasketItem } from '../models/predictedBasketItem.model';
-import { redisClient } from '../config/redis';
+import { redisClient } from '../config/redis.config';
 import { mlApiClient } from '../services/ml.service';
 import logger from '../utils/logger';
 import { Op } from 'sequelize'; // Import 'Op' directly

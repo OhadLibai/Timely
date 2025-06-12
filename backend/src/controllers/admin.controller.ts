@@ -124,7 +124,7 @@ export class AdminController {
                     logger.warn(`SKU ${sku} (Instacart ID ${p_ml.productId}) not found in DB for predicted basket of user ${instacartUserIdStr}.`);
                 }
                 return productDetail ? {
-                    ...(productDetail as Product), // Cast to ensure type compatibility
+                    ...(productDetail as any), // Cast to ensure type compatibility
                     predictedQuantity: p_ml.quantity,
                     confidenceScore: p_ml.score,
                 } : {
@@ -144,7 +144,7 @@ export class AdminController {
                 if (!productDetail) {
                     logger.warn(`SKU ${sku} not found in DB for true future basket of user ${instacartUserIdStr}.`);
                 }
-                return productDetail ? (productDetail as Product) : {
+                return productDetail ? (productDetail as any) : {
                     id: sku.replace('PROD-', '').replace(/^0+/, ''), // Fallback ID
                     sku: sku,
                     name: `Unknown Product (SKU: ${sku})`,

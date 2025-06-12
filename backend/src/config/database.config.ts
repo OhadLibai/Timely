@@ -76,7 +76,7 @@ export const defineAssociations = () => {
   Cart.hasMany(CartItem, { foreignKey: 'cartId', as: 'items' });
 
   // CartItem associations
-  CartItem.belongsTo(Cart, { foreignKey: 'cartId', as: 'cart' });
+  CartItem.belongsTo(Cart, { foreignKey: 'cartId', as: 'parentCart' });
   CartItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
   // Order associations

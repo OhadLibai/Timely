@@ -5,7 +5,7 @@ import crypto from 'crypto';
 import { User, UserRole } from '../models/user.model';
 import { Cart } from '../models/cart.model';
 import { UserPreference } from '../models/userPreference.model';
-import { redisClient } from '../config/redis';
+import { redisClient } from '../config/redis.config';
 import logger from '../utils/logger';
 import { sendEmail } from '../services/email.service';
 

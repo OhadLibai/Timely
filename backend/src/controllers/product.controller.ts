@@ -6,7 +6,7 @@ import { Category } from '../models/category.model';
 import { ProductView } from '../models/productView.model';
 import { OrderItem } from '../models/orderItem.model';
 import { Favorite } from '../models/favorite.model';
-import { redisClient } from '../config/redis';
+import { redisClient } from '../config/redis.config';
 import { uploadImage } from '../services/upload.service';
 import { parseCSV, generateCSV } from '../utils/csv.utils';
 import logger from '../utils/logger';
@@ -295,7 +295,7 @@ export class ProductController {
       // Upload images if provided
       if (files && files.length > 0) {
         const imageUrls = await Promise.all(
-          files.map(file => uploadImage(file, 'products'))
+          files.map(file => uploadImage(file))
         );
         productData.imageUrl = imageUrls[0];
         productData.additionalImages = imageUrls.slice(1);
@@ -326,7 +326,7 @@ export class ProductController {
       // Upload new images if provided
       if (files && files.length > 0) {
         const imageUrls = await Promise.all(
-          files.map(file => uploadImage(file, 'products'))
+          files.map(file => uploadImage(file))
         );
         
         if (!updates.keepExistingImages) {
@@ -413,7 +413,7 @@ export class ProductController {
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
-      const products = await parseCSV(req.file.buffer);
+      const products = await parseCSV(req.file.path);
       
       let imported = 0;
       let skipped = 0;
@@ -483,7 +483,7 @@ export class ProductController {
         salePercentage: product.salePercentage
       }));
 
-      const csv = generateCSV(data);
+      const csv = await generateCSV(data, Object.keys(data[0] || {}));
 
       res.setHeader('Content-Type', 'text/csv');
       res.setHeader('Content-Disposition', 'attachment; filename=products.csv');
@@ -499,7 +499,7 @@ export class ProductController {
       const categoryData = req.body;
       
       if (req.file) {
-        categoryData.imageUrl = await uploadImage(req.file, 'categories');
+        categoryData.imageUrl = await uploadImage(req.file);
       }
 
       const category = await Category.create(categoryData);
@@ -524,7 +524,7 @@ export class ProductController {
       }
 
       if (req.file) {
-        updates.imageUrl = await uploadImage(req.file, 'categories');
+        updates.imageUrl = await uploadImage(req.file);
       }
 
       await category.update(updates);

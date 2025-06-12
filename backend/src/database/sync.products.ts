@@ -114,7 +114,7 @@ async function syncProductsFromStaging() {
                 categoryId: stagingProd.category_id, // This is the UUID from categories table
                 stock: Number.isFinite(stagingProd.stock) ? Number(stagingProd.stock) : 50,
                 trackInventory: true,
-                isActive: stagingProd.is_active !== undefined ? stagingProd.is_active : true,
+                isActive: stagingProd.is_active !== undefined && stagingProd.is_active !== null ? stagingProd.is_active : true,
                 isFeatured: Math.random() < 0.05,
                 isOnSale: isOnSale,
                 salePercentage: salePercentage,
@@ -134,7 +134,7 @@ async function syncProductsFromStaging() {
                             id: uuidv4(),
                             sku: stagingProd.sku,
                             ...productData,
-                        } as Product,
+                        } as any,
                         { transaction }
                     );
                     newProductsCount++;
@@ -149,7 +149,7 @@ async function syncProductsFromStaging() {
         logger.info(`Product sync completed. New: ${newProductsCount}, Updated: ${updatedProductsCount}, Skipped (Bad Category/SKU): ${skippedInvalidCategory + skippedMissingSku}`);
 
     } catch (error) {
-        if (transaction && !transaction.finished) { // Check if transaction exists and is not finished
+        if (transaction) { // Check if transaction exists
             await transaction.rollback();
         }
         logger.error('Fatal error during product sync from staging:', error);

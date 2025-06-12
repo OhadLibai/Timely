@@ -22,7 +22,7 @@ export class CartItem extends Model {
   })
   cartId!: string;
 
-  @BelongsTo(() => Cart)
+  // Association defined in database.config.ts
   cart!: Cart;
 
   @ForeignKey(() => Product)
@@ -32,7 +32,7 @@ export class CartItem extends Model {
   })
   productId!: string;
 
-  @BelongsTo(() => Product)
+  // Association defined in database.config.ts
   product!: Product;
 
   @Column({

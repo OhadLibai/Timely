@@ -95,23 +95,14 @@ export class User extends Model {
   })
   metadata!: Record<string, any>;
 
-  // Associations
-  @HasOne(() => Cart)
+  // Associations are defined in database.config.ts
   cart!: Cart;
-
-  @HasMany(() => Order)
   orders!: Order[];
-
-  @HasMany(() => Favorite)
   favorites!: Favorite[];
-
-  @HasMany(() => PredictedBasket)
   predictedBaskets!: PredictedBasket[];
 
-  @HasOne(() => UserPreference)
   preferences!: UserPreference;
 
-  @HasMany(() => ProductView)
   productViews!: ProductView[];
 
   // Hooks
