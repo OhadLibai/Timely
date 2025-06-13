@@ -6,7 +6,6 @@ import { Category } from '../models/category.model';
 import { ProductView } from '../models/productView.model';
 import { OrderItem } from '../models/orderItem.model';
 import { Favorite } from '../models/favorite.model';
-import { redisClient } from '../config/redis.config';
 import { uploadImage } from '../services/upload.service';
 import { parseCSV, generateCSV } from '../utils/csv.utils';
 import logger from '../utils/logger';
@@ -107,13 +106,6 @@ export class ProductController {
     try {
       const { id } = req.params;
 
-      // Try to get from cache first
-      const cacheKey = `product:${id}`;
-      const cached = await redisClient.get(cacheKey);
-      if (cached) {
-        return res.json(JSON.parse(cached));
-      }
-
       const product = await Product.findByPk(id, {
         include: [
           {
@@ -126,9 +118,6 @@ export class ProductController {
       if (!product || !product.isActive) {
         return res.status(404).json({ error: 'Product not found' });
       }
-
-      // Cache for 5 minutes
-      await redisClient.set(cacheKey, JSON.stringify(product), { EX: 300 });
 
       res.json(product);
     } catch (error) {
@@ -342,9 +331,6 @@ export class ProductController {
 
       await product.update(updates);
 
-      // Clear cache
-      await redisClient.del(`product:${id}`);
-
       logger.info(`Product updated: ${id}`);
 
       res.json(product);
@@ -365,9 +351,6 @@ export class ProductController {
 
       // Soft delete by setting isActive to false
       await product.update({ isActive: false });
-
-      // Clear cache
-      await redisClient.del(`product:${id}`);
 
       logger.info(`Product deleted: ${id}`);
 
@@ -390,7 +373,6 @@ export class ProductController {
           const product = await Product.findByPk(id);
           if (product) {
             await product.update(productUpdates);
-            await redisClient.del(`product:${id}`);
             updated++;
           } else {
             errors.push(`Product ${id} not found`);

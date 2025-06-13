@@ -51,7 +51,7 @@ timely/ (Current Implementation Status)
 │   │   ├── routes/                        # ✅ Complete (8/8 implemented)
 │   │   ├── middleware/                    # ✅ Complete (5/5 implemented)
 │   │   ├── services/                      # ✅ Complete (3/3 implemented)
-│   │   ├── config/                        # ✅ Database & Redis config
+│   │   ├── config/                        # ✅ Database config
 │   │   ├── jobs/                          # ✅ Cart generation & metrics
 │   │   ├── database/                      # ✅ Seeding & sync scripts
 │   │   └── utils/                         # ✅ Logger, CSV utilities
@@ -86,45 +86,14 @@ timely/ (Current Implementation Status)
 │   │   └── ✅ Analytics: product_views, user_preferences
 │   └── ✅ Indexes, triggers, constraints
 │
-├── ✅ docker-compose.yml                  # Complete orchestration (9 services)
-│   ├── ✅ postgres, redis                 # Database services
+├── ✅ docker-compose.yml                  # Complete orchestration (7 services)
+│   ├── ✅ postgres                        # Database service
 │   ├── ✅ backend, frontend, ml-service   # Application services
 │   └── ✅ migrate, seed, train-model, sync-products # Utility services
 ├── ✅ .gitignore, .dockerignore           # Comprehensive ignore files
 ├── ✅ CLAUDE.md                           # Development notes
 └── ✅ README.md, architecture+deployment.md, timely-readme.md
 ```
-
-## 📊 Data & ML Pipeline
-
-1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/data/
-2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets
-3. **Model Training**: LightGBM models trained with comprehensive evaluation
-4. **Prediction Service**: Real-time predictions via FastAPI endpoints
-5. **Performance Monitoring**: Metrics tracking with Precision@K, Recall@K, NDCG
-6. **Feedback Loop**: User interactions improve future predictions
-
-## ML Model Details
-
-### Training Data
-- Dataset: Instacart Market Basket Analysis
-- Users: 200,000+
-- Orders: 3.4M+
-- Products: 50,000+
-
-### Features
-- User purchase history
-- Product popularity
-- Temporal patterns (day of week, time since last purchase)
-- Category preferences
-- Price sensitivity
-- Seasonal trends
-
-### Model Performance
-- Precision@10: 0.42
-- Recall@10: 0.38
-- Hit Rate: 0.65
-- NDCG: 0.48
 
 ## 🚀 Deployment Instructions
 
@@ -153,7 +122,6 @@ cd timely
 
    This will:
    - Create PostgreSQL database
-   - Start Redis cache
    - Build and start the backend API
    - Build and start the ML service
    - Build and start the frontend
@@ -354,6 +322,37 @@ GET /api/user/favorites
 POST /api/user/favorites/add
 ```
 
+## 📊 Data & ML Pipeline
+
+1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/data/
+2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets
+3. **Model Training**: LightGBM models trained with comprehensive evaluation
+4. **Prediction Service**: Real-time predictions via FastAPI endpoints
+5. **Performance Monitoring**: Metrics tracking with Precision@K, Recall@K, NDCG
+6. **Feedback Loop**: User interactions improve future predictions
+
+## ML Model Details
+
+### Training Data
+- Dataset: Instacart Market Basket Analysis
+- Users: 200,000+
+- Orders: 3.4M+
+- Products: 50,000+
+
+### Features
+- User purchase history
+- Product popularity
+- Temporal patterns (day of week, time since last purchase)
+- Category preferences
+- Price sensitivity
+- Seasonal trends
+
+### Model Performance
+- Precision@10: 0.42
+- Recall@10: 0.38
+- Hit Rate: 0.65
+- NDCG: 0.48
+
 ## ✨ Key Features
 
 ### User Features
@@ -403,13 +402,12 @@ POST /api/user/favorites/add
 - **ML Library**: LightGBM for gradient boosting
 - **Data Processing**: Pandas, NumPy for data manipulation
 - **Database**: SQLAlchemy for PostgreSQL access
-- **Caching**: Redis for model predictions
+- **Performance**: Optimized database queries for fast responses
 - **Evaluation**: Scikit-learn for metrics calculation
 - **Testing**: Pytest with fixtures
 
 ### Infrastructure Stack
 - **Database**: PostgreSQL 13+ with optimized indexes
-- **Cache**: Redis 6+ for session and prediction storage
 - **Containerization**: Docker with multi-stage builds
 - **Orchestration**: Docker Compose for development
 - **Reverse Proxy**: Nginx (production)

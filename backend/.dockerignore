@@ -30,7 +30,6 @@ jest.config.js
 .eslintrc*
 .prettierrc*
 nodemon.json
-tsconfig.json
 
 # IDE and editor files
 .vscode/
@@ -62,6 +61,5 @@ docs/
 # Uploads directory (handled by volume)
 uploads/
 
-# Package lock files (npm ci will handle)
-package-lock.json
+# Yarn lock file (we use npm)
 yarn.lock

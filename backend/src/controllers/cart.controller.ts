@@ -6,7 +6,6 @@ import { Product } from '../models/product.model';
 import { Category } from '../models/category.model';
 import { PredictedBasket } from '../models/predictedBasket.model';
 import { PredictedBasketItem } from '../models/predictedBasketItem.model';
-import { redisClient } from '../config/redis.config';
 import { mlApiClient } from '../services/ml.service';
 import logger from '../utils/logger';
 import { Op } from 'sequelize'; // Import 'Op' directly
@@ -163,9 +162,6 @@ export class CartController {
 
       const cartData = this.calculateCartTotals(updatedCart!);
 
-      // Clear cart cache
-      await this.clearCartCache(userId);
-
       logger.info(`Product ${productId} added to cart for user ${userId}`);
 
       res.json(cartData);
@@ -238,8 +234,6 @@ export class CartController {
 
       const cartData = this.calculateCartTotals(cart!);
 
-      await this.clearCartCache(userId);
-
       res.json(cartData);
     } catch (error) {
       next(error);
@@ -293,8 +287,6 @@ export class CartController {
 
       const cartData = this.calculateCartTotals(cart!);
 
-      await this.clearCartCache(userId);
-
       res.json(cartData);
     } catch (error) {
       next(error);
@@ -312,8 +304,6 @@ export class CartController {
       }
 
       await CartItem.destroy({ where: { cartId: cart.id } });
-
-      await this.clearCartCache(userId);
 
       res.json(this.getEmptyCart());
     } catch (error) {
@@ -429,8 +419,6 @@ export class CartController {
       });
 
       const cartData = this.calculateCartTotals(updatedCart!);
-
-      await this.clearCartCache(userId);
 
       res.json(cartData);
     } catch (error) {
@@ -564,12 +552,6 @@ export class CartController {
     try {
       const userId = (req as any).user.id;
 
-      const cacheKey = `cart_count:${userId}`;
-      const cached = await redisClient.get(cacheKey);
-      if (cached) {
-        return res.json({ count: parseInt(cached) });
-      }
-
       const cart = await Cart.findOne({
         where: { userId, isActive: true },
         include: [
@@ -582,9 +564,6 @@ export class CartController {
       });
 
       const count = cart?.items.reduce((sum: number, item: CartItem) => sum + item.quantity, 0) || 0;
-
-      // Cache for 5 minutes
-      await redisClient.set(cacheKey, count.toString(), { EX: 300 });
 
       res.json({ count });
     } catch (error) {
@@ -813,7 +792,4 @@ export class CartController {
     };
   }
 
-  private async clearCartCache(userId: string) {
-    await redisClient.del(`cart_count:${userId}`);
-  }
 }

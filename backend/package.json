@@ -33,7 +33,6 @@
     "node-cron": "^3.0.2",
     "pg": "^8.11.3",
     "pg-hstore": "^2.3.4",
-    "redis": "^4.6.7",
     "sequelize": "^6.33.0",
     "sequelize-typescript": "^2.1.5",
     "winston": "^3.10.0"

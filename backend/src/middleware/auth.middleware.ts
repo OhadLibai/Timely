@@ -26,12 +26,6 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { userId: string; email: string; role: string; iat: number; exp: number };
 
-    // Optional: Check if token is blacklisted in Redis (if implementing advanced logout)
-    // const isBlacklisted = await redisClient.get(`blacklist_token:${token}`);
-    // if (isBlacklisted) {
-    //   logger.warn(`Attempt to use blacklisted token for user ID: ${decoded.userId}`);
-    //   return res.status(401).json({ error: 'Token has been invalidated.' });
-    // }
 
     // Attach user information to the request object
     req.user = {

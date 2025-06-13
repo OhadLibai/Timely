@@ -18,7 +18,6 @@ from ..database.models import Base # For table creation
 from ..services.prediction_service import PredictionService # Your main prediction service
 from ..services.metrics_service import MetricsService
 from ..api.routes import predictions, metrics, training # Assuming these are your existing routers
-from ..utils.redis_client import redis_client
 from ..utils.logger import setup_logger
 
 
@@ -40,9 +39,6 @@ async def lifespan(app: FastAPI):
     try:
         Base.metadata.create_all(bind=engine) # Create DB tables if not exist
         logger.info("Database tables created/verified (if models are defined in database.models)")
-        
-        await redis_client.connect()
-        logger.info("Connected to Redis")
         
         model_path_base = os.getenv("MODEL_PATH", "/app/models")
         model_filename = "enhanced_lightgbm_model.pkl" # Prefer enhanced model
@@ -106,12 +102,6 @@ async def lifespan(app: FastAPI):
     yield # Service runs here
     
     logger.info("Shutting down ML Service...")
-    if hasattr(redis_client, 'close'): # Ensure redis_client has close method
-         await redis_client.close()
-         logger.info("Disconnected from Redis")
-    else: # Fallback for older redis versions or different client interface
-        await redis_client.disconnect()
-        logger.info("Disconnected from Redis (using disconnect).")
 
 
 app = FastAPI(
@@ -206,9 +196,7 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    # ... (keep existing health_check logic)
     try:
-        await redis_client.ping()
         model_status = "Not Loaded"
         if app.state.model:
             if hasattr(app.state.model, 'model') and app.state.model.model: # For LightGBMModel
@@ -218,12 +206,10 @@ async def health_check():
             elif app.state.model: # Catch all if model object exists but internal 'model' attribute check fails
                  model_status = "Loaded (Unknown Structure)"
 
-
         return {
             "status": "healthy",
             "timestamp": datetime.utcnow().isoformat(),
             "services": {
-                "redis": "connected",
                 "model": model_status,
                 "database": "connected (assumed, check via engine ping if needed)"
             }

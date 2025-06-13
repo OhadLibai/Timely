@@ -5,7 +5,6 @@ import crypto from 'crypto';
 import { User, UserRole } from '../models/user.model';
 import { Cart } from '../models/cart.model';
 import { UserPreference } from '../models/userPreference.model';
-import { redisClient } from '../config/redis.config';
 import logger from '../utils/logger';
 import { sendEmail } from '../services/email.service';
 
@@ -49,11 +48,6 @@ export class AuthController {
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
 
-      // Store refresh token in Redis
-      await redisClient.set(`refresh_token:${user.id}`, refreshToken, {
-        EX: 7 * 24 * 60 * 60 // 7 days
-      });
-
       logger.info(`New user registered: ${user.email}`);
 
       res.status(201).json({
@@ -93,11 +87,6 @@ export class AuthController {
       const accessToken = generateAccessToken(user);
       const refreshToken = generateRefreshToken(user);
 
-      // Store refresh token in Redis
-      await redisClient.set(`refresh_token:${user.id}`, refreshToken, {
-        EX: 7 * 24 * 60 * 60 // 7 days
-      });
-
       logger.info(`User logged in: ${user.email}`);
 
       res.json({
@@ -119,12 +108,6 @@ export class AuthController {
       // Verify refresh token
       const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET!) as any;
       
-      // Check if refresh token exists in Redis
-      const storedToken = await redisClient.get(`refresh_token:${decoded.userId}`);
-      if (!storedToken || storedToken !== refreshToken) {
-        return res.status(401).json({ error: 'Invalid refresh token' });
-      }
-
       // Find user
       const user = await User.findByPk(decoded.userId);
       if (!user || !user.isActive) {
@@ -134,11 +117,6 @@ export class AuthController {
       // Generate new tokens
       const newAccessToken = generateAccessToken(user);
       const newRefreshToken = generateRefreshToken(user);
-
-      // Update refresh token in Redis
-      await redisClient.set(`refresh_token:${user.id}`, newRefreshToken, {
-        EX: 7 * 24 * 60 * 60 // 7 days
-      });
 
       res.json({
         accessToken: newAccessToken,
@@ -156,19 +134,6 @@ export class AuthController {
   async logout(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-
-      // Remove refresh token from Redis
-      await redisClient.del(`refresh_token:${userId}`);
-
-      // Blacklist current access token
-      const token = req.headers.authorization?.split(' ')[1];
-      if (token) {
-        const decoded = jwt.decode(token) as any;
-        const ttl = decoded.exp - Math.floor(Date.now() / 1000);
-        if (ttl > 0) {
-          await redisClient.set(`blacklist_token:${token}`, '1', { EX: ttl });
-        }
-      }
 
       logger.info(`User logged out: ${userId}`);
 

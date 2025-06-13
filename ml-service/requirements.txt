@@ -21,9 +21,6 @@ psycopg2-binary==2.9.7
 sqlalchemy==2.0.20
 alembic==1.11.3
 
-# Redis
-redis==4.6.0
-
 # Utilities
 python-dotenv==1.0.0
 httpx==0.24.1

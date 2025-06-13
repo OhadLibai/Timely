@@ -70,7 +70,6 @@ export interface SystemHealth {
   services: {
     api: { status: 'healthy' | 'degraded' | 'down'; latency: number };
     database: { status: 'healthy' | 'degraded' | 'down'; connections: number };
-    redis: { status: 'healthy' | 'degraded' | 'down'; memory: number };
     ml: { status: 'healthy' | 'degraded' | 'down'; lastPrediction: string };
   };
   metrics: {

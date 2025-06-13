@@ -12,7 +12,6 @@ import rateLimit from 'express-rate-limit';
 dotenv.config();
 
 import { sequelize } from './config/database.config';
-import { redisClient } from './config/redis.config';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -63,13 +62,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.get('/health', async (req: Request, res: Response) => {
   try {
     await sequelize.authenticate();
-    await redisClient.ping();
     res.status(200).json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       services: {
-        database: 'connected',
-        redis: 'connected'
+        database: 'connected'
       }
     });
   } catch (error) {
@@ -107,8 +104,6 @@ process.on('SIGTERM', async () => {
     logger.info('HTTP server closed');
     await sequelize.close();
     logger.info('Database connection closed');
-    await redisClient.disconnect();
-    logger.info('Redis connection closed');
     process.exit(0);
   });
 });
@@ -122,8 +117,6 @@ const startServer = async () => {
       await sequelize.sync({ alter: true });
       logger.info('Database models synchronized');
     }
-    
-    await redisClient.connect();
     
     server.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
