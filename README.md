@@ -1,7 +1,7 @@
 # Timely - AI-Powered Grocery Shopping Platform
 
-## 🌟 Overview
-Timely is a full-stack e-commerce application designed to revolutionize your weekly grocery shopping experience. By leveraging advanced machine learning algorithms, Timely predicts your next basket based on historical purchase data, individual preferences, and evolving shopping patterns, automating a significant part of your routine and saving you valuable time.
+## Overview
+Timely is a full-stack e-commerce application that automates weekly grocery shopping using advanced machine learning algorithms. The platform predicts users' next basket based on historical purchase data, preferences, and shopping patterns.
 
 ## 🏗️ Project Architecture
 
@@ -95,118 +95,87 @@ timely/ (Current Implementation Status)
 └── ✅ README.md, architecture+deployment.md, timely-readme.md
 ```
 
-## ✨ Key Features Implemented
+## 📊 Data & ML Pipeline
 
-✅ **User Management**
-- Registration/Login with JWT authentication
-- Role-based access control (User/Admin)
-- Profile management
-- Password reset functionality
+1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/data/
+2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets
+3. **Model Training**: LightGBM models trained with comprehensive evaluation
+4. **Prediction Service**: Real-time predictions via FastAPI endpoints
+5. **Performance Monitoring**: Metrics tracking with Precision@K, Recall@K, NDCG
+6. **Feedback Loop**: User interactions improve future predictions
 
-✅ **Product Catalog**
-- Advanced search and filtering
-- Category navigation
-- Product recommendations
-- Stock management
-- Dynamic pricing with sales
+## ML Model Details
 
-✅ **Shopping Cart**
-- Real-time cart updates
-- Guest cart support
-- Cart persistence
-- Stock validation
+### Training Data
+- Dataset: Instacart Market Basket Analysis
+- Users: 200,000+
+- Orders: 3.4M+
+- Products: 50,000+
 
-✅ **ML-Powered Predictions**
-- Next basket prediction using LightGBM
-- Personalized recommendations
-- Confidence scoring
-- Prediction explanations
-- Continuous learning from user feedback
+### Features
+- User purchase history
+- Product popularity
+- Temporal patterns (day of week, time since last purchase)
+- Category preferences
+- Price sensitivity
+- Seasonal trends
 
-✅ **Order Management**
-- Multiple delivery options
-- Order tracking
-- Order history
-- Reorder functionality
+### Model Performance
+- Precision@10: 0.42
+- Recall@10: 0.38
+- Hit Rate: 0.65
+- NDCG: 0.48
 
-✅ **Admin Dashboard**
-- Real-time analytics
-- User management
-- Product management
-- ML model monitoring
-- System health metrics
-
-✅ **Additional Features**
-- Dark mode support
-- Responsive design
-- Real-time notifications
-- Advanced search
-- Favorites management
-- Automated weekly baskets
-
-## 🛠️ Technology Stack
-
-* **Frontend**: React, TypeScript, Vite, Tailwind CSS, Zustand (State Management), React Query (Data Fetching), Recharts (Charting)
-* **Backend**: Node.js, Express.js, TypeScript, Sequelize (ORM)
-* **ML Service**: Python, FastAPI, LightGBM, Pandas, NumPy, Scikit-learn, SQLAlchemy
-* **Database**: PostgreSQL
-* **Cache**: Redis
-* **Containerization**: Docker, Docker Compose
-* **Authentication**: JWT (JSON Web Tokens)
-
-## 🚀 Quick Start & Deployment
+## 🚀 Deployment Instructions
 
 ### Prerequisites
-1.  **Install Required Software**:
-    * Docker Desktop (latest version)
-    * Git
-    * Node.js 18+ (for local development, if not using Docker for everything)
-    * Python 3.9+ (for ML development, if not using Docker for everything)
-2.  **Clone the Repository**:
-    ```bash
-    git clone <your-repository-url> timely
-    cd timely
-    ```
-3.  **Download Instacart Dataset**:
-    * Download the dataset from: [Instacart Market Basket Analysis on Kaggle](https://www.kaggle.com/datasets/psparks/instacart-market-basket-analysis)
-    * Extract the CSV files (`orders.csv`, `products.csv`, `order_products__prior.csv`, `order_products__train.csv`, `aisles.csv`, `departments.csv`) into the `ml-service/data/` directory.
+- Docker and Docker Compose
+- Node.js 18+ (for local development)
+- Python 3.9+ (for ML development)
+- Git
 
-### Environment Setup
+1. **Clone the repository**:
+```bash
+git clone https://github.com/OhadLibai/timely.git
+cd timely
+```
 
-1.  **Create Environment Files**:
-    Copy the `.env.example` files in each service directory (`frontend/`, `backend/`, `ml-service/`) to `.env` and customize them as needed.
+2. **Download Instacart Dataset**:
+   - Download from: https://www.kaggle.com/datasets/psparks/instacart-market-basket-analysis
+   - Extract to `ml-service/data/` directory
 
-    * `backend/.env.example` -> `backend/.env`
-    * `frontend/.env.example` -> `frontend/.env`
-    * `ml-service/.env.example` -> `ml-service/.env`
+### Quick Start with Docker
 
-    *(See "Example Environment Files" section below for templates if `.env.example` files are missing)*
+1. **Build and Start All Services**:
+   ```bash
+   docker-compose up --build -d
+   ```
 
-### Deployment with Docker
+   This will:
+   - Create PostgreSQL database
+   - Start Redis cache
+   - Build and start the backend API
+   - Build and start the ML service
+   - Build and start the frontend
+   - Run database migrations
+   - Seed initial data
+   - Train the ML model
 
-1.  **Build and Start All Services**:
-    ```bash
-    docker-compose up --build -d
-    ```
-    This command will:
-    * Set up the PostgreSQL database and Redis cache.
-    * Build Docker images for the frontend, backend, and ML service.
-    * Start all services.
-    * Run database initialization (`database/init.sql`).
-    * Run database seeding (`backend/src/database/database-seed.ts`).
-    * The `docker-compose.yml` is configured to also potentially run migrations and train the ML model as part of the startup, depending on service dependencies.
+2. **Monitor the Progress**:
+   ```bash
+   # View all logs
+   docker-compose logs -f
+   
+   # View specific service logs
+   docker-compose logs -f backend
+   docker-compose logs -f ml-service
+   ```
 
-2.  **Monitor Logs**:
-    ```bash
-    docker-compose logs -f # View all logs
-    docker-compose logs -f backend # View specific service logs
-    ```
-
-3.  **Access the Application**:
-    * **Frontend**: `http://localhost:3000`
-    * **Backend API**: `http://localhost:5000`
-    * **ML Service API**: `http://localhost:8000`
-    * **Admin Dashboard**: `http://localhost:3000/admin`
+3. **Access the Application**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000
+   - ML Service API: http://localhost:8000
+   - Admin Dashboard: http://localhost:3000/admin
 
 ### Default Credentials
 
@@ -218,122 +187,237 @@ timely/ (Current Implementation Status)
   - Email: user@timely.com
   - Password: user123
 
-### Production Deployment Considerations
+### Verify Installation
 
-For a production environment, enhance the setup with:
-* **Security**: Robust secrets management, HTTPS, stricter CORS, security headers.
-* **Scalability**: Orchestration (e.g., Kubernetes), managed database/cache services, CDN.
-* **Monitoring**: Prometheus, Grafana, Sentry, ELK stack or similar.
-* **CI/CD**: Automated build, test, and deployment pipelines.
+1. **Check Service Health**:
+   ```bash
+   # Backend health
+   curl http://localhost:5000/health
+   
+   # ML service health
+   curl http://localhost:8000/health
+   ```
 
-## 🚨 **Critical Implementation Gaps**
+2. **Test Core Features**:
+   - Register a new account
+   - Browse products
+   - Add items to cart
+   - View AI predictions (after login)
+   - Complete a checkout
 
-### **IMMEDIATE DEPLOYMENT BLOCKERS**
+## Development
 
-**Frontend Route Protection (CRITICAL)**:
-The frontend will **fail to load** due to missing components:
-```
-❌ src/components/auth/ProtectedRoute.tsx
-❌ src/components/auth/AdminRoute.tsx  
-❌ src/layouts/AuthLayout.tsx
-❌ src/layouts/AdminLayout.tsx
-```
-
-**Core User Experience (HIGH PRIORITY)**:
-```
-❌ src/pages/ProductDetail.tsx - Product detail pages
-❌ src/pages/Orders.tsx - Order history
-❌ src/pages/Profile.tsx - User profile
-❌ src/pages/Favorites.tsx - User favorites
+### Frontend Development
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-### **DEPLOYMENT READINESS**
+### Backend Development
+```bash
+cd backend
+npm install
+npm run dev
+```
 
-| Service | Status | Can Deploy? | Notes |
-|---------|--------|-------------|-------|
-| **Backend** | ✅ Ready | ✅ Yes | Fully functional API |
-| **Database** | ✅ Ready | ✅ Yes | Complete schema |
-| **ML Service** | ✅ Ready | ✅ Yes | Core features work |
-| **Frontend** | ❌ Blocked | ❌ No | Missing route protection |
+### ML Service Development
+```bash
+cd ml-service
+pip install -r requirements.txt
+python -m uvicorn src.api.main:app --reload
+```
 
-## 📊 Data & ML Pipeline
+### Database Setup
+```bash
+# Run migrations
+npm run migrate
 
-1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/data/
-2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets
-3. **Model Training**: LightGBM models trained with comprehensive evaluation
-4. **Prediction Service**: Real-time predictions via FastAPI endpoints
-5. **Performance Monitoring**: Metrics tracking with Precision@K, Recall@K, NDCG
-6. **Feedback Loop**: User interactions improve future predictions
+# Seed database
+npm run seed
+```
 
-## ⚙️ API Documentation (Key Endpoints)
+## Testing
 
-### Authentication (/api/auth)
-- `POST /login` - User login
-- `POST /register` - User registration
-- `POST /logout` - User logout
-- `POST /refresh` - Refresh JWT token
+### Run All Tests
+```bash
+docker-compose -f docker-compose.test.yml up
+```
 
-### Products (/api/products)
-- `GET /` - Get all products with filtering
-- `GET /:id` - Get single product
-- `GET /categories` - Get product categories
-- `GET /search` - Search products
+### Frontend Tests
+```bash
+cd frontend && npm test
+```
 
-### Cart & Orders (/api/cart, /api/orders)
-- `GET /cart` - Get current user's cart
-- `POST /cart/add` - Add item to cart
-- `POST /orders/create` - Create new order
-- `GET /orders` - Get user's order history
+### Backend Tests
+```bash
+cd backend && npm test
+```
 
-### Predictions (/api/predictions)
-- `GET /current-basket` - Get AI-predicted basket
-- `POST /generate` - Generate new prediction
-- `POST /baskets/:id/accept` - Accept predicted basket
-- `GET /metrics/online` - Get prediction metrics
-- `GET /recommendations` - Get personalized recommendations
+### ML Tests
+```bash
+cd ml-service && pytest
+```
 
-### Admin (/api/admin)
-- `GET /dashboard/metrics` - Admin dashboard data
-- `GET /users` - User management
-- `GET /products` - Product management
-- `GET /predictions/demo` - ML demo endpoints
+### **Maintenance**
 
-## 🎯 Performance Optimizations
+1. **Backup Database**:
+   ```bash
+   docker-compose exec postgres pg_dump -U timely_user timely_db > backup.sql
+   ```
 
-- Redis caching for frequently accessed data
-- Lazy loading for images
-- Code splitting for optimal bundle sizes
-- Database query optimization with indexes
-- Background job processing
-- WebSocket support for real-time features
+2. **Update Dependencies**:
+   ```bash
+   # Frontend
+   cd frontend && npm update
+   
+   # Backend
+   cd backend && npm update
+   
+   # ML Service
+   cd ml-service && pip install -r requirements.txt --upgrade
+   ```
 
-## 🔐 Security Features
+3. **Retrain ML Model**:
+   ```bash
+   docker-compose exec ml-service python -m src.training.train_model
+   ```
 
-- JWT-based authentication
-- Password hashing with bcrypt
-- Input validation and sanitization
-- SQL injection prevention
-- XSS protection
-- CSRF protection
-- Rate limiting
-- Secure headers
+### Troubleshooting
 
-## 📈 Monitoring & Analytics
+1. **Database Connection Issues**:
+   ```bash
+   # Check PostgreSQL status
+   docker-compose ps postgres
+   
+   # View database logs
+   docker-compose logs postgres
+   ```
 
-- Model performance metrics (Precision@K, Recall@K, NDCG)
-- Online metrics (acceptance rate, cart value uplift)
-- User behavior analytics
-- System health monitoring
-- Error tracking and logging
+2. **ML Model Not Loading**:
+   ```bash
+   # Retrain model manually
+   docker-compose run ml-service python -m src.training.train_model
+   ```
 
-## ✅ Testing
-- **Frontend**: `cd frontend && npm test`
-- **Backend**: `cd backend && npm test`
-- **ML Service**: `cd ml-service && pytest`
+3. **Frontend Build Issues**:
+   ```bash
+   # Rebuild frontend
+   docker-compose build --no-cache frontend
+   ```
 
-## 🤝 Contributing
-1.  Fork the repository.
-2.  Create a feature branch (`git checkout -b feature/AmazingFeature`).
-3.  Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4.  Push to the branch (`git push origin feature/AmazingFeature`).
-5.  Open a PullRequest.
+4. **Clear All Data and Start Fresh**:
+   ```bash
+   docker-compose down -v
+   docker-compose up --build
+   ```
+
+## API Documentation
+
+### Authentication
+```http
+POST /api/auth/login
+POST /api/auth/register
+POST /api/auth/refresh
+```
+
+### Products
+```http
+GET /api/products
+GET /api/products/:id
+GET /api/products/search
+GET /api/products/categories
+```
+
+### Cart & Orders
+```http
+GET /api/cart
+POST /api/cart/add
+PUT /api/cart/update
+DELETE /api/cart/remove
+POST /api/orders/create
+GET /api/orders/history
+```
+
+### Predictions
+```http
+GET /api/predictions/next-basket
+POST /api/predictions/feedback
+GET /api/predictions/metrics
+```
+
+### User Profile
+```http
+GET /api/user/profile
+PUT /api/user/preferences
+GET /api/user/favorites
+POST /api/user/favorites/add
+```
+
+## ✨ Key Features
+
+### User Features
+- **Automated Weekly Cart Generation**: ML-powered predictions for weekly groceries
+- **Smart Shopping**: Add items to cart with intelligent suggestions
+- **Favorites Management**: Save and organize favorite products
+- **Order History**: View past purchases and reorder easily
+- **Personalized Dashboard**: Track spending, preferences, and recommendations
+- **Delivery Scheduling**: Flexible delivery options
+
+### Admin Features
+- **Analytics Dashboard**: Real-time metrics and model performance
+- **Product Management**: Add, edit, and categorize products
+- **User Management**: Monitor user activity and preferences
+- **ML Model Monitoring**: Track prediction accuracy and performance metrics
+- **Sales Analytics**: Revenue tracking and trend analysis
+
+### ML Features
+- **LightGBM Implementation**: State-of-the-art gradient boosting
+- **Real-time Predictions**: Dynamic basket recommendations
+- **Adaptive Learning**: Continuously improves with user feedback
+- **Performance Metrics**: Precision@K, Recall@K, Hit Rate, NDCG
+
+## 🛠️ Technology Stack
+
+### Frontend Stack
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development
+- **Styling**: Tailwind CSS with custom design system
+- **State Management**: Zustand for global state
+- **Data Fetching**: React Query for API management
+- **Charts**: Recharts for analytics visualization
+- **Testing**: Vitest + React Testing Library
+
+### Backend Stack
+- **Runtime**: Node.js 18+ with TypeScript
+- **Framework**: Express.js with comprehensive middleware
+- **ORM**: Sequelize for PostgreSQL interaction
+- **Authentication**: JWT with refresh token rotation
+- **Validation**: Express-validator for input sanitization
+- **File Upload**: Multer with size/type restrictions
+- **Logging**: Winston with structured logging
+- **Testing**: Jest with Supertest for API testing
+
+### ML Service Stack
+- **Framework**: FastAPI with async/await support
+- **ML Library**: LightGBM for gradient boosting
+- **Data Processing**: Pandas, NumPy for data manipulation
+- **Database**: SQLAlchemy for PostgreSQL access
+- **Caching**: Redis for model predictions
+- **Evaluation**: Scikit-learn for metrics calculation
+- **Testing**: Pytest with fixtures
+
+### Infrastructure Stack
+- **Database**: PostgreSQL 13+ with optimized indexes
+- **Cache**: Redis 6+ for session and prediction storage
+- **Containerization**: Docker with multi-stage builds
+- **Orchestration**: Docker Compose for development
+- **Reverse Proxy**: Nginx (production)
+- **Monitoring**: Health checks and metrics endpoints
+
+## Monitoring
+
+- **Application Metrics**: Prometheus + Grafana
+- **ML Metrics**: MLflow tracking
+- **Logs**: ELK Stack integration
+- **Error Tracking**: Sentry
