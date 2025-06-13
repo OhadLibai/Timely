@@ -112,6 +112,7 @@ yarn.lock
 # Temporary files
 *.tmp
 .tmp/
+TODO
 
 # Local development overrides
 .env.local.override
