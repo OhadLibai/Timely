@@ -62,15 +62,43 @@ timely/
 - **Adaptive Learning**: Continuously improves with user feedback
 - **Performance Metrics**: Precision@K, Recall@K, Hit Rate, NDCG
 
-## Technology Stack
+## 🛠️ Technology Stack
 
-- **Frontend**: React, TypeScript, Tailwind CSS, Recharts
-- **Backend**: Node.js, Express, TypeScript
-- **ML Service**: Python, FastAPI, LightGBM, Pandas, NumPy
-- **Database**: PostgreSQL
-- **Cache**: Redis
-- **Container**: Docker, Docker Compose
-- **Authentication**: JWT
+### Frontend Stack
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development
+- **Styling**: Tailwind CSS with custom design system
+- **State Management**: Zustand for global state
+- **Data Fetching**: React Query for API management
+- **Charts**: Recharts for analytics visualization
+- **Testing**: Vitest + React Testing Library
+
+### Backend Stack
+- **Runtime**: Node.js 18+ with TypeScript
+- **Framework**: Express.js with comprehensive middleware
+- **ORM**: Sequelize for PostgreSQL interaction
+- **Authentication**: JWT with refresh token rotation
+- **Validation**: Express-validator for input sanitization
+- **File Upload**: Multer with size/type restrictions
+- **Logging**: Winston with structured logging
+- **Testing**: Jest with Supertest for API testing
+
+### ML Service Stack
+- **Framework**: FastAPI with async/await support
+- **ML Library**: LightGBM for gradient boosting
+- **Data Processing**: Pandas, NumPy for data manipulation
+- **Database**: SQLAlchemy for PostgreSQL access
+- **Caching**: Redis for model predictions
+- **Evaluation**: Scikit-learn for metrics calculation
+- **Testing**: Pytest with fixtures
+
+### Infrastructure Stack
+- **Database**: PostgreSQL 13+ with optimized indexes
+- **Cache**: Redis 6+ for session and prediction storage
+- **Containerization**: Docker with multi-stage builds
+- **Orchestration**: Docker Compose for development
+- **Reverse Proxy**: Nginx (production)
+- **Monitoring**: Health checks and metrics endpoints
 
 ## Quick Start
 
