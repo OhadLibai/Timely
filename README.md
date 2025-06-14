@@ -7,92 +7,91 @@ Timely is a full-stack e-commerce application that automates weekly grocery shop
 
 ```
 timely/ (Current Implementation Status)
-├── frontend/                              # React TypeScript Frontend [⚠️ 60% Complete]
+├── frontend/                              # React TypeScript Frontend
 │   ├── src/
-│   │   ├── components/                    # ✅ UI Components (7/7 implemented)
-│   │   │   ├── common/                    # ✅ LoadingSpinner, EmptyState, ErrorBoundary
-│   │   │   ├── products/                  # ✅ ProductCard, ProductImage
-│   │   │   ├── predictions/               # ✅ ConfidenceIndicator, PredictionExplanation
-│   │   │   └── auth/                      # ❌ MISSING: ProtectedRoute, AdminRoute
-│   │   ├── pages/                         # ⚠️ Core pages exist, many missing
-│   │   │   ├── ✅ Home.tsx, Products.tsx, Cart.tsx, Checkout.tsx
-│   │   │   ├── ✅ Login.tsx, Register.tsx, PredictedBasket.tsx
-│   │   │   ├── ❌ MISSING: ProductDetail, Orders, OrderDetail
-│   │   │   ├── ❌ MISSING: Profile, Favorites, ForgotPassword, ResetPassword
-│   │   │   └── admin/                     # ⚠️ Partial (3/6 implemented)
-│   │   │       ├── ✅ Dashboard.tsx, Metrics.tsx, DemoPredictionPage.tsx
-│   │   │       └── ❌ MISSING: Products, Orders, Users, Settings
-│   │   ├── layouts/                       # ⚠️ Partial (1/3 implemented)
-│   │   │   ├── ✅ MainLayout.tsx
-│   │   │   └── ❌ MISSING: AuthLayout, AdminLayout
-│   │   ├── services/                      # ✅ Complete (8/8 implemented)
-│   │   ├── stores/                        # ✅ Complete (2/2 implemented)
-│   │   └── types/                         # ❌ MISSING: TypeScript definitions
-│   ├── public/                            # ✅ Basic structure
-│   ├── ✅ index.html                      # Production-ready with SEO
-│   ├── ✅ vite.config.ts, tailwind.config.js, tsconfig.json
-│   ├── ✅ package.json                    # Complete dependencies
-│   └── ✅ Dockerfile                      # Production-ready
+│   │   ├── components/                    # UI Components
+│   │   │   ├── common/                    # LoadingSpinner, EmptyState, ErrorBoundary
+│   │   │   ├── products/                  # ProductCard, ProductImage
+│   │   │   ├── predictions/               # ConfidenceIndicator, PredictionExplanation
+│   │   │   └── auth/                      # ❌ MISSING: ProtectedRoute, AdminRoute <- **this folder does not exist**
+│   │   ├── pages/                         
+│   │   │   ├── Home.tsx, Products.tsx, Cart.tsx, Checkout.tsx
+│   │   │   ├── Login.tsx, Register.tsx, PredictedBasket.tsx
+│   │   │   ├── ProductDetail, Orders, OrderDetail
+│   │   │   ├── Profile, Favorites, ForgotPassword, ResetPassword
+│   │   │   └── admin/                     
+│   │   │       ├── Dashboard.tsx, Metrics.tsx, DemoPredictionPage.tsx
+│   │   │       └── Products, Orders, Users, Settings
+│   │   ├── layouts/                       
+│   │   │   ├── MainLayout.tsx
+│   │   │   └── AuthLayout, AdminLayout
+│   │   ├── services/                       
+│   │   ├── stores/                        
+│   │   └── types/                         # ❌ MISSING: TypeScript definitions <- **this folder does not exist**
+│   ├── public/                            # Basic structure
+│   ├── index.html                      # Production-ready with SEO
+│   ├── vite.config.ts, tailwind.config.js, tsconfig.json
+│   ├── package.json                    # Complete dependencies
+│   └── Dockerfile                      # Production-ready
 │
-├── backend/                               # Node.js/Express Backend [✅ 95% Complete]
+├── backend/                               # Node.js/Express Backend 
 │   ├── src/
-│   │   ├── controllers/                   # ✅ Complete (6/6 implemented)
-│   │   │   ├── ✅ auth.controller.ts      # Login, register, logout
-│   │   │   ├── ✅ user.controller.ts      # Profile, preferences
-│   │   │   ├── ✅ product.controller.ts   # CRUD, search, categories
-│   │   │   ├── ✅ cart.controller.ts      # Cart management
-│   │   │   ├── ✅ prediction.controller.ts # 19 ML endpoints
-│   │   │   └── ✅ admin.controller.ts     # Admin dashboard, metrics
-│   │   ├── models/                        # ✅ Complete (14/14 implemented)
-│   │   │   ├── ✅ User, Product, Category, Cart, CartItem
-│   │   │   ├── ✅ Order, OrderItem, Favorite, Delivery
-│   │   │   ├── ✅ PredictedBasket, PredictedBasketItem
-│   │   │   └── ✅ UserPreference, ProductView, ModelMetric
-│   │   ├── routes/                        # ✅ Complete (8/8 implemented)
-│   │   ├── middleware/                    # ✅ Complete (5/5 implemented)
-│   │   ├── services/                      # ✅ Complete (3/3 implemented)
-│   │   ├── config/                        # ✅ Database config
-│   │   ├── jobs/                          # ✅ Cart generation & metrics
-│   │   ├── database/                      # ✅ Seeding & sync scripts
-│   │   └── utils/                         # ✅ Logger, CSV utilities
-│   ├── uploads/                           # ✅ File upload directory
-│   ├── ✅ package.json                    # Complete dependencies
-│   └── ✅ Dockerfile                      # Multi-stage production build
+│   │   ├── controllers/                   
+│   │   │   ├── auth.controller.ts      # Login, register, logout
+│   │   │   ├── user.controller.ts      # Profile, preferences
+│   │   │   ├── product.controller.ts   # CRUD, search, categories
+│   │   │   ├── cart.controller.ts      # Cart management
+│   │   │   ├── prediction.controller.ts # 19 ML endpoints
+│   │   │   └── admin.controller.ts     # Admin dashboard, metrics
+│   │   ├── models/                        
+│   │   │   ├── User, Product, Category, Cart, CartItem
+│   │   │   ├── Order, OrderItem, Favorite, Delivery
+│   │   │   ├── PredictedBasket, PredictedBasketItem
+│   │   │   └── UserPreference, ProductView, ModelMetric
+│   │   ├── routes/                        
+│   │   ├── middleware/                    
+│   │   ├── services/                      
+│   │   ├── config/                        # Database config
+│   │   ├── jobs/                          # Cart generation & metrics
+│   │   ├── database/                      # Seeding & sync scripts
+│   │   └── utils/                         # Logger, CSV utilities
+│   ├── uploads/                           # File upload directory
+│   ├── package.json                    # Complete dependencies
+│   └── Dockerfile                      # Multi-stage production build
 │
-├── ml-service/                            # Python ML Service [✅ 85% Complete]
+├── ml-service/                            # Python ML Service
 │   ├── src/
-│   │   ├── api/                           # ✅ FastAPI main app
-│   │   │   └── ✅ main.py                 # Comprehensive API with demo endpoints
-│   │   ├── models/                        # ✅ Complete (2/2 implemented)
-│   │   │   ├── ✅ lightgbm_model.py       # Basic LightGBM
-│   │   │   └── ✅ lightgbm_enhanced.py    # Advanced basket prediction
-│   │   ├── preprocessing/                 # ✅ Data preprocessing
-│   │   ├── training/                      # ✅ Model training scripts
-│   │   ├── evaluation/                    # ✅ Model evaluation
-│   │   ├── services/                      # ⚠️ May be missing modular services
-│   │   └── utils/                         # ✅ Logger utilities
-│   ├── data/                              # ✅ Instacart dataset (6 CSV files)
-│   │   ├── ✅ orders.csv, products.csv, departments.csv, aisles.csv
-│   │   └── ✅ order_products__prior.csv, order_products__train.csv
-│   ├── models/                            # ✅ Trained model storage
-│   ├── ✅ requirements.txt                # Complete Python dependencies
-│   └── ✅ Dockerfile                      # Production-ready
+│   │   ├── api/                           # FastAPI main app
+│   │   │   └── main.py                 # Comprehensive API with demo endpoints
+│   │   ├── models/                        
+│   │   │   ├── lightgbm_model.py       # Basic LightGBM
+│   │   │   └── lightgbm_enhanced.py    # Advanced basket prediction
+│   │   ├── preprocessing/                 # Data preprocessing
+│   │   ├── training/                      # Model training scripts
+│   │   ├── evaluation/                    # Model evaluation
+│   │   ├── services/                      # ⚠️ May be missing modular services (probably not critical)
+│   │   └── utils/                         # Logger utilities
+│   ├── data/                              # Instacart dataset (6 CSV files)
+│   │   ├── orders.csv, products.csv, departments.csv, aisles.csv
+│   │   └── order_products__prior.csv, order_products__train.csv
+│   ├── models/                            # Trained model storage
+│   ├── requirements.txt                # Complete Python dependencies
+│   └── Dockerfile                      # Production-ready
 │
-├── database/                              # Database Configuration [✅ 100% Complete]
-│   ├── ✅ init.sql                        # Comprehensive schema (14 tables)
-│   │   ├── ✅ Core tables: users, products, categories, orders
-│   │   ├── ✅ ML tables: predicted_baskets, model_metrics
-│   │   ├── ✅ E-commerce: carts, favorites, deliveries
-│   │   └── ✅ Analytics: product_views, user_preferences
-│   └── ✅ Indexes, triggers, constraints
+├── database/                              # Database Configuration
+│   ├── init.sql                        # Comprehensive schema (14 tables)
+│   │   ├── Core tables: users, products, categories, orders
+│   │   ├── ML tables: predicted_baskets, model_metrics
+│   │   ├── E-commerce: carts, favorites, deliveries
+│   │   └── Analytics: product_views, user_preferences
+│   └── Indexes, triggers, constraints <- ⚠️ Not existed in the project
 │
-├── ✅ docker-compose.yml                  # Complete orchestration (7 services)
-│   ├── ✅ postgres                        # Database service
-│   ├── ✅ backend, frontend, ml-service   # Application services
-│   └── ✅ migrate, seed, train-model, sync-products # Utility services
-├── ✅ .gitignore, .dockerignore           # Comprehensive ignore files
-├── ✅ CLAUDE.md                           # Development notes
-└── ✅ README.md, architecture+deployment.md, timely-readme.md
+├── docker-compose.yml                  # Complete orchestration (7 services)
+│   ├── postgres                        # Database service
+│   ├── backend, frontend, ml-service   # Application services
+│   └── migrate, seed, train-model, sync-products # Utility services
+├── .gitignore, .dockerignore           # Comprehensive ignore files
+└── README.md
 ```
 
 ## 🚀 Deployment Instructions

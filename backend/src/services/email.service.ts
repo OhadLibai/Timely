@@ -9,7 +9,7 @@ interface EmailOptions {
 }
 
 // This is a mock email service that logs to the console for development.
-// For production, you would integrate a real email provider (e.g., using nodemailer with SendGrid, Mailgun, etc.).
+// For production, we would integrate a real email provider (e.g., using nodemailer with SendGrid, Mailgun, etc.).
 export const sendEmail = async (options: EmailOptions): Promise<void> => {
   logger.info('--- Mock Email Service ---');
   logger.info(`Sending email to: ${options.to}`);
