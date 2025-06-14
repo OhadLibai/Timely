@@ -257,8 +257,8 @@ class InstacartDataPreprocessor:
 
 def main():
     """Main preprocessing pipeline"""
-    data_path = "/app/data/instacart"
-    output_path = "/app/data/processed"
+    data_path = os.getenv("RAW_DATA_PATH", "/app/data")
+    output_path = os.getenv("PROCESSED_DATA_PATH", "/app/data/processed")
     
     preprocessor = InstacartDataPreprocessor(data_path)
     preprocessor.load_raw_data()

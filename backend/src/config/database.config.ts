@@ -30,6 +30,14 @@ export const sequelize = new Sequelize(DATABASE_URL, {
     acquire: 30000,
     idle: 10000
   },
+  define: {
+    // Convert camelCase model attributes to snake_case column names
+    underscored: true,
+    // Convert snake_case column names to camelCase model attributes when reading
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+  },
   models: [
     User,
     Product,
@@ -50,67 +58,8 @@ export const sequelize = new Sequelize(DATABASE_URL, {
 
 // Define associations
 export const defineAssociations = () => {
-  // User associations
-  User.hasOne(Cart, { foreignKey: 'userId', as: 'cart' });
-  User.hasMany(Order, { foreignKey: 'userId', as: 'orders' });
-  User.hasMany(Favorite, { foreignKey: 'userId', as: 'favorites' });
-  User.hasMany(PredictedBasket, { foreignKey: 'userId', as: 'predictedBaskets' });
-  User.hasOne(UserPreference, { foreignKey: 'userId', as: 'preferences' });
-  User.hasMany(ProductView, { foreignKey: 'userId', as: 'productViews' });
-
-  // Product associations
-  Product.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
-  Product.hasMany(CartItem, { foreignKey: 'productId', as: 'cartItems' });
-  Product.hasMany(OrderItem, { foreignKey: 'productId', as: 'orderItems' });
-  Product.hasMany(Favorite, { foreignKey: 'productId', as: 'favorites' });
-  Product.hasMany(PredictedBasketItem, { foreignKey: 'productId', as: 'predictedItems' });
-  Product.hasMany(ProductView, { foreignKey: 'productId', as: 'views' });
-
-  // Category associations
-  Category.hasMany(Product, { foreignKey: 'categoryId', as: 'products' });
-  Category.belongsTo(Category, { foreignKey: 'parentId', as: 'parentCategory' }); // Self-referencing for parent category
-  Category.hasMany(Category, { foreignKey: 'parentId', as: 'subCategories' });   // Self-referencing for subcategories
-
-  // Cart associations
-  Cart.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-  Cart.hasMany(CartItem, { foreignKey: 'cartId', as: 'items' });
-
-  // CartItem associations
-  CartItem.belongsTo(Cart, { foreignKey: 'cartId', as: 'parentCart' });
-  CartItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-
-  // Order associations
-  Order.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-  Order.hasMany(OrderItem, { foreignKey: 'orderId', as: 'items' });
-  Order.hasOne(Delivery, { foreignKey: 'orderId', as: 'delivery' });
-
-  // OrderItem associations
-  OrderItem.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
-  OrderItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-
-  // Favorite associations
-  Favorite.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-  Favorite.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-
-  // PredictedBasket associations
-  PredictedBasket.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-  PredictedBasket.hasMany(PredictedBasketItem, { foreignKey: 'basketId', as: 'items' });
-
-  // PredictedBasketItem associations
-  PredictedBasketItem.belongsTo(PredictedBasket, { foreignKey: 'basketId', as: 'basket' });
-  PredictedBasketItem.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-
-  // UserPreference associations
-  UserPreference.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-
-  // Delivery associations
-  Delivery.belongsTo(Order, { foreignKey: 'orderId', as: 'order' });
-
-  // ProductView associations
-  ProductView.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-  ProductView.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-
-  // ModelMetric has no direct associations with other business models in this context
+  // All associations are defined using decorators in the model files
+  // This function is kept for future manual associations if needed
 };
 
 // Initialize associations

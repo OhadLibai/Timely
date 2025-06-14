@@ -95,8 +95,7 @@ export class UserPreference extends Model {
   })
   currency!: string;
 
-  // Adding metadata field based on init.sql. It was missing in the original prompt for userPreference.model
-   @Column({
+  @Column({
     type: DataType.JSONB,
     defaultValue: {}
   })

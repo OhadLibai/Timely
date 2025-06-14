@@ -1,4 +1,4 @@
-CSVs -> ML preprocessing -> ML training/staging DB population -> Backend product sync -> API usage.
+/CSVs -> ML preprocessing -> ML training/staging DB population -> Backend product sync -> API usage.
 
 Data & ML Pipeline (Updated Flow)
 Raw Data: Instacart CSVs in ml-service/data/.
