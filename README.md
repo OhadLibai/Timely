@@ -13,7 +13,7 @@ timely/ (Current Implementation Status)
 │   │   │   ├── common/                    # LoadingSpinner, EmptyState, ErrorBoundary
 │   │   │   ├── products/                  # ProductCard, ProductImage
 │   │   │   ├── predictions/               # ConfidenceIndicator, PredictionExplanation
-│   │   │   └── auth/                      # ❌ MISSING: ProtectedRoute, AdminRoute <- **this folder does not exist**
+│   │   │   └── auth/                      # ProtectedRoute, AdminRoute : Mock
 │   │   ├── pages/                         
 │   │   │   ├── Home.tsx, Products.tsx, Cart.tsx, Checkout.tsx
 │   │   │   ├── Login.tsx, Register.tsx, PredictedBasket.tsx
@@ -127,6 +127,18 @@ cd timely
    - Run database migrations
    - Seed initial data
    - Train the ML model
+
+   If doesn't work possibly do:
+   nano ~/.docker/config.json
+   delete "credsStore": "desktop.exe"
+   so it looks like:
+         {
+      "auths": {
+         "https://index.docker.io/v1/": {}
+      }
+      }
+
+
 
 2. **Monitor the Progress**:
    ```bash

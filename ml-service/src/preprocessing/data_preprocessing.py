@@ -29,15 +29,27 @@ class InstacartDataPreprocessor:
         logger.info("Loading Instacart dataset...")
         
         try:
+            logger.info("Loading orders.csv...")
             self.orders = pd.read_csv(os.path.join(self.data_path, "orders.csv"))
+
+            logger.info("Loading order_products__prior.csv...")
             self.order_products_prior = pd.read_csv(os.path.join(self.data_path, "order_products__prior.csv"))
+
+            logger.info("Loading order_products__train.csv...")
             self.order_products_train = pd.read_csv(os.path.join(self.data_path, "order_products__train.csv"))
+
+            logger.info("Loading products.csv...")
             self.products = pd.read_csv(os.path.join(self.data_path, "products.csv"))
+
+            logger.info("Loading aisles.csv...")
             self.aisles = pd.read_csv(os.path.join(self.data_path, "aisles.csv"))
+
+            logger.info("Loading departments.csv...")
             self.departments = pd.read_csv(os.path.join(self.data_path, "departments.csv"))
-            
+
             logger.info(f"Loaded {len(self.orders)} orders")
             logger.info(f"Loaded {len(self.products)} products")
+
             
         except FileNotFoundError as e:
             logger.error(f"Dataset file not found: {e}")

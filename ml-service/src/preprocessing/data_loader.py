@@ -29,7 +29,9 @@ class DataLoader:
             raise FileNotFoundError(f"CSV file not found: {file_path}")
             
         logger.info(f"Loading CSV file: {file_path}")
+        print(f"loading {file_path}...")
         df = pd.read_csv(file_path)
+        print(f"loaded {file_path}")
         logger.info(f"Loaded {len(df)} rows from {filename}")
         
         return df

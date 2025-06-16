@@ -83,7 +83,9 @@ async def lifespan(app: FastAPI):
         if isinstance(app.state.model, EnhancedLightGBMModel):
             try:
                 features_csv_path = os.path.join(PROCESSED_DATA_PATH, "features.csv")
+                print(f'loading {features_csv_path}...')
                 app.state.features_df = pd.read_csv(features_csv_path)
+                print(f'loaded {features_csv_path}')
                 logger.info(f"Global features_df loaded from {features_csv_path} for EnhancedLightGBMModel. Shape: {app.state.features_df.shape}")
             except FileNotFoundError:
                 logger.error(f"features.csv not found at {features_csv_path}. Some model predictions might fail or be inaccurate.")

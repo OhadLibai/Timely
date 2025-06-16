@@ -1,0 +1,197 @@
+.
+├── CLAUDE.md
+├── README.md
+├── backend
+│   ├── Dockerfile
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src
+│   │   ├── config
+│   │   │   └── database.config.ts
+│   │   ├── controllers
+│   │   │   ├── admin.controller.ts
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── cart.controller.ts
+│   │   │   ├── prediction.controller.ts
+│   │   │   ├── product.controller.ts
+│   │   │   └── user.controller.ts
+│   │   ├── database
+│   │   │   ├── database.seed.ts
+│   │   │   ├── migrate.ts
+│   │   │   ├── migrations
+│   │   │   │   └── 001_add_metadata_to_user_preferences.ts
+│   │   │   └── sync.products.ts
+│   │   ├── jobs
+│   │   │   ├── cartGeneration.job.ts
+│   │   │   └── metrics.job.ts
+│   │   ├── middleware
+│   │   │   ├── admin.middleware.ts
+│   │   │   ├── auth.middleware.ts
+│   │   │   ├── error.middleware.ts
+│   │   │   ├── upload.middleware.ts
+│   │   │   └── validation.middleware.ts
+│   │   ├── models
+│   │   │   ├── cart.model.ts
+│   │   │   ├── cartItem.model.ts
+│   │   │   ├── category.model.ts
+│   │   │   ├── delivery.model.ts
+│   │   │   ├── favorite.model.ts
+│   │   │   ├── modelMetric.model.ts
+│   │   │   ├── order.model.ts
+│   │   │   ├── orderItem.model.ts
+│   │   │   ├── predictedBasket.model.ts
+│   │   │   ├── predictedBasketItem.model.ts
+│   │   │   ├── product.model.ts
+│   │   │   ├── productView.model.ts
+│   │   │   ├── user.model.ts
+│   │   │   └── userPreference.model.ts
+│   │   ├── routes
+│   │   │   ├── admin.routes.ts
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── cart.routes.ts
+│   │   │   ├── delivery.routes.ts
+│   │   │   ├── order.routes.ts
+│   │   │   ├── prediction.routes.ts
+│   │   │   ├── product.routes.ts
+│   │   │   └── user.routes.ts
+│   │   ├── server.ts
+│   │   ├── services
+│   │   │   ├── email.service.ts
+│   │   │   ├── ml.service.ts
+│   │   │   └── upload.service.ts
+│   │   ├── tests
+│   │   │   ├── admin.demo.routes.test.ts
+│   │   │   └── data-consistency.test.ts
+│   │   ├── types
+│   │   │   └── custom.d.ts
+│   │   └── utils
+│   │       ├── csv.utils.ts
+│   │       └── logger.ts
+│   └── tsconfig.json
+├── database
+│   └── init.sql
+├── docker-compose.yml
+├── frontend
+│   ├── Dockerfile
+│   ├── index.html
+│   ├── nginx.conf
+│   ├── package.json
+│   ├── public
+│   │   └── images
+│   │       └── README
+│   ├── src
+│   │   ├── App.tsx
+│   │   ├── components
+│   │   │   ├── admin
+│   │   │   │   ├── DateRangePicker.tsx
+│   │   │   │   ├── MetricCard.tsx
+│   │   │   │   └── MetricExplanation.tsx
+│   │   │   ├── auth
+│   │   │   │   ├── AdminRoute.tsx
+│   │   │   │   └── ProtectedRoute.tsx
+│   │   │   ├── cart
+│   │   │   │   └── CartDropdown.tsx
+│   │   │   ├── common
+│   │   │   │   ├── EmptyState.tsx
+│   │   │   │   ├── ErrorBoundary.tsx
+│   │   │   │   ├── LoadingSpinner.tsx
+│   │   │   │   └── Pagination.tsx
+│   │   │   ├── home
+│   │   │   │   ├── FeatureCard.tsx
+│   │   │   │   └── Hero.tsx
+│   │   │   ├── navigation
+│   │   │   │   └── MobileMenu.tsx
+│   │   │   ├── notifications
+│   │   │   │   └── NotificationDropdown.tsx
+│   │   │   ├── predictions
+│   │   │   │   ├── ConfidenceIndicator.tsx
+│   │   │   │   └── PredictionExplanation.tsx
+│   │   │   ├── products
+│   │   │   │   ├── CategoryFilter.tsx
+│   │   │   │   ├── PriceRangeFilter.tsx
+│   │   │   │   ├── ProductCard.tsx
+│   │   │   │   ├── ProductImage.tsx
+│   │   │   │   ├── ProductListItem.tsx
+│   │   │   │   └── SortDropdown.tsx
+│   │   │   └── search
+│   │   │       └── SearchModal.tsx
+│   │   ├── index.css
+│   │   ├── layouts
+│   │   │   ├── AdminLayout.tsx
+│   │   │   ├── AuthLayout.tsx
+│   │   │   └── MainLayout.tsx
+│   │   ├── main.tsx
+│   │   ├── pages
+│   │   │   ├── Cart.tsx
+│   │   │   ├── Checkout.tsx
+│   │   │   ├── Favorites.tsx
+│   │   │   ├── ForgotPassword.tsx
+│   │   │   ├── Home.tsx
+│   │   │   ├── Login.tsx
+│   │   │   ├── OrderDetail.tsx
+│   │   │   ├── Orders.tsx
+│   │   │   ├── PredictedBasket.tsx
+│   │   │   ├── ProductDetail.tsx
+│   │   │   ├── Products.tsx
+│   │   │   ├── Profile.tsx
+│   │   │   ├── Register.tsx
+│   │   │   ├── ResetPassword.tsx
+│   │   │   └── admin
+│   │   │       ├── Dashboard.tsx
+│   │   │       ├── DemoPredictionPage.tsx
+│   │   │       ├── Metrics.tsx
+│   │   │       ├── Orders.tsx
+│   │   │       ├── Products.tsx
+│   │   │       ├── Settings.tsx
+│   │   │       └── Users.tsx
+│   │   ├── services
+│   │   │   ├── admin.service.ts
+│   │   │   ├── api.client.ts
+│   │   │   ├── auth.service.ts
+│   │   │   ├── cart.service.ts
+│   │   │   ├── favorite.service.ts
+│   │   │   ├── order.service.ts
+│   │   │   ├── prediction.service.ts
+│   │   │   └── product.service.ts
+│   │   └── stores
+│   │       ├── auth.store.ts
+│   │       └── cart.store.ts
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   ├── tsconfig.node.json
+│   └── vite.config.ts
+├── layout.txt
+├── ml-service
+│   ├── Dockerfile
+│   ├── README
+│   ├── data
+│   │   ├── README.md
+│   │   ├── aisles.csv
+│   │   ├── departments.csv
+│   │   ├── order_products__prior.csv
+│   │   ├── order_products__train.csv
+│   │   ├── orders.csv
+│   │   └── products.csv
+│   ├── requirements.txt
+│   └── src
+│       ├── api
+│       │   └── main.py
+│       ├── database
+│       │   ├── __init__.py
+│       │   └── connection.py
+│       ├── evaluation
+│       │   └── evaluator.py
+│       ├── models
+│       │   ├── lightgbm_enhanced.py
+│       │   └── lightgbm_model.py
+│       ├── preprocessing
+│       │   ├── data_loader.py
+│       │   └── data_preprocessing.py
+│       ├── training
+│       │   └── training_script.py
+│       └── utils
+│           └── logger.py
+├── package-lock.json
+└── package.json
+
+45 directories, 149 files
