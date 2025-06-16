@@ -193,6 +193,13 @@ npm install
 npm run dev
 ```
 
+Possibly neccarry:
+```bash
+cd frontend
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
+```
+
 ### Backend Development
 ```bash
 cd backend
