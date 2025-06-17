@@ -55,7 +55,7 @@ jspm_packages/
 .yarn-integrity
 
 # ML/Data files (keep structure but ignore large files)
-/ml-service/training_data/*.csv
+/ml-service/training-data/*.csv
 # /ml-service/training_data/processed/
 /ml-service/training_data/raw/
 /ml-service/models/*.pkl
