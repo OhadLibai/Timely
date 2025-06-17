@@ -200,20 +200,6 @@ CREATE TABLE IF NOT EXISTS product_views (
     viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Model metrics table
--- model_metrics table (ensure it matches what training-script.py saves)
-CREATE TABLE IF NOT EXISTS model_metrics (
-    id SERIAL PRIMARY KEY, -- Changed from UUID to SERIAL for simplicity if preferred
-    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    precision_at_10 FLOAT,
-    recall_at_10 FLOAT,
-    f1_at_10 FLOAT,
-    ndcg_at_10 FLOAT,
-    hit_rate_at_10 FLOAT,
-    model_version VARCHAR(50),
-    metrics_json JSONB -- Store the full metrics dictionary
-);
-
 -- Create indexes for better performance
 CREATE INDEX idx_products_category ON products(category_id);
 CREATE INDEX idx_products_active ON products(is_active);

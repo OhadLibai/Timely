@@ -64,7 +64,6 @@ timely/ (Current Implementation Status)
 │   │   ├── api/                           # FastAPI main app
 │   │   │   └── main.py                 # Comprehensive API with demo endpoints
 │   │   ├── models/                        
-│   │   │   ├── lightgbm_model.py       # Basic LightGBM
 │   │   │   └── lightgbm_enhanced.py    # Advanced basket prediction
 │   │   ├── preprocessing/                 # Data preprocessing
 │   │   ├── training/                      # Model training scripts
@@ -84,7 +83,7 @@ timely/ (Current Implementation Status)
 │   │   ├── ML tables: predicted_baskets, model_metrics
 │   │   ├── E-commerce: carts, favorites, deliveries
 │   │   └── Analytics: product_views, user_preferences
-│   └── Indexes, triggers, constraints <- ⚠️ Not existed in the project
+│   └── Indexes, triggers, constraints 
 │
 ├── docker-compose.yml                  # Complete orchestration (7 services)
 │   ├── postgres                        # Database service
@@ -148,11 +147,11 @@ cd timely
 
 - **Admin Account**:
   - Email: admin@timely.com
-  - Password: admin123
+  - Password: password
 
 - **Test User Account**:
-  - Email: user@timely.com
-  - Password: user123
+  - Email: test@timely.com
+  - Password: password
 
 ### Verify Installation
 
@@ -325,9 +324,9 @@ POST /api/user/favorites/add
 
 1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/data/
 2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets
-3. **Model Training**: LightGBM models trained with comprehensive evaluation
+3. **Model Training**: Two-stage stacked model, a LightGBM model + A Scikit-learn GradientBoostingClassifier
 4. **Prediction Service**: Real-time predictions via FastAPI endpoints
-5. **Performance Monitoring**: Metrics tracking with Precision@K, Recall@K, NDCG
+5. **Performance Monitoring**: Metrics tracking with Precision@K, Recall@K, NDCG, F1
 6. **Feedback Loop**: User interactions improve future predictions
 
 ## ML Model Details
@@ -347,10 +346,11 @@ POST /api/user/favorites/add
 - Seasonal trends
 
 ### Model Performance
-- Precision@10: 0.42
-- Recall@10: 0.38
-- Hit Rate: 0.65
-- NDCG: 0.48
+- Precision@10:
+- Recall@10:
+- Hit Rate:
+- NDCG: 
+- F1: 
 
 ## ✨ Key Features
 
@@ -398,7 +398,7 @@ POST /api/user/favorites/add
 
 ### ML Service Stack
 - **Framework**: FastAPI with async/await support
-- **ML Library**: LightGBM for gradient boosting
+- **ML Library**: LightGBM for gradient boosting + Scikit-learn GradientBoostingClassifier
 - **Data Processing**: Pandas, NumPy for data manipulation
 - **Database**: SQLAlchemy for PostgreSQL access
 - **Performance**: Optimized database queries for fast responses

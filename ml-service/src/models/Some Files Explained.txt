@@ -1,0 +1,14 @@
+features.csv:
+This is the master dataset for training.
+Each row in this file represents a single (user, product) pair.
+The columns contain all the rich, engineered features that describe the relationship between that user and that product
+(e.g., user_total_orders, user_product_order_rate, product_reorder_rate, etc.).
+The Stage 1 model learns from these features to predict the probability that a user will reorder a specific product.
+
+instacart_keyset_0.json:
+This is a small but crucial file for ensuring your model is trained and evaluated correctly.
+It contains lists of user_ids that have been pre-split into three distinct groups: train, valid, and test.
+Purpose: Its role is to prevent data leakage. By using these predefined sets, you guarantee that the model is trained
+only on the train users, its hyperparameters are tuned on the valid users, and its final,
+unbiased performance is measured on the test users, who the model has never seen before.
+Essential for building a trustworthy model.

@@ -3,6 +3,7 @@ from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import logging
+
 from datetime import datetime
 import os
 import asyncio
@@ -10,98 +11,74 @@ import pandas as pd # For loading features_df
 import json # For parsing product lists
 
 # Assuming these are the correct paths from your project structure
-from ..models.lightgbm_enhanced import EnhancedLightGBMModel # Use Enhanced for demo if it has predict_basket
-from ..models.lightgbm_model import LightGBMModel # Fallback or if you use this one primarily
-from ..preprocessing.feature_engineering import FeatureEngineer
+from ..models.stacked_basket_model import StackedBasketModel
+from ..evaluation.evaluator import BasketPredictionEvaluator
+from ..services.feature_engineering import FeatureEngineer
+from ..services.prediction_service import PredictionService # Main prediction service
 from ..database.connection import get_db, engine # get_db might not be used if using SQLAlchemy engine directly
 from ..database.models import Base # For table creation
-from ..services.prediction_service import PredictionService # Your main prediction service
-from ..services.metrics_service import MetricsService
 from ..api.routes import predictions, metrics, training # Assuming these are your existing routers
 from ..utils.logger import setup_logger
-
 
 # Setup logger
 logger = setup_logger(__name__)
 
-# Global model instance and other shared resources
-# These will be initialized in the lifespan manager
-# app_state = {} # Using app.state instead
-
 PROCESSED_DATA_PATH = os.getenv("PROCESSED_DATA_PATH", "/app/data/processed")
 INSTACART_DATA_PATH = os.getenv("RAW_DATA_PATH", "/app/data") # For raw Instacart files
+MODEL_PATH_BASE = os.getenv("MODEL_PATH", "/app/models")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Startup and shutdown events"""
-    logger.info("Starting ML Service...")
-    
+    """
+    Handles startup logic for the application, loading the stacked model.
+    """
+    logger.info("Application startup...")
+
+    # --- 1. Initialize and Load the Stacked Model ---
+    app.state.model = StackedBasketModel()
     try:
-        Base.metadata.create_all(bind=engine) # Create DB tables if not exist
-        logger.info("Database tables created/verified (if models are defined in database.models)")
-        
-        model_path_base = os.getenv("MODEL_PATH", "/app/models")
-        model_filename = "enhanced_lightgbm_model.pkl" # Prefer enhanced model
-        model_full_path = os.path.join(model_path_base, model_filename)
-
-        # Initialize feature engineer
-        app.state.feature_engineer = FeatureEngineer() # If still used by PredictionService
-
-        # Load ML model
-        # Prioritize EnhancedLightGBMModel if available and used for predictions
-        current_model = EnhancedLightGBMModel() 
-        try:
-            current_model.load_model(model_full_path)
-            logger.info(f"Successfully loaded: {model_filename}")
-        except FileNotFoundError:
-            logger.warning(f"{model_filename} not found at {model_full_path}. Trying lightgbm_model.pkl...")
-            current_model = LightGBMModel() # Fallback to basic model
-            model_filename = "lightgbm_model.pkl"
-            model_full_path = os.path.join(model_path_base, model_filename)
-            try:
-                current_model.load_model(model_full_path)
-                logger.info(f"Successfully loaded: {model_filename}")
-            except FileNotFoundError:
-                logger.error(f"No model file found at {model_path_base}. Predictions will fail.")
-                logger.warning("Please train the model first using the training script.")
-                current_model = None # No model loaded
-        except Exception as e:
-            logger.error(f"Error loading model from {model_full_path}: {e}", exc_info=True)
-            current_model = None
-            
-        app.state.model = current_model
-        
-        # Initialize PredictionService
-        if app.state.model and app.state.feature_engineer:
-            app.state.prediction_service = PredictionService(app.state.model, app.state.feature_engineer)
-            logger.info("PredictionService initialized.")
-        else:
-            app.state.prediction_service = None
-            logger.warning("PredictionService could not be initialized due to missing model or feature engineer.")
-
-        # Load features_df for demo/prediction purposes if EnhancedLightGBMModel expects it
-        if isinstance(app.state.model, EnhancedLightGBMModel):
-            try:
-                features_csv_path = os.path.join(PROCESSED_DATA_PATH, "features.csv")
-                app.state.features_df = pd.read_csv(features_csv_path)
-                logger.info(f"Global features_df loaded from {features_csv_path} for EnhancedLightGBMModel. Shape: {app.state.features_df.shape}")
-            except FileNotFoundError:
-                logger.error(f"features.csv not found at {features_csv_path}. Some model predictions might fail or be inaccurate.")
-                app.state.features_df = None
-            except Exception as e:
-                logger.error(f"Error loading global features_df: {e}", exc_info=True)
-                app.state.features_df = None
-        else:
-            app.state.features_df = None # Not needed for the basic LightGBMModel in this way
-
+        # The load_models method will load both stage1_lgbm.pkl and stage2_gbc.pkl
+        app.state.model.load_models(MODEL_PATH_BASE)
+        logger.info("✅ Successfully loaded two-stage stacked model.")
+    except FileNotFoundError as e:
+        logger.error(f"🚨 CRITICAL: A model file was not found in {MODEL_PATH_BASE}. Prediction service will be unavailable. Error: {e}", exc_info=True)
+        app.state.model = None
     except Exception as e:
-        logger.error(f"Critical error during ML Service startup: {e}", exc_info=True)
-        # Optionally, re-raise to prevent service from starting in a bad state
-        # raise
-    
-    yield # Service runs here
-    
-    logger.info("Shutting down ML Service...")
+        logger.error(f"🚨 CRITICAL: An error occurred loading the models: {e}", exc_info=True)
+        app.state.model = None
+
+    # --- 2. Load features.csv into memory ---
+    # This is still required as input for the Stage 1 model.
+    app.state.features_df = None
+    if app.state.model:
+        try:
+            features_csv_path = os.path.join(PROCESSED_DATA_PATH, "features.csv")
+            app.state.features_df = pd.read_csv(features_csv_path)
+            logger.info(f"✅ Global features_df loaded. Shape: {app.state.features_df.shape}")
+        except FileNotFoundError:
+            logger.warning(f"⚠️ features.csv not found. Prediction and evaluation will fail.")
+        except Exception as e:
+            logger.error(f"Error loading global features_df: {e}", exc_info=True)
+
+
+    # --- 3. Load Feature Engineering Components ---
+    # This is for real-time prediction, not batch evaluation.
+    app.state.feature_engineer = FeatureEngineer()
+    logger.info("FeatureEngineer initialized.")
+
+    # --- 4. Initialize Prediction Service ---
+    # This service encapsulates prediction logic, called by other endpoints.    
+    if app.state.model and app.state.feature_engineer:
+        app.state.prediction_service = PredictionService(app.state.model, app.state.feature_engineer, app.state.features_df)
+        logger.info("✅ PredictionService initialized with stacked model.")
+    else:
+        app.state.prediction_service = None
+        logger.warning("⚠️ PredictionService could not be initialized.")
+
+    yield # The application runs here
+
+    # --- Shutdown Logic ---
+    logger.info("Application shutdown.")
 
 
 app = FastAPI(
@@ -126,6 +103,54 @@ app.include_router(training.router, prefix="/api/training", tags=["training"])
 
 
 # --- Demo Endpoints ---
+@app.post("/evaluate")
+async def evaluate_model_endpoint():
+    """
+    Triggers an evaluation of the loaded model against the test set and
+    returns the full metrics dictionary in the response.
+    """
+    if not app.state.model:
+        raise HTTPException(status_code=503, detail="Model is not loaded.")
+
+    try:
+        logger.info("Starting on-demand model evaluation...")
+        features_df = pd.read_csv(os.path.join(PROCESSED_DATA_PATH, 'features.csv'))
+        instacart_future_df = pd.read_csv(os.path.join(PROCESSED_DATA_PATH, 'instacart_future.csv'))
+        with open(os.path.join(PROCESSED_DATA_PATH, 'instacart_keyset_0.json'), 'r') as f:
+            keyset = json.load(f)
+
+        test_user_ids = keyset.get('test', [])
+        if not test_user_ids:
+            raise HTTPException(status_code=404, detail="No test users found in keyset.")
+
+        predictions_for_eval = []
+        test_features = features_df[features_df['user_id'].isin(test_user_ids)]
+        
+        for user_id in test_user_ids:
+            actual_products_series = instacart_future_df[instacart_future_df['user_id'] == user_id]['products']
+            actual_products = json.loads(actual_products_series.iloc[0]) if not actual_products_series.empty else []
+            prediction_df = app.state.model.predict_basket(test_features, user_id, top_k=50)
+            predicted_products = prediction_df['product_id'].tolist()
+            
+            predictions_for_eval.append({
+                "user_id": user_id,
+                "predicted_products": predicted_products,
+                "actual_products": actual_products,
+            })
+
+        evaluator = BasketPredictionEvaluator()
+        results = evaluator.evaluate_model(predictions_for_eval)
+        logger.info("Evaluation complete.")
+        return {"message": "Evaluation complete. See results below.", "metrics": results}
+
+    except FileNotFoundError as e:
+        logger.error(f"Evaluation data file not found: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Evaluation data file not found: {e.filename}")
+    except Exception as e:
+        logger.error(f"An error occurred during evaluation: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"An error occurred during evaluation: {str(e)}")
+    
+
 @app.post("/api/predict/for-user-history", tags=["Demo"])
 async def predict_for_user_instacart_history_endpoint(payload: dict):
     user_id_str = payload.get("user_id")
@@ -194,6 +219,22 @@ async def get_user_future_basket_debug_endpoint(user_id_str: str):
 async def root():
     return {"service": "Timely ML Service", "status": "running", "timestamp": datetime.utcnow().isoformat()}
 
+@app.get("/model/feature-importance")
+async def get_feature_importance():
+    if not app.state.model or not hasattr(app.state.model.model, 'feature_importances_'):
+        raise HTTPException(status_code=503, detail="Model with feature importance not loaded.")
+    
+    feature_names = app.state.model.model.feature_name_
+    importances = app.state.model.model.feature_importances_
+    
+    # Create a list of dictionaries
+    importance_data = [{"feature": name, "importance": float(imp)} for name, imp in zip(feature_names, importances)]
+    
+    # Sort by importance
+    importance_data.sort(key=lambda x: x['importance'], reverse=True)
+    
+    return importance_data[:20] # Return top 20 features
+
 @app.get("/health")
 async def health_check():
     try:
@@ -217,11 +258,7 @@ async def health_check():
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")
         raise HTTPException(status_code=503, detail="Service unavailable")
-
-
-# ... (other existing endpoints like /api/model/info, error handlers) ...
-# Ensure predict_next_basket in the main PredictionService uses the loaded app.state.model
-# and app.state.features_df if necessary.
+    
 
 if __name__ == "__main__":
     import uvicorn

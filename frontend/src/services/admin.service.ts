@@ -32,20 +32,6 @@ export interface DashboardStats {
   }>;
 }
 
-export interface MLMetricsHistory {
-  timeline: Array<{
-    date: string;
-    precision: number;
-    recall: number;
-    hitRate: number;
-    ndcg: number;
-    f1: number;
-  }>;
-  lastTraining?: string;
-  trainingDataSize?: number;
-  modelVersion?: string;
-}
-
 export interface FeatureImportance {
   feature: string;
   importance: number;
@@ -99,26 +85,16 @@ class AdminService {
     return api.get<DashboardStats>(`/admin/dashboard?${params.toString()}`);
   }
 
-  // ML Metrics
-  async getMLMetricsHistory(days: number): Promise<MLMetricsHistory> {
-    return api.get<MLMetricsHistory>(`/admin/metrics/ml-history?days=${days}`);
+  // This is the new function we are adding
+  async triggerModelEvaluation(): Promise<any> {
+    // This calls the backend, which will then call the ml-service
+    return api.post('/admin/evaluation');
   }
 
+  // ML Metric
   async getFeatureImportance(): Promise<FeatureImportance[]> {
-    return mlApi.get<FeatureImportance[]>('/model/feature-importance');
-  }
-
-  async triggerModelRetrain(): Promise<{ jobId: string; message: string }> {
-    return mlApi.post<{ jobId: string; message: string }>('/training/retrain');
-  }
-
-  async getModelTrainingStatus(jobId: string): Promise<{
-    status: 'pending' | 'running' | 'completed' | 'failed';
-    progress: number;
-    message?: string;
-    completedAt?: string;
-  }> {
-    return mlApi.get(`/training/status/${jobId}`);
+    // This calls the backend, which acts as a proxy
+    return api.get<FeatureImportance[]>('/admin/feature-importance');
   }
 
   // User Management

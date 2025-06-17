@@ -1,0 +1,5 @@
+# /database/requirements.txt
+pandas
+SQLAlchemy
+psycopg2-binary
+bcrypt

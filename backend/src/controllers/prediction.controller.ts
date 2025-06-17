@@ -101,7 +101,11 @@ export class PredictionController {
     }
   }
 
-  // Get all predicted baskets for user
+  /**
+   * Get all predicted baskets for user
+   * Fetches a history of previously saved predictions for a user
+   * from the predicted_baskets table
+   */ 
   async getUserPredictedBaskets(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
@@ -456,7 +460,13 @@ export class PredictionController {
     }
   }
 
-  // Submit feedback
+  /*
+   * Submit feedback.
+   * This is the endpoint for collecting user feedback on a prediction.
+   * When a user accepts, modifies, or rejects a predicted basket, the frontend sends this feedback here
+   * "Online" evaluation and could be used in the future to retrain and improve
+   * the model with real-world data.
+   */
   async submitFeedback(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
@@ -481,7 +491,12 @@ export class PredictionController {
     }
   }
 
-  // Get online metrics
+  /*
+   * Get online metrics.
+   * Counterpart to submitFeedback.
+   * It reads all the user feedback from the database and calculates "online"
+   * performance metrics, such as "auto-cart acceptance rate." 
+   */
   async getOnlineMetrics(req: Request, res: Response, next: NextFunction) {
     try {
       // Calculate metrics from database
@@ -537,7 +552,12 @@ export class PredictionController {
     }
   }
 
-  // Get personalized recommendations
+  /* 
+   * Get personalized recommendations
+   * This is a different type of recommendation.
+   * While the main feature predicts a full basket for a user, this function likely provides item-based recommendations
+   * (e.g., "products similar to this one" or "users who bought X also bought Y")
+   */
   async getRecommendations(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
@@ -750,7 +770,12 @@ export class PredictionController {
     }
   }
 
-  // Test prediction (admin/debug)
+  /*
+   * Test prediction (admin/debug)
+   * Internal-facing tool for dev and testing.
+   * Its purpose is to directly test the ml-service with a specific userId
+   * and return the raw, unenriched output from the model. 
+   */
   async testPrediction(req: Request, res: Response, next: NextFunction) {
     try {
       const { userId = (req as any).user.id, options = {} } = req.body;
@@ -808,7 +833,14 @@ export class PredictionController {
     }
   }
 
-  // Evaluate prediction
+  /* 
+   * Evaluate prediction
+   * This function evaluates one single, past prediction.
+   * You would give it the ID of a basket that was previously predicted and saved.
+   * It would then fetch that prediction and the user's actual order to calculate a performance score
+   * for that specific instance.
+   * This differs from our evaluate endpoint, which evaluates the model's performance across the entire test set in a batch.
+   */
   async evaluatePrediction(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
@@ -880,7 +912,17 @@ export class PredictionController {
     }
   }
 
+
+  // --------------
   // Helper methods
+  // --------------
+
+  /* 
+   * Method for our main feature.
+   * 1. Calls the ml-service with the user's ID to get the list of predicted product IDs.
+   * 2. Takes that list of IDs and appeals to the database to fetch the full product details (name, image, price).
+   * 3. Returns the "enriched" list of full product objects.
+   */
   private async generateNewBasket(userId: string, weekOf: Date): Promise<PredictedBasket> {
     try {
       // Get predictions from ML service

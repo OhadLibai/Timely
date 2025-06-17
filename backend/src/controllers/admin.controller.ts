@@ -36,23 +36,22 @@ const getSafePlaceholderImageUrlForDemo = (seedText?: string | null, width = 100
 
 export class AdminController {
     /**
-     * Fetches ML evaluation metrics from the database.
+     * Triggers a new model evaluation in the ML service.
      */
-    async getMLEvaluationMetrics(req: Request, res: Response, next: NextFunction) {
+    async triggerModelEvaluation(req: Request, res: Response, next: NextFunction) {
         try {
-            const limit = parseInt(req.query.limit as string) || 10;
-            const evaluationMetrics = await ModelMetric.findAll({
-                order: [['timestamp', 'DESC']],
-                limit: limit,
-            });
+            logger.info('Received request to trigger model evaluation.');
+            
+            // Call the ML service's /evaluate endpoint
+            const evaluationResponse = await mlApiClient.post('/evaluate');
 
-            if (!evaluationMetrics || evaluationMetrics.length === 0) {
-                logger.info('No ML evaluation metrics found in the database.');
-                return res.status(404).json({ error: 'No ML evaluation metrics found.' });
-            }
-            res.json(evaluationMetrics);
+            logger.info('Model evaluation completed successfully in ML service.');
+        
+            //Forward the entire response from the ml-service to the frontend
+            res.status(200).json(evaluationResponse.data);
+
         } catch (error) {
-            logger.error('Error fetching ML evaluation metrics:', error);
+            logger.error('Error in backend while triggering model evaluation:', error);
             next(error);
         }
     }
@@ -165,6 +164,18 @@ export class AdminController {
                 mlResponseData: (error as any).response?.data 
             });
             next(error); // Pass to global error handler
+        }
+    }
+
+    async getFeatureImportance(req: Request, res: Response, next: NextFunction) {
+        try {
+            logger.info('Requesting feature importance from ML service...');
+            // The mlApiClient makes a GET request to the ml-service
+            const response = await mlApiClient.get('/model/feature-importance');
+            res.json(response.data);
+        } catch (error) {
+            logger.error('Error fetching feature importance:', error);
+            next(error);
         }
     }
 

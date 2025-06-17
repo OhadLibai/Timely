@@ -19,6 +19,9 @@ import LoadingSpinner from '../../components/common/LoadingSpinner';
 import MetricExplanation from '../../components/admin/MetricExplanation';
 import toast from 'react-hot-toast';
 
+import { MetricCard } from '../../components/admin/MetricCard';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+
 interface TimeRange {
   value: string;
   label: string;
@@ -64,6 +67,7 @@ const AdminMetrics: React.FC = () => {
     { staleTime: 30 * 60 * 1000 }
   );
 
+  // Exporting the results (JSON format)
   const handleExportMetrics = async () => {
     try {
       const data = await adminService.exportMetrics(selectedTimeRange.days);
@@ -80,16 +84,18 @@ const AdminMetrics: React.FC = () => {
     }
   };
 
-  const handleRetrainModel = async () => {
-    if (!window.confirm('Are you sure you want to retrain the model? This may take several minutes.')) {
-      return;
-    }
-
+  const handleEvaluateClick = async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      await adminService.triggerModelRetrain();
-      toast.success('Model retraining started. You will be notified when complete.');
-    } catch (error) {
-      toast.error('Failed to start model retraining');
+      const response = await adminService.triggerModelEvaluation();
+      // With our new architecture, the response directly contains the new metrics
+      setMetrics(response.metrics);
+    } catch (err) {
+      setError('Failed to run evaluation. Please check the service logs.');
+      console.error(err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
