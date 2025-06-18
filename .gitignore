@@ -56,7 +56,7 @@ jspm_packages/
 
 # ML/Data files (keep structure but ignore large files)
 /ml-service/training-data/*.csv
-/ml-service/training_data/*.csv
+/ml-service/training_data/*.csv # older name
 # /ml-service/training-data/processed/
 /ml-service/training-data/raw/
 /ml-service/models/*.pkl
