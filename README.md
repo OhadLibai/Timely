@@ -324,10 +324,10 @@ POST /api/user/favorites/add
 
 1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/data/
 2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets
-3. **Model Training**: Two-stage stacked model, a LightGBM model + A Scikit-learn GradientBoostingClassifier
+3. **Model Training**: Two-stage stacked model: a LightGBM model + A Scikit-learn GradientBoostingClassifier
 4. **Prediction Service**: Real-time predictions via FastAPI endpoints
 5. **Performance Monitoring**: Metrics tracking with Precision@K, Recall@K, NDCG, F1
-6. **Feedback Loop**: User interactions improve future predictions
+6. **Feedback Loop**: User interactions improve future predictions - Architecturely laid, further enhancements to be deployed
 
 ## ML Model Details
 
@@ -370,10 +370,9 @@ POST /api/user/favorites/add
 - **Sales Analytics**: Revenue tracking and trend analysis
 
 ### ML Features
-- **LightGBM Implementation**: State-of-the-art gradient boosting
 - **Real-time Predictions**: Dynamic basket recommendations
 - **Adaptive Learning**: Continuously improves with user feedback
-- **Performance Metrics**: Precision@K, Recall@K, Hit Rate, NDCG
+- **Performance Metrics**: Precision@K, Recall@K, Hit Rate, NDCG, F1
 
 ## 🛠️ Technology Stack
 
@@ -413,7 +412,6 @@ POST /api/user/favorites/add
 - **Monitoring**: Health checks and metrics endpoints
 
 ## Monitoring
-
 - **Application Metrics**: Prometheus + Grafana
 - **ML Metrics**: MLflow tracking
 - **Logs**: ELK Stack integration

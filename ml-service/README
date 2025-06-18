@@ -11,3 +11,25 @@ Admin Monitoring: Admin frontend fetches evaluation metrics from backend, which 
 Personalization for new users:
 Future enhancement: Record their orders and periodically re-run the data_preprocessing.py script to generate features for them.
 But for the current scope, it's important to know that new users will get intelligent, popularity-based recommendations that become personalized as they use the app.
+
+Training the Machine Learning Model (One-Time Offline Task):
+Two-stage model training. Done offline. Produces two model artifacts.
+Files needed for the training session (to be uploaded to Colab while training):
+- data_preprocessing.py
+- data_loader.py
+- stage1_candidate_generator.py
+- stage2_basket_selector.py
+- stacked_basket_model.py
+- evaluator.py
+- /ml-service/training-data/*.csv (all of them)
+- logger.py
+- model_training_script.ipynb (the training script itself)
+
+Runnig the notebook will execute the full two-stage training process.
+Upon completion, we will have:
+1. Two new model files: `stage1_lgbm.pkl` and `stage2_gbc.pkl`.
+2. `processed` folder containing `features.csv` and other necessary files.
+
+After that:
+1. Place both `.pkl` files into the `ml-service/models/` directory in your local project.
+2. Place the entire `processed` folder inside the `ml-service/training-data/` directory.
