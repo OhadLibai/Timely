@@ -4,7 +4,6 @@ import { body, query, param } from 'express-validator';
 import { ProductController } from '../controllers/product.controller';
 import { validateRequest } from '../middleware/validation.middleware';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { adminMiddleware } from '../middleware/admin.middleware';
 import { upload } from '../middleware/upload.middleware';
 
 const router = Router();

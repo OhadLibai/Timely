@@ -17,7 +17,6 @@ import { PredictedBasketItem } from '../models/predictedBasketItem.model';
 import { UserPreference } from '../models/userPreference.model';
 import { Delivery } from '../models/delivery.model';
 import { ProductView } from '../models/productView.model';
-import { ModelMetric } from '../models/modelMetric.model';
 
 const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://timely_user:timely_password@localhost:5432/timely_db';
 
@@ -52,7 +51,6 @@ export const sequelize = new Sequelize(DATABASE_URL, {
     UserPreference,
     Delivery,
     ProductView,
-    ModelMetric
   ]
 });
 

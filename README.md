@@ -10,87 +10,101 @@ timely/ (Current Implementation Status)
 ├── frontend/                              # React TypeScript Frontend
 │   ├── src/
 │   │   ├── components/                    # UI Components
-│   │   │   ├── common/                    # LoadingSpinner, EmptyState, ErrorBoundary
-│   │   │   ├── products/                  # ProductCard, ProductImage
+│   │   │   ├── common/                    # LoadingSpinner, EmptyState, ErrorBoundary, Pagination
+│   │   │   ├── products/                  # ProductCard, ProductImage, CategoryFilter, PriceRangeFilter, SortDropdown
 │   │   │   ├── predictions/               # ConfidenceIndicator, PredictionExplanation
-│   │   │   └── auth/                      # ❌ MISSING: ProtectedRoute, AdminRoute <- **this folder does not exist**
+│   │   │   ├── auth/                      # ProtectedRoute, AdminRoute
+│   │   │   ├── admin/                     # DateRangePicker, MetricCard, MetricExplanation
+│   │   │   ├── cart/                      # CartDropdown
+│   │   │   ├── home/                      # FeatureCard, Hero
+│   │   │   ├── navigation/                # MobileMenu
+│   │   │   ├── notifications/             # NotificationDropdown
+│   │   │   └── search/                    # SearchModal
 │   │   ├── pages/                         
 │   │   │   ├── Home.tsx, Products.tsx, Cart.tsx, Checkout.tsx
 │   │   │   ├── Login.tsx, Register.tsx, PredictedBasket.tsx
-│   │   │   ├── ProductDetail, Orders, OrderDetail
-│   │   │   ├── Profile, Favorites, ForgotPassword, ResetPassword
+│   │   │   ├── ProductDetail.tsx, Orders.tsx, OrderDetail.tsx
+│   │   │   ├── Profile.tsx, Favorites.tsx, ForgotPassword.tsx, ResetPassword.tsx
 │   │   │   └── admin/                     
 │   │   │       ├── Dashboard.tsx, Metrics.tsx, DemoPredictionPage.tsx
-│   │   │       └── Products, Orders, Users, Settings
+│   │   │       └── Products.tsx, Orders.tsx, Users.tsx, Settings.tsx
 │   │   ├── layouts/                       
-│   │   │   ├── MainLayout.tsx
-│   │   │   └── AuthLayout, AdminLayout
-│   │   ├── services/                       
-│   │   ├── stores/                        
-│   │   └── types/                         # ❌ MISSING: TypeScript definitions <- **this folder does not exist**
-│   ├── public/                            # Basic structure
-│   ├── index.html                      # Production-ready with SEO
-│   ├── vite.config.ts, tailwind.config.js, tsconfig.json
+│   │   │   ├── MainLayout.tsx, AuthLayout.tsx, AdminLayout.tsx
+│   │   ├── services/                      # API client services
+│   │   │   ├── admin.service.ts, api.client.ts, auth.service.ts
+│   │   │   ├── cart.service.ts, favorite.service.ts, order.service.ts
+│   │   │   └── prediction.service.ts, product.service.ts
+│   │   ├── stores/                        # Zustand state management
+│   │   │   ├── auth.store.ts, cart.store.ts
+│   │   └── ❌ MISSING: types/              # TypeScript definitions
+│   ├── public/                            # Static assets
+│   │   └── images/                        # Categories and products subdirectories
+│   ├── index.html, vite.config.ts, tailwind.config.js, tsconfig.json
 │   ├── package.json                    # Complete dependencies
 │   └── Dockerfile                      # Production-ready
 │
-├── backend/                               # Node.js/Express Backend 
+├── backend/                               # Node.js/Express Backend with Sequelize ORM
 │   ├── src/
 │   │   ├── controllers/                   
 │   │   │   ├── auth.controller.ts      # Login, register, logout
 │   │   │   ├── user.controller.ts      # Profile, preferences
-│   │   │   ├── product.controller.ts   # CRUD, search, categories
+│   │   │   ├── product.controller.ts   # CRUD, search, categories, image upload
 │   │   │   ├── cart.controller.ts      # Cart management
-│   │   │   ├── prediction.controller.ts # 19 ML endpoints
-│   │   │   └── admin.controller.ts     # Admin dashboard, metrics
-│   │   ├── models/                        
+│   │   │   ├── prediction.controller.ts # 23 prediction/ML endpoints
+│   │   │   └── admin.controller.ts     # Admin dashboard, demo endpoints
+│   │   ├── models/                     # Sequelize-TypeScript models
 │   │   │   ├── User, Product, Category, Cart, CartItem
 │   │   │   ├── Order, OrderItem, Favorite, Delivery
 │   │   │   ├── PredictedBasket, PredictedBasketItem
 │   │   │   └── UserPreference, ProductView, ModelMetric
-│   │   ├── routes/                        
-│   │   ├── middleware/                    
-│   │   ├── services/                      
-│   │   ├── config/                        # Database config
-│   │   ├── jobs/                          # Cart generation & metrics
-│   │   ├── database/                      # Seeding & sync scripts
-│   │   └── utils/                         # Logger, CSV utilities
-│   ├── uploads/                           # File upload directory
-│   ├── package.json                    # Complete dependencies
+│   │   ├── routes/                     # Express route definitions
+│   │   │   ├── admin.routes.ts, auth.routes.ts, cart.routes.ts
+│   │   │   ├── delivery.routes.ts, order.routes.ts, prediction.routes.ts
+│   │   │   └── product.routes.ts, user.routes.ts
+│   │   ├── middleware/                 # Auth, admin, error, upload, validation
+│   │   ├── services/                   # ML service client, email, upload
+│   │   ├── config/                     # Database configuration
+│   │   ├── jobs/                       # Background job: cartGeneration.job.ts
+│   │   ├── database/                   # Migration scripts
+│   │   ├── types/                      # TypeScript definitions
+│   │   └── utils/                      # Logger, CSV utilities
+│   ├── uploads/                        # File upload directory
+│   ├── package.json, tsconfig.json    # Complete dependencies
 │   └── Dockerfile                      # Multi-stage production build
 │
-├── ml-service/                            # Python ML Service
+├── ml-service/                            # Python FastAPI ML Service
 │   ├── src/
-│   │   ├── api/                           # FastAPI main app
-│   │   │   └── main.py                 # Comprehensive API with demo endpoints
+│   │   ├── api/
+│   │   │   └── main.py                 # FastAPI with demo/prediction endpoints
 │   │   ├── models/                        
-│   │   │   └── lightgbm_enhanced.py    # Advanced basket prediction
-│   │   ├── preprocessing/                 # Data preprocessing
-│   │   ├── training/                      # Model training scripts
-│   │   ├── evaluation/                    # Model evaluation
-│   │   ├── services/                      # ⚠️ May be missing modular services (probably not critical)
-│   │   └── utils/                         # Logger utilities
-│   ├── data/                              # Instacart dataset (6 CSV files)
+│   │   │   ├── stacked_basket_model.py # Two-stage basket prediction
+│   │   │   ├── stage1_candidate_generator.py, stage2_basket_selector.py
+│   │   │   └── training/               # Training scripts and data preprocessing
+│   │   │       ├── data_loader.py, data_preprocessing.py
+│   │   │       └── model_training_script.ipynb
+│   │   ├── evaluation/                 # Model evaluation: evaluator.py
+│   │   ├── services/                   # Feature engineering: feature_engineering.py
+│   │   └── utils/                      # Logger utilities
+│   ├── training-data/                  # Instacart dataset (6 CSV files)
 │   │   ├── orders.csv, products.csv, departments.csv, aisles.csv
 │   │   └── order_products__prior.csv, order_products__train.csv
-│   ├── models/                            # Trained model storage
-│   ├── requirements.txt                # Complete Python dependencies
+│   ├── models/                         # Trained model storage (.pkl files)
+│   ├── requirements.txt                # Python dependencies
 │   └── Dockerfile                      # Production-ready
 │
-├── database/                              # Database Configuration
-│   ├── init.sql                        # Comprehensive schema (14 tables)
-│   │   ├── Core tables: users, products, categories, orders
-│   │   ├── ML tables: predicted_baskets, model_metrics
-│   │   ├── E-commerce: carts, favorites, deliveries
-│   │   └── Analytics: product_views, user_preferences
-│   └── Indexes, triggers, constraints 
+├── database/                              # Database Initialization Service
+│   ├── init-database.ts               # TypeORM seeding script
+│   ├── category_details.csv           # Category images and descriptions
+│   ├── init.sql                        # SQL schema (if needed)
+│   ├── package.json, tsconfig.json    # Node.js dependencies
+│   ├── requirements.txt                # Python dependencies (unused)
+│   └── Dockerfile                      # Database initialization container
 │
-├── docker-compose.yml                  # Complete orchestration (7 services)
-│   ├── postgres                        # Database service
+├── docker-compose.yml                  # Complete orchestration (5 services)
+│   ├── db                              # PostgreSQL database
+│   ├── init-db                         # Database seeding service
 │   ├── backend, frontend, ml-service   # Application services
-│   └── migrate, seed, train-model, sync-products # Utility services
-├── .gitignore, .dockerignore           # Comprehensive ignore files
-└── README.md
+└── README.md, package.json             # Project documentation and root dependencies
 ```
 
 ## 🚀 Deployment Instructions
@@ -109,7 +123,7 @@ cd timely
 
 2. **Download Instacart Dataset**:
    - Download from: https://www.kaggle.com/datasets/psparks/instacart-market-basket-analysis
-   - Extract to `ml-service/data/` directory
+   - Extract to `ml-service/training-data/` directory
 
 ### Quick Start with Docker
 
@@ -322,7 +336,7 @@ POST /api/user/favorites/add
 
 ## 📊 Data & ML Pipeline
 
-1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/data/
+1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/training-data/
 2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets
 3. **Model Training**: Two-stage stacked model: a LightGBM model + A Scikit-learn GradientBoostingClassifier
 4. **Prediction Service**: Real-time predictions via FastAPI endpoints

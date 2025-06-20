@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
-import { ModelMetric } from '../models/modelMetric.model';
 import { User, UserRole } from '../models/user.model';
 import { Product } from '../models/product.model';
 import { Category } from '../models/category.model'; // If needed for other admin functions
 import { Order } from '../models/order.model';       // If needed for other admin functions
+import { OrderItem } from '../models/orderItem.model';
 import { mlApiClient } from '../services/ml.service'; // To call your ML service
 import logger from '../utils/logger'; // Assuming your logger is in utils
+import * as mlService from '../services/ml.service';
+import bcrypt from 'bcrypt';
 
 // These should be actual user_ids (as strings) from the Instacart dataset
 // that are present in your generated instacart_keyset_0.json (preferably from 'test' set)
@@ -24,15 +26,6 @@ type PlainProduct = {
     // Add any other properties you select from the DB and use
 };
 
-// Helper for placeholder images if needed directly in controller (though product.imageUrl should be primary)
-const getSafePlaceholderImageUrlForDemo = (seedText?: string | null, width = 100, height = 100): string => {
-    let seed = 0;
-    const textToSeed = seedText || `product_fallback_${Math.floor(Math.random() * 10000)}`;
-    for (let i = 0; i < textToSeed.length; i++) {
-        seed = (seed + textToSeed.charCodeAt(i) * (i + 1)) % 1000;
-    }
-    return `https://picsum.photos/seed/${seed + 3000}/${width}/${height}`; // Different seed base
-};
 
 export class AdminController {
     /**
@@ -94,7 +87,7 @@ export class AdminController {
 
 
             // 2. Call ML service to get the "true" future basket for this Instacart user ID
-            const trueFutureResponse = await mlApiClient.get(`/debug/user-future-basket/${instacartUserIdStr}`);
+            const trueFutureResponse = await mlService.getGroundTruthBasket(instacartUserIdStr);
             // Expected: { user_id: INT, products: [INT, INT, ...] }
             const trueFutureProductIdsFromML: number[] = trueFutureResponse.data.products;
             logger.debug(`ML true future product IDs for Instacart User ${instacartUserIdStr}:`, trueFutureProductIdsFromML);
@@ -166,6 +159,54 @@ export class AdminController {
             next(error); // Pass to global error handler
         }
     }
+
+    public async seedDemoUser(req: Request, res: Response, next: NextFunction) {
+        const { instacartUserId } = req.params;
+        const email = `demo-${instacartUserId}@timely.com`;
+  
+        try {
+            // 1. Check if user already exists
+            let user = await User.findOne({ where: { email } });
+            if (user) {
+                return res.status(409).json({ message: 'This demo user has already been seeded.' });
+            }
+
+            // 2. Create the new user in our database
+            const hashedPassword = await bcrypt.hash('password123', 10);
+            user = await User.create({
+            email,
+            password: hashedPassword,
+            firstName: 'Demo',
+            lastName: instacartUserId,
+            role: 'user',
+            });
+
+            // 3. Get the order history from the ML service
+            const orderHistory = await mlService.getInstacartUserHistory(instacartUserId);
+
+            // 4. Create orders and order items in our database
+            for (const orderData of orderHistory) {
+            const order = await Order.create({
+                userId: user.id,
+                status: 'completed',
+                total: 0, // You might need to calculate a mock total
+            });
+
+            const orderItems = orderData.product_id.map((sku: number) => ({
+                orderId: order.id,
+                productId: sku, // Assuming product SKUs match IDs in your DB
+                quantity: 1,
+                price: 0, // You might need to look up the price
+            }));
+            await OrderItem.bulkCreate(orderItems);
+            }
+
+            res.status(201).json({ message: `Successfully seeded user ${email} with ${orderHistory.length} orders.` });
+        } catch (error) {
+            // ... error handling ...
+        }
+    }
+
 
     async getFeatureImportance(req: Request, res: Response, next: NextFunction) {
         try {

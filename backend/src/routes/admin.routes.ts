@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { AdminController } from '../controllers/admin.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { adminMiddleware } from '../middleware/admin.middleware'; // Ensures only admins can access
 
 const router = Router();
 const adminController = new AdminController();
@@ -18,6 +17,15 @@ router.post(
   adminController.triggerModelEvaluation
 );
 
+// In backend/src/routes/admin.routes.ts
+router.post(
+  '/demo/seed-user/:instacartUserId',
+  authMiddleware,
+  adminMiddleware,
+  adminController.seedDemoUser
+);
+
+
 // ... other imports and routes
 router.get(
   '/feature-importance',
@@ -29,7 +37,5 @@ router.get(
 // Demo Simulation Routes
 router.get('/demo/user-ids', adminController.getDemoUserIds);
 router.get('/demo/user-prediction/:userId', adminController.getDemoUserPrediction);
-
-
 
 export default router;

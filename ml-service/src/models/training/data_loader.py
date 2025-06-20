@@ -10,7 +10,7 @@ class DataLoader:
     Loads raw CSV data files for the ML pipeline
     """
     
-    def __init__(self, data_path: str = "/app/data"):
+    def __init__(self, data_path: str = "/app/training-data"):
         self.data_path = data_path
         
     def load_csv(self, filename: str) -> pd.DataFrame:

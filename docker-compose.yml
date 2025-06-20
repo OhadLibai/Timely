@@ -25,7 +25,7 @@ services:
       context: ./database
       dockerfile: Dockerfile
     volumes:
-      - ./ml-service/data:/data
+      - ./ml-service/training-data:/training-data
       - ./backend:/usr/src/app/backend
     environment:
       - POSTGRES_USER=${POSTGRES_USER}

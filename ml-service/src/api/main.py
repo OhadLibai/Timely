@@ -10,6 +10,9 @@ import asyncio
 import pandas as pd # For loading features_df
 import json # For parsing product lists
 
+from pydantic import BaseModel
+from typing import List
+
 # Assuming these are the correct paths from your project structure
 from ..models.stacked_basket_model import StackedBasketModel
 from ..evaluation.evaluator import BasketPredictionEvaluator
@@ -23,9 +26,17 @@ from ..utils.logger import setup_logger
 # Setup logger
 logger = setup_logger(__name__)
 
-PROCESSED_DATA_PATH = os.getenv("PROCESSED_DATA_PATH", "/app/data/processed")
-INSTACART_DATA_PATH = os.getenv("RAW_DATA_PATH", "/app/data") # For raw Instacart files
+PROCESSED_DATA_PATH = os.getenv("PROCESSED_DATA_PATH", "/app/training-data/processed")
+INSTACART_DATA_PATH = os.getenv("RAW_DATA_PATH", "/app/training-data") # For raw Instacart files
 MODEL_PATH_BASE = os.getenv("MODEL_PATH", "/app/models")
+ORDERS_DF = pd.read_csv('./training-data/orders.csv')
+ORDER_PRODUCTS_PRIOR_DF = pd.read_csv('./training-data/order_products__prior.csv')
+
+# Pydantic model for the request body of our new endpoint
+class PredictionRequestFromDbHistory(BaseModel):
+    user_id: str # application's user UUID
+    order_history: List[List[int]] # A list of past orders, where each order is a list of product IDs
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -63,7 +74,7 @@ async def lifespan(app: FastAPI):
 
     # --- 3. Load Feature Engineering Components ---
     # This is for real-time prediction, not batch evaluation.
-    app.state.feature_engineer = FeatureEngineer()
+    app.state.feature_engineer = FeatureEngineer(PROCESSED_DATA_PATH)
     logger.info("FeatureEngineer initialized.")
 
     # --- 4. Initialize Prediction Service ---
@@ -84,7 +95,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Timely ML Service",
     description="Machine Learning service for next basket prediction and related tasks.",
-    version="1.0.2", # Incremented version
+    version="1.0.0",
     lifespan=lifespan
 )
 
@@ -103,7 +114,7 @@ app.include_router(training.router, prefix="/api/training", tags=["training"])
 
 
 # --- Demo Endpoints ---
-@app.post("/evaluate")
+@app.post("/evaluate", tags=["Evaluation"])
 async def evaluate_model_endpoint():
     """
     Triggers an evaluation of the loaded model against the test set and
@@ -151,43 +162,7 @@ async def evaluate_model_endpoint():
         raise HTTPException(status_code=500, detail=f"An error occurred during evaluation: {str(e)}")
     
 
-@app.post("/api/predict/for-user-history", tags=["Demo"])
-async def predict_for_user_instacart_history_endpoint(payload: dict):
-    user_id_str = payload.get("user_id")
-    if not user_id_str:
-        raise HTTPException(status_code=400, detail="user_id (Instacart integer ID) is required")
-
-    if not app.state.model:
-        raise HTTPException(status_code=503, detail="ML Model is not loaded.")
-
-    # Check if we are using EnhancedLightGBMModel and have features_df
-    if isinstance(app.state.model, EnhancedLightGBMModel):
-        if app.state.features_df is None:
-            logger.error("features_df is not loaded, cannot use EnhancedLightGBMModel.predict_basket for demo.")
-            raise HTTPException(status_code=500, detail="Server configuration error: Feature data not available.")
-        try:
-            logger.info(f"Predicting for Instacart User ID {user_id_str} using EnhancedLightGBMModel.")
-            # predict_basket expects integer user_id
-            raw_predictions = app.state.model.predict_basket(app.state.features_df, int(user_id_str), k=10)
-            # Ensure productId is int as per Instacart dataset, score is float
-            api_predictions = [{"productId": int(pid), "quantity": 1, "score": float(score)} for pid, score in raw_predictions]
-            return {"predictions": api_predictions}
-        except Exception as e:
-            logger.error(f"Error predicting with EnhancedLightGBMModel for user {user_id_str}: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
-    else:
-        # Fallback or if using the basic LightGBMModel which might have a different prediction pathway
-        # This part would require your PredictionService to be adapted to take an Instacart user ID
-        # and generate features on the fly, or use a pre-calculated feature vector.
-        # For simplicity, this demo endpoint focuses on EnhancedLightGBMModel with pre-loaded features_df.
-        logger.warning(f"Demo prediction not fully implemented for model type: {type(app.state.model)}. Returning placeholder.")
-        # Placeholder:
-        sample_product_ids = [196, 27856, 16797, 38689, 26209] # Example product IDs
-        predictions_placeholder = [{"productId": pid, "quantity": 1, "score": round(0.5 + (idx*0.05),2)} for idx, pid in enumerate(sample_product_ids)]
-        return {"predictions": predictions_placeholder}
-
-
-@app.get("/api/debug/user-future-basket/{user_id_str}", tags=["Demo"])
+@app.get("/demo-data/user-future-basket/{user_id_str}", tags=["Demo Data"])
 async def get_user_future_basket_debug_endpoint(user_id_str: str):
     try:
         user_id = int(user_id_str)
@@ -212,6 +187,32 @@ async def get_user_future_basket_debug_endpoint(user_id_str: str):
     except Exception as e:
         logger.error(f"Error fetching future basket for user {user_id_str}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.get("/demo-data/instacart-user-order-history/{user_id}", tags=["Demo Data"])
+def get_instacart_user_order_history(user_id: int):
+    """
+    Retrieves the entire order history for a given Instacart user ID
+    from the original CSV files.
+    """
+    user_orders = ORDERS_DF[ORDERS_DF['user_id'] == user_id]
+    if user_orders.empty:
+        raise HTTPException(status_code=404, detail="Instacart user not found")
+
+    # Get all order IDs for the user
+    user_order_ids = user_orders['order_id'].tolist()
+
+    # Get all product SKUs for those orders
+    order_details = ORDER_PRODUCTS_PRIOR_DF[ORDER_PRODUCTS_PRIOR_DF['order_id'].isin(user_order_ids)]
+
+    # Group products by order
+    grouped_orders = order_details.groupby('order_id')['product_id'].apply(list).reset_index()
+
+    # Join with order info (like order number)
+    final_history = pd.merge(grouped_orders, user_orders, on='order_id')
+    
+    # Return as JSON
+    return final_history.to_dict(orient='records')
 
 
 # --- Standard Endpoints ---
@@ -221,19 +222,53 @@ async def root():
 
 @app.get("/model/feature-importance")
 async def get_feature_importance():
-    if not app.state.model or not hasattr(app.state.model.model, 'feature_importances_'):
-        raise HTTPException(status_code=503, detail="Model with feature importance not loaded.")
+    """
+    Retrieves saved feature importance data from the JSON file created during training.
+    """
+    try:
+        # Construct the path relative to the model storage location
+        importance_path = os.path.join(MODEL_PATH_BASE, "feature_importances.json")
+        with open(importance_path, 'r') as f:
+            importance_data = json.load(f)
+        
+        # The data is already sorted and formatted correctly by our training script
+        return importance_data[:20] # Return top 20 features
+
+    except FileNotFoundError:
+        logger.error(f"feature_importances.json not found at {importance_path}", exc_info=True)
+        raise HTTPException(status_code=404, detail="Feature importance data not found. The model may need to be (re)trained.")
+    except Exception as e:
+        logger.error(f"Error reading feature importance file: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Could not load feature importance data.")
+
+
+@app.post("/predict/from-db-history", tags=["Prediction"])
+async def predict_from_db_history(request: PredictionRequestFromDbHistory):
+    """
+    Predicts a basket based on order history provided from the app's database.
+    """
+    if not app.state.prediction_service:
+        raise HTTPException(status_code=503, detail="Prediction service is not available.")
     
-    feature_names = app.state.model.model.feature_name_
-    importances = app.state.model.model.feature_importances_
+    try:
+        # THIS IS NO LONGER A MOCK
+        # 1. Generate features from the user's history
+        user_features_df = app.state.feature_engineer.generate_features_for_user(request.order_history)
+        
+        # If no features could be generated, return an empty basket
+        if user_features_df.empty:
+            return {"predicted_skus": []}
+
+        # 2. Get a prediction from the stacked model using these features
+        # The model's predict method will need to be adapted to accept a feature dataframe
+        predicted_skus = app.state.prediction_service.predict(user_features_df, request.user_id)
+        
+        return {"predicted_skus": predicted_skus}
+
+    except Exception as e:
+        logger.error(f"Error in /predict/from-db-history: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to generate prediction from DB history.")
     
-    # Create a list of dictionaries
-    importance_data = [{"feature": name, "importance": float(imp)} for name, imp in zip(feature_names, importances)]
-    
-    # Sort by importance
-    importance_data.sort(key=lambda x: x['importance'], reverse=True)
-    
-    return importance_data[:20] # Return top 20 features
 
 @app.get("/health")
 async def health_check():
@@ -258,6 +293,9 @@ async def health_check():
     except Exception as e:
         logger.error(f"Health check failed: {str(e)}")
         raise HTTPException(status_code=503, detail="Service unavailable")
+  
+
+
     
 
 if __name__ == "__main__":

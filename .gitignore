@@ -111,7 +111,9 @@ yarn.lock
 .tmp/
 TODO
 CLAUDE.md
-Claude for later.txt
+Simple Claude.txt
+Remove Files.txt
+Remove Functions.txt
 
 # Local development overrides
 .env.local.override

@@ -157,52 +157,31 @@ class InstacartDataPreprocessor:
         Extract features for LightGBM model
         Following jsaikrishna's feature engineering approach
         """
-        features_list = []
-        
-        # Group by user
-        for user_id, user_orders in instacart_history.groupby('user_id'):
-            user_features = {}
-            user_features['user_id'] = user_id
-            
-            # User-level features
-            user_features['user_total_orders'] = len(user_orders)
-            user_features['user_avg_days_between_orders'] = user_orders['days_since_prior_order'].mean()
-            user_features['user_std_days_between_orders'] = user_orders['days_since_prior_order'].std()
-            
-            # Product frequency features
-            all_products = []
-            for products in user_orders['products']:
-                all_products.extend(products)
-            
-            product_counts = pd.Series(all_products).value_counts()
-            user_features['user_distinct_products'] = len(product_counts)
-            user_features['user_avg_products_per_order'] = len(all_products) / len(user_orders)
-            
-            # Time features
-            user_features['user_favorite_dow'] = user_orders['order_dow'].mode()[0] if len(user_orders['order_dow'].mode()) > 0 else 0
-            user_features['user_favorite_hour'] = user_orders['order_hour_of_day'].mode()[0] if len(user_orders['order_hour_of_day'].mode()) > 0 else 0
-            
-            # For each product, create product-specific features
-            for product_id, count in product_counts.items():
-                product_feature = user_features.copy()
-                product_feature['product_id'] = product_id
-                product_feature['user_product_orders'] = count
-                product_feature['user_product_order_rate'] = count / len(user_orders)
-                
-                # Find first and last order containing this product
-                product_orders = []
-                for idx, row in user_orders.iterrows():
-                    if product_id in row['products']:
-                        product_orders.append(row['order_number'])
-                
-                if product_orders:
-                    product_feature['user_product_first_order'] = min(product_orders)
-                    product_feature['user_product_last_order'] = max(product_orders)
-                    product_feature['user_product_orders_since_last'] = len(user_orders) - max(product_orders)
-                
-                features_list.append(product_feature)
-        
-        features_df = pd.DataFrame(features_list)
+        # Explode the 'products' list into separate rows
+        user_product_history = instacart_history.explode('products').rename(columns={'products': 'product_id'})
+
+        # --- User-level Features ---
+        user_features = instacart_history.groupby('user_id').agg(
+            user_total_orders=('order_id', 'nunique'),
+            user_avg_days_between_orders=('days_since_prior_order', 'mean'),
+            user_std_days_between_orders=('days_since_prior_order', 'std'),
+            user_favorite_dow=('order_dow', lambda x: x.mode()[0]),
+            user_favorite_hour=('order_hour_of_day', lambda x: x.mode()[0])
+        ).reset_index()
+
+        # --- User-Product Features ---
+        user_product_features = user_product_history.groupby(['user_id', 'product_id']).agg(
+            user_product_orders=('order_id', 'nunique'),
+            user_product_first_order=('order_number', 'min'),
+            user_product_last_order=('order_number', 'max')
+        ).reset_index()
+
+        # Merge user features into user-product features
+        features_df = user_product_features.merge(user_features, on='user_id', how='left')
+
+        # --- Calculated Features ---
+        features_df['user_product_order_rate'] = features_df['user_product_orders'] / features_df['user_total_orders']
+        features_df['user_product_orders_since_last'] = features_df['user_total_orders'] - features_df['user_product_last_order']
         
         # Add product features
         features_df = self._add_product_features(features_df)

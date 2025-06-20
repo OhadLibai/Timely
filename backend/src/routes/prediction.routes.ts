@@ -185,16 +185,6 @@ router.put(
   predictionController.updateSchedule
 );
 
-// Test prediction for user (admin/debug)
-router.post(
-  '/test',
-  [
-    body('userId').optional().isUUID(),
-    body('options').optional().isObject()
-  ],
-  validateRequest,
-  predictionController.testPrediction
-);
 
 // Get prediction history
 router.get(

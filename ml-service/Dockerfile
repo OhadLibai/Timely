@@ -18,7 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY src ./src
-COPY data ./data
+COPY training-data ./training-data
 
 # Create directories for models and logs
 RUN mkdir -p models logs

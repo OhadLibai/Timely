@@ -5,58 +5,66 @@ import { startOfWeek, addDays } from 'date-fns';
 import { PredictedBasket } from '../models/predictedBasket.model';
 import { PredictedBasketItem } from '../models/predictedBasketItem.model';
 import { Product } from '../models/product.model';
+import { User } from '../models/user.model';
 import { Category } from '../models/category.model';
 import { UserPreference } from '../models/userPreference.model';
 import { Order } from '../models/order.model';
 import { OrderItem } from '../models/orderItem.model';
 import { Cart } from '../models/cart.model';
 import { mlApiClient } from '../services/ml.service';
+import * as mlService from '../services/ml.service';
 import logger from '../utils/logger';
 
 export class PredictionController {
+  
   // Get current predicted basket
   async getCurrentPredictedBasket(req: Request, res: Response, next: NextFunction) {
+    const userId = (req as any).user.id;
+    logger.info(`Generating live prediction for user ID: ${userId}`);
+
     try {
-      const userId = (req as any).user.id;
-      const currentWeek = startOfWeek(new Date());
+        // Step 1: Fetch the user's entire order history from our database.
+        const orders = await Order.findAll({
+            where: { userId },
+            include: [{ model: OrderItem, attributes: ['productId'] }],
+            order: [['createdAt', 'ASC']],
+            limit: 50, // Limit to the last 50 orders to keep payload reasonable
+        });
 
-      let basket = await PredictedBasket.findOne({
-        where: {
-          userId,
-          weekOf: currentWeek,
-          status: { [Op.ne]: 'rejected' }
-        },
-        include: [
-          {
-            model: PredictedBasketItem,
-            as: 'items',
-            include: [
-              {
-                model: Product,
-                as: 'product',
-                include: [
-                  {
-                    model: Category,
-                    as: 'category',
-                    attributes: ['id', 'name']
-                  }
-                ]
-              }
-            ]
-          }
-        ],
-        order: [[{ model: PredictedBasketItem, as: 'items' }, 'confidenceScore', 'DESC']]
-      });
+        if (orders.length < 2) {
+            logger.warn(`User ${userId} has insufficient order history (<2 orders).`);
+            return res.status(400).json({ message: "Not enough order history to generate a prediction." });
+        }
 
-      if (!basket) {
-        // Generate new basket if none exists
-        basket = await this.generateNewBasket(userId, currentWeek);
-      }
+        // Step 2: Format the history into a list of lists of product IDs.
+        const formattedHistory: number[][] = orders
+            .map(order => (order.orderItems || []).map(item => item.productId))
+            .filter(order => order.length > 0);
 
-      const basketData = this.formatBasketData(basket);
-      res.json(basketData);
+        // Step 3: Call our ML service endpoint via the service layer.
+        logger.info(`Sending ${formattedHistory.length} orders to ML service for user ${userId}.`);
+        const predictionResponse = await mlService.getPredictionFromDbHistory(userId, formattedHistory);
+        const predictedSkus = predictionResponse.predicted_skus;
+
+        if (!predictedSkus || predictedSkus.length === 0) {
+            logger.info(`ML service returned an empty basket for user ${userId}.`);
+            return res.json({ predictedBasket: [] });
+        }
+
+        // Step 4: Enrich the predicted SKUs with full product details from our database.
+        const predictedProducts = await Product.findAll({
+            where: {
+                id: { [Op.in]: predictedSkus }
+            }
+        });
+
+        // Step 5: Return the fully detailed basket.
+        logger.info(`Successfully returned a predicted basket with ${predictedProducts.length} items for user ${userId}.`);
+        res.json({ predictedBasket: predictedProducts });
+
     } catch (error) {
-      next(error);
+        logger.error(`Error in getCurrentPredictedBasket for user ${userId}:`, error);
+        next(error);
     }
   }
 
@@ -770,26 +778,51 @@ export class PredictionController {
     }
   }
 
-  /*
-   * Test prediction (admin/debug)
-   * Internal-facing tool for dev and testing.
-   * Its purpose is to directly test the ml-service with a specific userId
-   * and return the raw, unenriched output from the model. 
-   */
-  async testPrediction(req: Request, res: Response, next: NextFunction) {
-    try {
-      const { userId = (req as any).user.id, options = {} } = req.body;
 
-      // Generate test prediction
-      const response = await mlApiClient.post('/predict/test', {
-        userId,
-        options
-      });
 
-      res.json(response.data);
-    } catch (error) {
-      next(error);
-    }
+  // This is the implementation for the "Real Perfect Demo"
+  public async getPredictionForCurrentUser(req: Request, res: Response, next: NextFunction) {
+      const userId = (req.user as User).id;
+
+      try {
+          // Step 1: Fetch the user's entire order history from our database.
+          const orders = await Order.findAll({
+              where: { userId },
+              include: [{ model: OrderItem, attributes: ['productId'] }],
+              order: [['createdAt', 'ASC']],
+          });
+
+          if (orders.length < 2) {
+              return res.status(400).json({ message: "Not enough order history to generate a prediction." });
+          }
+
+          // Step 2: Format the history into a list of lists of product IDs.
+          const formattedHistory = orders.map(order => 
+              order.orderItems.map(item => item.productId)
+          );
+
+          // Step 3: Call our new, robust ML service endpoint.
+          const predictionResponse = await mlService.getPredictionFromDbHistory(userId, formattedHistory);
+          const predictedSkus = predictionResponse.predicted_skus;
+
+          if (!predictedSkus || predictedSkus.length === 0) {
+              return res.json({ predictedBasket: [] });
+          }
+
+          // Step 4: Enrich the predicted SKUs with full product details from our database.
+          const predictedProducts = await Product.findAll({
+              where: {
+                  id: { [Op.in]: predictedSkus }
+              }
+          });
+
+          // Step 5: Return the fully detailed basket.
+          res.json({ predictedBasket: predictedProducts });
+
+      } catch (error) {
+          logger.error(`Error generating prediction for user ${userId}:`, error);
+          next(error);
+      }
   }
 
   // Get prediction history

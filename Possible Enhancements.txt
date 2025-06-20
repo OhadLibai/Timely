@@ -1,0 +1,23 @@
+1. A more advanced dashboard might include:
+
+Time-based filters (e.g., "Revenue this month").
+Calculated metrics (e.g., "Average Order Value").
+Charts showing trends over time.
+
+Consider broadening that.
+
+
+2. Architectual decision regarding fetching user past purchases and other attributes
+from the database in order to predict the next basket:
+
+Currently, the Backend proactively fetches the data and sends it to the ML service.
+Instead of the backend fetching data for the ML service we can shift it such that the ML service
+fetch the data he needs for his calculations (e.g purchases's histories and other attributes) by himself from the database.
+That is connecting the ml-service with the database.
+
+I can think of three changes:
+1. Activate the Direct Database Connection in the ML Service
+2. Modify the ML Service Endpoint to Fetch Data
+3. Simplify the Backend Controller
+
+Can you think of more changes needs to be deployed?
