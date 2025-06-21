@@ -1,5 +1,5 @@
 -- database/init.sql
--- Initialize Timely Database Schema
+-- COMPLETE DATABASE SCHEMA WITH TEMPORAL FIELDS FOR ML COMPATIBILITY
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -7,10 +7,12 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- Categories table
 CREATE TABLE IF NOT EXISTS categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name VARCHAR(255) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    slug VARCHAR(255) UNIQUE NOT NULL,
     description TEXT,
-    image_url VARCHAR(500),
+    image_url VARCHAR(255),
     parent_id UUID REFERENCES categories(id),
+    sort_order INTEGER DEFAULT 0,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -19,16 +21,16 @@ CREATE TABLE IF NOT EXISTS categories (
 -- Products table
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    sku VARCHAR(100) NOT NULL UNIQUE,
+    sku VARCHAR(255) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
     compare_at_price DECIMAL(10,2) CHECK (compare_at_price >= 0),
     unit VARCHAR(50),
     unit_value DECIMAL(10,3),
-    brand VARCHAR(100),
+    brand VARCHAR(255),
     tags TEXT[],
-    image_url VARCHAR(500),
+    image_url VARCHAR(255),
     additional_images TEXT[],
     category_id UUID NOT NULL REFERENCES categories(id),
     stock INTEGER DEFAULT 0 CHECK (stock >= 0),
@@ -39,10 +41,6 @@ CREATE TABLE IF NOT EXISTS products (
     sale_percentage DECIMAL(5,2) DEFAULT 0 CHECK (sale_percentage >= 0 AND sale_percentage <= 100),
     nutritional_info JSONB DEFAULT '{}',
     metadata JSONB DEFAULT '{}',
-    view_count INTEGER DEFAULT 0,
-    purchase_count INTEGER DEFAULT 0,
-    avg_rating DECIMAL(3,2) DEFAULT 0 CHECK (avg_rating >= 0 AND avg_rating <= 5),
-    review_count INTEGER DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -50,17 +48,15 @@ CREATE TABLE IF NOT EXISTS products (
 -- Users table
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    email VARCHAR(255) NOT NULL UNIQUE,
+    email VARCHAR(255) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
-    first_name VARCHAR(100) NOT NULL,
-    last_name VARCHAR(100) NOT NULL,
-    phone VARCHAR(20),
-    role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    role VARCHAR(50) DEFAULT 'user' CHECK (role IN ('admin', 'user')),
     is_active BOOLEAN DEFAULT true,
-    last_login_at TIMESTAMP,
-    reset_password_token VARCHAR(255),
-    reset_password_expires TIMESTAMP,
-    metadata JSONB DEFAULT '{}',
+    email_verified BOOLEAN DEFAULT false,
+    phone VARCHAR(20),
+    date_of_birth DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -68,27 +64,25 @@ CREATE TABLE IF NOT EXISTS users (
 -- User preferences table
 CREATE TABLE IF NOT EXISTS user_preferences (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    auto_basket_enabled BOOLEAN DEFAULT true,
-    auto_basket_day INTEGER DEFAULT 0 CHECK (auto_basket_day >= 0 AND auto_basket_day <= 6),
-    auto_basket_time TIME DEFAULT '10:00:00',
-    delivery_preference VARCHAR(50) DEFAULT 'standard',
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     dietary_restrictions TEXT[],
     preferred_brands TEXT[],
-    notifications_enabled BOOLEAN DEFAULT true,
-    email_notifications BOOLEAN DEFAULT true,
-    sms_notifications BOOLEAN DEFAULT false,
-    language VARCHAR(10) DEFAULT 'en',
-    currency VARCHAR(3) DEFAULT 'USD',
+    excluded_categories UUID[],
+    max_budget DECIMAL(10,2),
+    auto_basket_enabled BOOLEAN DEFAULT false,
+    auto_basket_day INTEGER DEFAULT 0 CHECK (auto_basket_day >= 0 AND auto_basket_day <= 6),
+    auto_basket_time TIME DEFAULT '10:00',
+    notification_preferences JSONB DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Carts table
+-- Shopping carts table
 CREATE TABLE IF NOT EXISTS carts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-    is_active BOOLEAN DEFAULT true,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'abandoned', 'converted')),
+    total DECIMAL(10,2) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -99,17 +93,20 @@ CREATE TABLE IF NOT EXISTS cart_items (
     cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES products(id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
-    price DECIMAL(10,2) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(cart_id, product_id)
+    added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Orders table
+-- Orders table - WITH REQUIRED TEMPORAL FIELDS FOR ML COMPATIBILITY
 CREATE TABLE IF NOT EXISTS orders (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id),
     order_number VARCHAR(50) NOT NULL UNIQUE,
+    
+    -- CRITICAL: Temporal fields required by ML model (trained on Instacart data)
+    days_since_prior_order DECIMAL(10,2) DEFAULT 0,  -- Days since user's previous order
+    order_dow INTEGER NOT NULL,                      -- Day of week (0=Monday, 6=Sunday)
+    order_hour_of_day INTEGER NOT NULL,              -- Hour of day (0-23)
+    
     status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'shipped', 'delivered', 'cancelled', 'refunded')),
     subtotal DECIMAL(10,2) NOT NULL,
     tax DECIMAL(10,2) DEFAULT 0,
@@ -201,37 +198,25 @@ CREATE TABLE IF NOT EXISTS product_views (
 );
 
 -- Create indexes for better performance
-CREATE INDEX idx_products_category ON products(category_id);
-CREATE INDEX idx_products_active ON products(is_active);
-CREATE INDEX idx_products_sku ON products(sku);
-CREATE INDEX idx_orders_user ON orders(user_id);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_order_items_order ON order_items(order_id);
-CREATE INDEX idx_cart_items_cart ON cart_items(cart_id);
-CREATE INDEX idx_favorites_user ON favorites(user_id);
-CREATE INDEX idx_predicted_baskets_user ON predicted_baskets(user_id);
-CREATE INDEX idx_predicted_baskets_week ON predicted_baskets(week_of);
-CREATE INDEX idx_product_views_product ON product_views(product_id);
-CREATE INDEX idx_product_views_user ON product_views(user_id);
+CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
+CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
+CREATE INDEX IF NOT EXISTS idx_products_sku ON products(sku);
+CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
+CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at);  -- For temporal calculations
+CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
+CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_id);
+CREATE INDEX IF NOT EXISTS idx_cart_items_cart ON cart_items(cart_id);
+CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);
+CREATE INDEX IF NOT EXISTS idx_product_views_user ON product_views(user_id);
+CREATE INDEX IF NOT EXISTS idx_product_views_product ON product_views(product_id);
 
--- Create update timestamp trigger function
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.updated_at = CURRENT_TIMESTAMP;
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
+-- Insert default admin user
+INSERT INTO users (email, password, first_name, last_name, role, is_active, email_verified) 
+VALUES ('admin@timely.com', '$2b$10$rZ4J0M8J9QJ8V8P6X7V8PO8J9QJ8V8P6X7V8PO8J9QJ8V8P6X7V8PO', 'Admin', 'User', 'admin', true, true)
+ON CONFLICT (email) DO NOTHING;
 
--- Apply update trigger to all tables with updated_at
-CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON categories FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON products FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_user_preferences_updated_at BEFORE UPDATE ON user_preferences FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_carts_updated_at BEFORE UPDATE ON carts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_cart_items_updated_at BEFORE UPDATE ON cart_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_orders_updated_at BEFORE UPDATE ON orders FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_order_items_updated_at BEFORE UPDATE ON order_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_predicted_baskets_updated_at BEFORE UPDATE ON predicted_baskets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_predicted_basket_items_updated_at BEFORE UPDATE ON predicted_basket_items FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_deliveries_updated_at BEFORE UPDATE ON deliveries FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Insert default test user  
+INSERT INTO users (email, password, first_name, last_name, role, is_active, email_verified)
+VALUES ('test@timely.com', '$2b$10$rZ4J0M8J9QJ8V8P6X7V8PO8J9QJ8V8P6X7V8PO8J9QJ8V8P6X7V8PO', 'Test', 'User', 'user', true, true)
+ON CONFLICT (email) DO NOTHING;
