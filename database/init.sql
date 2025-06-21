@@ -1,5 +1,6 @@
 -- database/init.sql
--- COMPLETE DATABASE SCHEMA WITH TEMPORAL FIELDS FOR ML COMPATIBILITY
+-- UPDATED: Complete database schema WITHOUT default user insertions
+-- Users are handled by Sequelize in init-database.ts for consistent password hashing
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -57,6 +58,7 @@ CREATE TABLE IF NOT EXISTS users (
     email_verified BOOLEAN DEFAULT false,
     phone VARCHAR(20),
     date_of_birth DATE,
+    metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -73,6 +75,7 @@ CREATE TABLE IF NOT EXISTS user_preferences (
     auto_basket_day INTEGER DEFAULT 0 CHECK (auto_basket_day >= 0 AND auto_basket_day <= 6),
     auto_basket_time TIME DEFAULT '10:00',
     notification_preferences JSONB DEFAULT '{}',
+    metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -145,23 +148,26 @@ CREATE TABLE IF NOT EXISTS favorites (
 -- Predicted baskets table
 CREATE TABLE IF NOT EXISTS predicted_baskets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID NOT NULL REFERENCES users(id),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     week_of DATE NOT NULL,
     status VARCHAR(50) DEFAULT 'generated' CHECK (status IN ('generated', 'modified', 'accepted', 'rejected')),
-    confidence_score DECIMAL(3,2) CHECK (confidence_score >= 0 AND confidence_score <= 1),
+    confidence_score DECIMAL(5,4),
+    total_items INTEGER DEFAULT 0,
+    total_value DECIMAL(10,2) DEFAULT 0,
     accepted_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Predicted basket items table
+-- Predicted basket items table  
 CREATE TABLE IF NOT EXISTS predicted_basket_items (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     basket_id UUID NOT NULL REFERENCES predicted_baskets(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES products(id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
-    confidence_score DECIMAL(3,2) CHECK (confidence_score >= 0 AND confidence_score <= 1),
-    is_accepted BOOLEAN DEFAULT true,
+    confidence_score DECIMAL(5,4),
+    is_accepted BOOLEAN DEFAULT false,
+    reason TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -169,23 +175,32 @@ CREATE TABLE IF NOT EXISTS predicted_basket_items (
 -- Deliveries table
 CREATE TABLE IF NOT EXISTS deliveries (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    order_id UUID NOT NULL UNIQUE REFERENCES orders(id),
-    type VARCHAR(50) DEFAULT 'standard' CHECK (type IN ('standard', 'express', 'scheduled')),
-    status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'scheduled', 'in_transit', 'delivered', 'failed')),
-    address_line1 VARCHAR(255) NOT NULL,
+    order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+    type VARCHAR(50) DEFAULT 'standard',
+    status VARCHAR(50) DEFAULT 'pending',
+    address_line1 VARCHAR(255),
     address_line2 VARCHAR(255),
-    city VARCHAR(100) NOT NULL,
-    state VARCHAR(100) NOT NULL,
-    zip_code VARCHAR(20) NOT NULL,
-    country VARCHAR(100) DEFAULT 'USA',
-    scheduled_date DATE,
-    scheduled_time_start TIME,
-    scheduled_time_end TIME,
+    city VARCHAR(100),
+    state VARCHAR(50),
+    zip_code VARCHAR(20),
+    country VARCHAR(50) DEFAULT 'USA',
     delivered_at TIMESTAMP,
-    delivery_notes TEXT,
-    tracking_number VARCHAR(100),
+    notes TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Model metrics table (for ML evaluation tracking)
+CREATE TABLE IF NOT EXISTS model_metrics (
+    id SERIAL PRIMARY KEY,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    precision_at_10 FLOAT,
+    recall_at_10 FLOAT,
+    f1_at_10 FLOAT,
+    ndcg_at_10 FLOAT,
+    hit_rate_at_10 FLOAT,
+    model_version VARCHAR(100),
+    metrics_json JSONB
 );
 
 -- Product views table for tracking
@@ -211,12 +226,5 @@ CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);
 CREATE INDEX IF NOT EXISTS idx_product_views_user ON product_views(user_id);
 CREATE INDEX IF NOT EXISTS idx_product_views_product ON product_views(product_id);
 
--- Insert default admin user
-INSERT INTO users (email, password, first_name, last_name, role, is_active, email_verified) 
-VALUES ('admin@timely.com', '$2b$10$rZ4J0M8J9QJ8V8P6X7V8PO8J9QJ8V8P6X7V8PO8J9QJ8V8P6X7V8PO', 'Admin', 'User', 'admin', true, true)
-ON CONFLICT (email) DO NOTHING;
-
--- Insert default test user  
-INSERT INTO users (email, password, first_name, last_name, role, is_active, email_verified)
-VALUES ('test@timely.com', '$2b$10$rZ4J0M8J9QJ8V8P6X7V8PO8J9QJ8V8P6X7V8PO8J9QJ8V8P6X7V8PO', 'Test', 'User', 'user', true, true)
-ON CONFLICT (email) DO NOTHING;
+-- REMOVED: Default user insertions (now handled by Sequelize in init-database.ts)
+-- This ensures consistent password hashing and proper ORM integration
