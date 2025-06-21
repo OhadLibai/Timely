@@ -1,5 +1,5 @@
 // backend/src/routes/admin.routes.ts
-// UPDATED: Removed feature importance routes, added ML monitoring routes
+// FIXED: Consistent route paths to match frontend expectations
 
 import { Router } from 'express';
 import { AdminController } from '../controllers/admin.controller';
@@ -16,10 +16,10 @@ router.use(adminMiddleware);
 // MODEL EVALUATION & MONITORING (NO FEATURE IMPORTANCE)
 // ============================================================================
 
-// Model evaluation (BLACK BOX - no feature importance exposure)
-router.post('/evaluation', adminController.triggerModelEvaluation);
+// FIXED: Model evaluation path to match frontend
+router.post('/ml/evaluate', adminController.triggerModelEvaluation);
 
-// NEW: ML service health and monitoring
+// ML service health and monitoring
 router.get('/ml-service/status', adminController.getMLServiceStatus);
 router.get('/architecture/status', adminController.getArchitectureStatus);
 
@@ -27,7 +27,7 @@ router.get('/architecture/status', adminController.getArchitectureStatus);
 // DEMO PREDICTION SYSTEM
 // ============================================================================
 
-// Demo prediction functionality
+// Demo prediction functionality - paths match frontend
 router.get('/demo/user-ids', adminController.getDemoUserIds);
 router.get('/demo/user-prediction/:userId', adminController.getDemoUserPrediction);
 router.post('/demo/seed-user/:instacartUserId', adminController.seedDemoUser);
@@ -39,11 +39,41 @@ router.post('/demo/seed-user/:instacartUserId', adminController.seedDemoUser);
 // Dashboard statistics
 router.get('/dashboard/stats', adminController.getDashboardStats);
 
+// System health
+router.get('/system/health', adminController.getSystemHealth);
+
 // ============================================================================
-// REMOVED ROUTES (Feature Engineering Black Box)
+// PRODUCT MANAGEMENT
 // ============================================================================
 
-// REMOVED: Feature importance route (feature engineering is now black box)
-// router.get('/feature-importance', adminController.getFeatureImportance);
+// Product CRUD operations
+router.get('/products', adminController.getProducts);
+router.post('/products', adminController.createProduct);
+router.put('/products/:productId', adminController.updateProduct);
+router.delete('/products/:productId', adminController.deleteProduct);
+
+// ============================================================================
+// USER MANAGEMENT  
+// ============================================================================
+
+// User management operations
+router.get('/users', adminController.getUsers);
+router.put('/users/:userId', adminController.updateUser);
+router.delete('/users/:userId', adminController.deleteUser);
+
+// ============================================================================
+// ORDER MANAGEMENT
+// ============================================================================
+
+// Order management operations
+router.get('/orders', adminController.getOrders);
+router.put('/orders/:orderId/status', adminController.updateOrderStatus);
+
+// ============================================================================
+// LEGACY COMPATIBILITY (if needed)
+// ============================================================================
+
+// Legacy evaluation endpoint (redirect to new path)
+router.post('/evaluation', adminController.triggerModelEvaluation);
 
 export default router;

@@ -1,27 +1,20 @@
 // frontend/src/services/admin.service.ts
-// UPDATED: Removed feature importance, maintained demo functionality, black box ML
+// FIXED: Corrected API endpoint paths to match backend routes
 
-import { api } from './api.client';
-import { Product } from './product.service';
+import api from './api.client';
 
-// Core admin interfaces (BLACK BOX - no feature importance)
 export interface ModelMetrics {
-  precisionAt10: number;
-  recallAt10: number;
-  hitRate: number;
+  precision_at_k: Record<string, number>;
+  recall_at_k: Record<string, number>;
+  hit_rate: number;
   ndcg: number;
-  f1Score: number;
-  lastUpdated: string;
+  f1_score: number;
 }
 
 export interface SystemHealth {
-  status: 'healthy' | 'degraded' | 'unhealthy';
-  services: {
-    database: 'healthy' | 'unhealthy';
-    mlService: 'healthy' | 'unhealthy';
-  };
-  architecture: string;
-  feature_engineering: string;
+  status: string;
+  database: string;
+  mlService: string;
   timestamp: string;
 }
 
@@ -29,39 +22,49 @@ export interface DashboardStats {
   totalUsers: number;
   totalProducts: number;
   totalOrders: number;
-  mlService: {
-    status: string;
-    architecture: string;
-    feature_engineering: string;
-  } | null;
-  architecture: string;
-  feature_engineering: string;
-  timestamp: string;
+  totalRevenue: number;
+  averageOrderValue: number;
+  topCategories: Array<{
+    name: string;
+    count: number;
+  }>;
+  recentOrders: Array<{
+    id: string;
+    user: string;
+    total: number;
+    createdAt: string;
+  }>;
+  monthlyRevenue: Array<{
+    month: string;
+    revenue: number;
+  }>;
 }
 
-// Demo interfaces (maintained functionality)
 export interface DemoUserPrediction {
   userId: string;
-  predictedBasket: DemoBasketItem[];
-  trueFutureBasket: DemoBasketItem[];
-  architecture: string;
-  feature_engineering: string;
+  predictedBasket: Array<{
+    id: string;
+    name: string;
+    imageUrl?: string;
+    price: number;
+    category?: string;
+    predictedQuantity?: number;
+    confidenceScore?: number;
+  }>;
+  trueFutureBasket: Array<{
+    id: string;
+    name: string;
+    imageUrl?: string;
+    price: number;
+    category?: string;
+  }>;
   comparisonMetrics: {
     predictedCount: number;
     actualCount: number;
     commonItems: number;
   };
-}
-
-export interface DemoBasketItem {
-  id: string;
-  sku: string;
-  name: string;
-  imageUrl: string;
-  price: number;
-  salePrice: number;
-  category: string;
-  confidenceScore?: number;
+  architecture: string;
+  feature_engineering: string;
 }
 
 export interface DemoUserIds {
@@ -105,11 +108,12 @@ class AdminService {
   }
 
   // ============================================================================
-  // DEMO FUNCTIONALITY (MAINTAINED)
+  // DEMO FUNCTIONALITY (FIXED ENDPOINTS)
   // ============================================================================
   
   /**
    * Get available demo user IDs
+   * FIXED: Correct endpoint path
    */
   async getDemoUserIds(): Promise<DemoUserIds> {
     return api.get<DemoUserIds>('/admin/demo/user-ids');
@@ -117,13 +121,15 @@ class AdminService {
 
   /**
    * Get demo prediction comparison (AI vs actual)
+   * FIXED: Correct endpoint path to match backend route
    */
   async getDemoUserPrediction(userId: string): Promise<DemoUserPrediction> {
-    return api.get<DemoUserPrediction>(`/admin/demo/users/${userId}/prediction`);
+    return api.get<DemoUserPrediction>(`/admin/demo/user-prediction/${userId}`);
   }
 
   /**
    * Seed demo user with Instacart order history
+   * FIXED: Correct endpoint path
    */
   async seedDemoUser(instacartUserId: string): Promise<{
     message: string;
@@ -154,39 +160,35 @@ class AdminService {
     category?: string;
     isActive?: boolean;
   }): Promise<{
-    products: Product[];
-    total: number;
-    page: number;
-    totalPages: number;
+    products: Array<any>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
   }> {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.search) searchParams.append('search', params.search);
-    if (params?.category) searchParams.append('category', params.category);
-    if (params?.isActive !== undefined) searchParams.append('isActive', params.isActive.toString());
-
-    return api.get(`/admin/products?${searchParams.toString()}`);
+    return api.get('/admin/products', { params });
   }
 
   /**
    * Create new product
    */
-  async createProduct(productData: Partial<Product>): Promise<Product> {
-    return api.post<Product>('/admin/products', productData);
+  async createProduct(productData: any): Promise<any> {
+    return api.post('/admin/products', productData);
   }
 
   /**
    * Update existing product
    */
-  async updateProduct(productId: string, productData: Partial<Product>): Promise<Product> {
-    return api.put<Product>(`/admin/products/${productId}`, productData);
+  async updateProduct(productId: string, productData: any): Promise<any> {
+    return api.put(`/admin/products/${productId}`, productData);
   }
 
   /**
    * Delete product
    */
-  async deleteProduct(productId: string): Promise<{ message: string }> {
+  async deleteProduct(productId: string): Promise<void> {
     return api.delete(`/admin/products/${productId}`);
   }
 
@@ -204,33 +206,29 @@ class AdminService {
     role?: string;
     isActive?: boolean;
   }): Promise<{
-    users: any[];
-    total: number;
-    page: number;
-    totalPages: number;
+    users: Array<any>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
   }> {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.search) searchParams.append('search', params.search);
-    if (params?.role) searchParams.append('role', params.role);
-    if (params?.isActive !== undefined) searchParams.append('isActive', params.isActive.toString());
-
-    return api.get(`/admin/users?${searchParams.toString()}`);
+    return api.get('/admin/users', { params });
   }
 
   /**
-   * Update user status
+   * Update user status/role
    */
-  async updateUserStatus(userId: string, isActive: boolean): Promise<{ message: string }> {
-    return api.patch(`/admin/users/${userId}/status`, { isActive });
+  async updateUser(userId: string, userData: any): Promise<any> {
+    return api.put(`/admin/users/${userId}`, userData);
   }
 
   /**
-   * Update user role
+   * Delete user
    */
-  async updateUserRole(userId: string, role: string): Promise<{ message: string }> {
-    return api.patch(`/admin/users/${userId}/role`, { role });
+  async deleteUser(userId: string): Promise<void> {
+    return api.delete(`/admin/users/${userId}`);
   }
 
   // ============================================================================
@@ -243,63 +241,27 @@ class AdminService {
   async getOrders(params?: {
     page?: number;
     limit?: number;
+    search?: string;
     status?: string;
-    startDate?: string;
-    endDate?: string;
   }): Promise<{
-    orders: any[];
-    total: number;
-    page: number;
-    totalPages: number;
+    orders: Array<any>;
+    pagination: {
+      page: number;
+      limit: number;
+      total: number;
+      totalPages: number;
+    };
   }> {
-    const searchParams = new URLSearchParams();
-    if (params?.page) searchParams.append('page', params.page.toString());
-    if (params?.limit) searchParams.append('limit', params.limit.toString());
-    if (params?.status) searchParams.append('status', params.status);
-    if (params?.startDate) searchParams.append('startDate', params.startDate);
-    if (params?.endDate) searchParams.append('endDate', params.endDate);
-
-    return api.get(`/admin/orders?${searchParams.toString()}`);
+    return api.get('/admin/orders', { params });
   }
 
   /**
    * Update order status
    */
-  async updateOrderStatus(orderId: string, status: string): Promise<{ message: string }> {
-    return api.patch(`/admin/orders/${orderId}/status`, { status });
-  }
-
-  // ============================================================================
-  // ANALYTICS (BLACK BOX)
-  // ============================================================================
-  
-  /**
-   * Get sales analytics without exposing ML internals
-   */
-  async getSalesAnalytics(dateRange: { start: string; end: string }): Promise<{
-    totalSales: number;
-    totalOrders: number;
-    averageOrderValue: number;
-    salesByDay: Array<{ date: string; sales: number; orders: number }>;
-    topProducts: Array<{ productId: string; name: string; sales: number }>;
-    feature_engineering: string;
-  }> {
-    return api.get(`/admin/analytics/sales?start=${dateRange.start}&end=${dateRange.end}`);
-  }
-
-  /**
-   * Get user engagement analytics
-   */
-  async getUserAnalytics(): Promise<{
-    totalUsers: number;
-    activeUsers: number;
-    newUsersThisMonth: number;
-    userGrowth: Array<{ month: string; newUsers: number }>;
-    feature_engineering: string;
-  }> {
-    return api.get('/admin/analytics/users');
+  async updateOrderStatus(orderId: string, status: string): Promise<any> {
+    return api.put(`/admin/orders/${orderId}/status`, { status });
   }
 }
 
-export const adminService = new AdminService();
-export default adminService;
+const adminService = new AdminService();
+export { adminService };

@@ -1,8 +1,8 @@
 Summary of the New Two-Stage Prediction Model
-This new model emulates the sophisticated, stacked pipeline.
+This new model emulates stacked pipeline.
 
 Primary Goal
-The goal is no longer just to rank products by reorder probability. The new primary goal is to predict a final, chosen basket of products for a user's next order, mirroring a more realistic shopping experience.
+The primary goal is to predict a final, chosen basket of products for a user's next order, mirroring a realistic shopping experience.
 
 Learning Pipeline
 The pipeline consists of a two-stage stacked model, managed by a central StackedBasketModel orchestrator:
