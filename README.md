@@ -11,7 +11,7 @@ timely/ (Current Implementation Status)
 │   ├── src/
 │   │   ├── components/                    # UI Components
 │   │   │   ├── common/                    # LoadingSpinner, EmptyState, ErrorBoundary, Pagination
-│   │   │   ├── products/                  # ProductCard, ProductImage, CategoryFilter, PriceRangeFilter, SortDropdown
+│   │   │   ├── products/                  # ProductCard, ProductImage, ProductListItem, CategoryFilter, PriceRangeFilter, SortDropdown
 │   │   │   ├── predictions/               # ConfidenceIndicator, PredictionExplanation
 │   │   │   ├── auth/                      # ProtectedRoute, AdminRoute
 │   │   │   ├── admin/                     # DateRangePicker, MetricCard, MetricExplanation
@@ -36,10 +36,10 @@ timely/ (Current Implementation Status)
 │   │   │   └── prediction.service.ts, product.service.ts
 │   │   └── stores/                        # Zustand state management
 │   │       ├── auth.store.ts, cart.store.ts
-│   ├── public/                            # Static assets
-│   │   └── images/                        # Categories and products subdirectories
+│   ├── public/                            # Static assets (images stored externally via URLs)
 │   ├── index.html, vite.config.ts, tailwind.config.js, tsconfig.json
 │   ├── package.json                    # Complete dependencies
+│   ├── nginx.conf                      # Nginx configuration
 │   └── Dockerfile                      # Production-ready
 │
 ├── backend/                               # Node.js/Express Backend with Sequelize ORM
@@ -47,28 +47,39 @@ timely/ (Current Implementation Status)
 │   │   ├── controllers/                   
 │   │   │   ├── auth.controller.ts      # Login, register, logout
 │   │   │   ├── user.controller.ts      # Profile, preferences
-│   │   │   ├── product.controller.ts   # CRUD, search, categories, image upload
+│   │   │   ├── product.controller.ts   # CRUD, search, categories
 │   │   │   ├── cart.controller.ts      # Cart management
-│   │   │   ├── prediction.controller.ts # 23 prediction/ML endpoints
+│   │   │   ├── order.controller.ts     # Order management
+│   │   │   ├── prediction.controller.ts # Prediction/ML endpoints
 │   │   │   └── admin.controller.ts     # Admin dashboard, demo endpoints
 │   │   ├── models/                     # Sequelize-TypeScript models
-│   │   │   ├── User, Product, Category, Cart, CartItem
-│   │   │   ├── Order, OrderItem, Favorite, Delivery
-│   │   │   ├── PredictedBasket, PredictedBasketItem
-│   │   │   └── UserPreference, ProductView, ModelMetric
+│   │   │   ├── user.model.ts, product.model.ts, category.model.ts
+│   │   │   ├── cart.model.ts, cartItem.model.ts
+│   │   │   ├── order.model.ts, orderItem.model.ts
+│   │   │   ├── favorite.model.ts, delivery.model.ts
+│   │   │   ├── predictedBasket.model.ts, predictedBasketItem.model.ts
+│   │   │   ├── userPreference.model.ts, productView.model.ts
+│   │   │   └── modelMetric.model.ts
 │   │   ├── routes/                     # Express route definitions
 │   │   │   ├── admin.routes.ts, auth.routes.ts, cart.routes.ts
 │   │   │   ├── delivery.routes.ts, order.routes.ts, prediction.routes.ts
 │   │   │   └── product.routes.ts, user.routes.ts
-│   │   ├── middleware/                 # Auth, admin, error, upload, validation
-│   │   ├── services/                   # ML service client, email, upload
-│   │   ├── config/                     # Database configuration
-│   │   ├── jobs/                       # Background job: cartGeneration.job.ts
-│   │   ├── database/                   # Migration scripts
-│   │   ├── types/                      # TypeScript definitions
-│   │   └── utils/                      # Logger, CSV utilities
-│   ├── uploads/                        # File upload directory
-│   ├── package.json, tsconfig.json    # Complete dependencies
+│   │   ├── middleware/                 # Auth, admin, error, upload, validation middleware
+│   │   │   ├── auth.middleware.ts, error.middleware.ts
+│   │   │   ├── upload.middleware.ts, validation.middleware.ts
+│   │   ├── services/                   # Business logic services
+│   │   │   ├── ml.service.ts, email.service.ts, upload.service.ts
+│   │   ├── config/                     # Configuration files
+│   │   │   └── database.config.ts
+│   │   ├── jobs/                       # Background jobs
+│   │   │   └── cartGeneration.job.ts
+│   │   ├── database/                   # Database migration scripts
+│   │   ├── types/                      # TypeScript type definitions
+│   │   │   └── custom.d.ts
+│   │   └── utils/                      # Utility functions
+│   │       ├── logger.ts, csv.utils.ts
+│   ├── server.ts                       # Main server entry point
+│   ├── package.json, tsconfig.json    # Dependencies and TypeScript config
 │   └── Dockerfile                      # Multi-stage production build
 │
 ├── ml-service/                            # Python FastAPI ML Service
@@ -83,11 +94,13 @@ timely/ (Current Implementation Status)
 │   │   │   └── training/               # Training scripts and data preprocessing
 │   │   │       ├── data_loader.py, data_preprocessing.py
 │   │   │       └── model_training_script.ipynb
-│   │   ├── evaluation/                 # Model evaluation: evaluator.py
+│   │   ├── evaluation/                 # Model evaluation
+│   │   │   └── evaluator.py
 │   │   ├── services/                   # Feature engineering and prediction services
 │   │   │   ├── feature_engineering.py, enhanced_feature_engineering.py
 │   │   │   └── prediction_service.py
 │   │   └── utils/                      # Logger utilities
+│   │       └── logger.py
 │   ├── training-data/                  # Instacart dataset (6 CSV files)
 │   │   ├── orders.csv, products.csv, departments.csv, aisles.csv
 │   │   └── order_products__prior.csv, order_products__train.csv
@@ -96,7 +109,7 @@ timely/ (Current Implementation Status)
 │   └── Dockerfile                      # Production-ready
 │
 ├── database/                              # Database Initialization Service
-│   ├── init-database.ts               # TypeORM seeding script
+│   ├── init-database.ts               # Database seeding script
 │   ├── category_details.csv           # Category images and descriptions
 │   ├── init.sql                        # SQL schema (if needed)
 │   ├── package.json, tsconfig.json    # Node.js dependencies
