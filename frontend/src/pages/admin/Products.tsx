@@ -38,7 +38,7 @@ const AdminProducts: React.FC = () => {
         description: 'Fresh organic bananas',
         price: 2.99,
         category: 'Produce',
-        image: '/images/products/bananas.jpg',
+        image: 'https://images.pexels.com/photos/1132047/pexels-photo-1132047.jpeg?auto=compress&cs=tinysrgb&w=400',
         inStock: true,
         isActive: true,
         createdAt: '2024-01-15'
@@ -49,7 +49,7 @@ const AdminProducts: React.FC = () => {
         description: 'Fresh baked whole wheat bread',
         price: 3.49,
         category: 'Bakery',
-        image: '/images/products/bread.jpg',
+        image: 'https://images.pexels.com/photos/209206/pexels-photo-209206.jpeg?auto=compress&cs=tinysrgb&w=400',
         inStock: true,
         isActive: true,
         createdAt: '2024-01-14'

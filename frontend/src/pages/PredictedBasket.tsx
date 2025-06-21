@@ -35,7 +35,7 @@ const PredictedBasket: React.FC = () => {
   );
 
   // Fetch model metrics
-  const { data: metrics } = useQuery(
+  const { data: modelMetrics } = useQuery(
     'model-metrics',
     predictionService.getModelMetrics,
     {
@@ -266,7 +266,7 @@ const PredictedBasket: React.FC = () => {
           </div>
 
           {/* Model Performance Alert */}
-          {metrics && metrics.precisionAt10 > 0.4 && (
+          {modelMetrics && modelMetrics.precisionAt10 > 0.4 && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -281,7 +281,7 @@ const PredictedBasket: React.FC = () => {
                     High Accuracy Predictions
                   </p>
                   <p className="text-sm text-green-700 dark:text-green-300">
-                    Our model is performing well with {(metrics.precisionAt10 * 100).toFixed(0)}% precision
+                    Our model is performing well with {(modelMetrics.precisionAt10 * 100).toFixed(0)}% precision
                   </p>
                 </div>
               </div>

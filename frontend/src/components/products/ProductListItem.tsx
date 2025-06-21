@@ -57,7 +57,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
           {/* Product Image */}
           <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
             <img
-              src={product.imageUrl || '/images/placeholder-product.png'}
+              src={product.imageUrl || 'https://images.pexels.com/photos/264537/pexels-photo-264537.jpeg?auto=compress&cs=tinysrgb&w=400'}}
               alt={product.name}
               className="w-full h-full object-cover"
             />

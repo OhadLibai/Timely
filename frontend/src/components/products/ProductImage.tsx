@@ -1,4 +1,5 @@
 // frontend/src/components/products/ProductImage.tsx
+
 import React, { useState } from 'react';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import { Package } from 'lucide-react';
@@ -31,11 +32,12 @@ const ProductImage: React.FC<ProductImageProps> = ({
     setIsLoading(false);
   };
 
-  // Default placeholder image
-  const placeholderImage = '/images/product-placeholder.png';
+  // ✅ FIXED: Use external placeholder instead of deleted local file
+  const placeholderImage = 'https://images.pexels.com/photos/264537/pexels-photo-264537.jpeg?auto=compress&cs=tinysrgb&w=400';
   const imageSrc = src || placeholderImage;
 
-  if (imageError || !imageSrc || imageSrc === '/images/products/default.jpg') {
+  // ✅ FIXED: Removed reference to deleted '/images/products/default.jpg'
+  if (imageError || !imageSrc) {
     return (
       <div 
         className={`flex items-center justify-center bg-gray-100 dark:bg-gray-800 ${className}`}

@@ -46,11 +46,10 @@ const AdminMetrics: React.FC = () => {
     { staleTime: 10 * 60 * 1000 }
   );
 
-  // Fetch current metrics
-  const { data: currentMetrics } = useQuery(
-    'current-ml-metrics',
+  const { data: modelMetrics } = useQuery(
+    'model-metrics',
     predictionService.getModelMetrics,
-    { staleTime: 5 * 60 * 1000 }
+    { staleTime: 10 * 60 * 1000 }  // Consistent with Dashboard
   );
 
   // Fetch online metrics
@@ -100,12 +99,12 @@ const AdminMetrics: React.FC = () => {
     );
   }
 
-  const radarData = currentMetrics ? [
-    { metric: 'Precision', value: (currentMetrics.precisionAt10 * 100) },
-    { metric: 'Recall', value: (currentMetrics.recallAt10 * 100) },
-    { metric: 'Hit Rate', value: (currentMetrics.hitRate * 100) },
-    { metric: 'NDCG', value: (currentMetrics.ndcg * 100) },
-    { metric: 'F1 Score', value: (currentMetrics.f1Score * 100) },
+  const radarData = modelMetrics ? [
+    { metric: 'Precision', value: (modelMetrics.precisionAt10 * 100) },
+    { metric: 'Recall', value: (modelMetrics.recallAt10 * 100) },
+    { metric: 'Hit Rate', value: (modelMetrics.hitRate * 100) },
+    { metric: 'NDCG', value: (modelMetrics.ndcg * 100) },
+    { metric: 'F1 Score', value: (modelMetrics.f1Score * 100) },
     { metric: 'Acceptance', value: ((onlineMetrics?.autoCartAcceptanceRate || 0) * 100) }
   ] : [];
 
@@ -167,7 +166,7 @@ const AdminMetrics: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <Target className="w-8 h-8 text-indigo-500" />
               <span className="text-3xl font-bold text-indigo-600">
-                {((currentMetrics?.precisionAt10 || 0) * 100).toFixed(1)}%
+                {((modelMetrics?.precisionAt10 || 0) * 100).toFixed(1)}%
               </span>
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white">Precision@10</h3>
@@ -188,7 +187,7 @@ const AdminMetrics: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <Activity className="w-8 h-8 text-purple-500" />
               <span className="text-3xl font-bold text-purple-600">
-                {((currentMetrics?.recallAt10 || 0) * 100).toFixed(1)}%
+                {((modelMetrics?.recallAt10 || 0) * 100).toFixed(1)}%
               </span>
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white">Recall@10</h3>
@@ -209,7 +208,7 @@ const AdminMetrics: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <Zap className="w-8 h-8 text-green-500" />
               <span className="text-3xl font-bold text-green-600">
-                {((currentMetrics?.hitRate || 0) * 100).toFixed(1)}%
+                {((modelMetrics?.hitRate || 0) * 100).toFixed(1)}%
               </span>
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white">Hit Rate</h3>
@@ -230,7 +229,7 @@ const AdminMetrics: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <TrendingUp className="w-8 h-8 text-orange-500" />
               <span className="text-3xl font-bold text-orange-600">
-                {((currentMetrics?.ndcg || 0) * 100).toFixed(1)}%
+                {((modelMetrics?.ndcg || 0) * 100).toFixed(1)}%
               </span>
             </div>
             <h3 className="font-semibold text-gray-900 dark:text-white">NDCG</h3>

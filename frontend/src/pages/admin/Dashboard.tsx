@@ -28,18 +28,16 @@ const AdminDashboard: React.FC = () => {
     { staleTime: 5 * 60 * 1000 }
   );
 
-  // Fetch ML metrics
-  const { data: mlMetrics, isLoading: isMLLoading } = useQuery(
-    'ml-metrics',
+  const { data: modelMetrics, isLoading: isModelLoading } = useQuery(
+    'model-metrics',
     predictionService.getModelMetrics,
-    { staleTime: 30 * 60 * 1000 }
+    { staleTime: 10 * 60 * 1000 }  // Standardized: 10min
   );
 
-  // Fetch online metrics
   const { data: onlineMetrics } = useQuery(
     'online-metrics',
     predictionService.getOnlineMetrics,
-    { staleTime: 5 * 60 * 1000 }
+    { staleTime: 2 * 60 * 1000 }   // Standardized: 2min
   );
 
   if (isDashboardLoading || isMLLoading) {
@@ -133,38 +131,38 @@ const AdminDashboard: React.FC = () => {
               ML Model Performance
             </h2>
             <span className="text-sm text-gray-500 dark:text-gray-400">
-              Last updated: {mlMetrics?.lastUpdated ? new Date(mlMetrics.lastUpdated).toLocaleString() : 'N/A'}
+              Last updated: {modelMetrics?.lastUpdated ? new Date(modelMetrics.lastUpdated).toLocaleString() : 'N/A'}
             </span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             <div className="text-center">
               <div className="text-3xl font-bold text-indigo-600">
-                {((mlMetrics?.precisionAt10 || 0) * 100).toFixed(1)}%
+                {((modelMetrics?.precisionAt10 || 0) * 100).toFixed(1)}%
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Precision@10</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-purple-600">
-                {((mlMetrics?.recallAt10 || 0) * 100).toFixed(1)}%
+                {((modelMetrics?.recallAt10 || 0) * 100).toFixed(1)}%
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Recall@10</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-pink-600">
-                {((mlMetrics?.hitRate || 0) * 100).toFixed(1)}%
+                {((modelMetrics?.hitRate || 0) * 100).toFixed(1)}%
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Hit Rate</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-green-600">
-                {((mlMetrics?.ndcg || 0) * 100).toFixed(1)}%
+                {((modelMetrics?.ndcg || 0) * 100).toFixed(1)}%
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">NDCG</div>
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-orange-600">
-                {((mlMetrics?.f1Score || 0) * 100).toFixed(1)}%
+                {((modelMetrics?.f1Score || 0) * 100).toFixed(1)}%
               </div>
               <div className="text-sm text-gray-600 dark:text-gray-400">F1 Score</div>
             </div>
