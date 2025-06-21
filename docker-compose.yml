@@ -1,4 +1,4 @@
-# docker-compose.yml
+# docker-compose.yml - UPDATED for new architecture
 
 services:
   db:
@@ -42,8 +42,20 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: timely-backend
-    env_file:
-      - ./backend/.env
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - DB_HOST=db
+      - DB_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - ML_SERVICE_URL=http://ml-service:8000
+      - FRONTEND_URL=http://localhost:3000
+    ports:
+      - "5000:5000"
     depends_on:
       db:
         condition: service_healthy
@@ -51,8 +63,8 @@ services:
         condition: service_completed_successfully
     volumes:
       - ./backend/uploads:/app/uploads
-      - ./backend:/app # Mount local backend code for development
-      - /app/node_modules # Prevent local node_modules from overwriting container's
+      - ./backend:/app # Development mode
+      - /app/node_modules 
     command: npm run dev 
     restart: unless-stopped
 
@@ -61,10 +73,23 @@ services:
     build:
       context: ./ml-service
       dockerfile: Dockerfile
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - USE_DATABASE=true  # Direct database access
     ports:
       - "8000:8000"
     volumes:
-      - ./ml-service/models:/app/src/models
+      - ./ml-service/models:/app/models
+      - ./ml-service/training-data:/app/training-data
+    depends_on:
+      db:
+        condition: service_healthy
+      init-db:
+        condition: service_completed_successfully
     restart: unless-stopped
 
   frontend:
@@ -75,18 +100,18 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL}
         VITE_ML_API_URL: ${VITE_ML_API_URL}
-    env_file:
-      - ./frontend/.env
+    environment:
+      - VITE_API_URL=${VITE_API_URL}
+      - VITE_ML_API_URL=${VITE_ML_API_URL}
     ports:
       - "3000:3000" 
     depends_on:
       - backend
-      # - ml-service # Only if frontend directly calls ML service
     volumes:
-      # For Vite dev server instead of Nginx build:
-      - ./frontend:/app
+      - ./frontend:/app # Development mode
       - /app/node_modules
     command: npm run dev 
+    restart: unless-stopped
 
 volumes:
   postgres_data:

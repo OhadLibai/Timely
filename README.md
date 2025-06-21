@@ -34,9 +34,8 @@ timely/ (Current Implementation Status)
 │   │   │   ├── admin.service.ts, api.client.ts, auth.service.ts
 │   │   │   ├── cart.service.ts, favorite.service.ts, order.service.ts
 │   │   │   └── prediction.service.ts, product.service.ts
-│   │   ├── stores/                        # Zustand state management
-│   │   │   ├── auth.store.ts, cart.store.ts
-│   │   └── ❌ MISSING: types/              # TypeScript definitions
+│   │   └── stores/                        # Zustand state management
+│   │       ├── auth.store.ts, cart.store.ts
 │   ├── public/                            # Static assets
 │   │   └── images/                        # Categories and products subdirectories
 │   ├── index.html, vite.config.ts, tailwind.config.js, tsconfig.json
@@ -76,6 +75,8 @@ timely/ (Current Implementation Status)
 │   ├── src/
 │   │   ├── api/
 │   │   │   └── main.py                 # FastAPI with demo/prediction endpoints
+│   │   ├── database/                   # Database connection and models
+│   │   │   ├── connection.py, models.py
 │   │   ├── models/                        
 │   │   │   ├── stacked_basket_model.py # Two-stage basket prediction
 │   │   │   ├── stage1_candidate_generator.py, stage2_basket_selector.py
@@ -83,7 +84,9 @@ timely/ (Current Implementation Status)
 │   │   │       ├── data_loader.py, data_preprocessing.py
 │   │   │       └── model_training_script.ipynb
 │   │   ├── evaluation/                 # Model evaluation: evaluator.py
-│   │   ├── services/                   # Feature engineering: feature_engineering.py
+│   │   ├── services/                   # Feature engineering and prediction services
+│   │   │   ├── feature_engineering.py, enhanced_feature_engineering.py
+│   │   │   └── prediction_service.py
 │   │   └── utils/                      # Logger utilities
 │   ├── training-data/                  # Instacart dataset (6 CSV files)
 │   │   ├── orders.csv, products.csv, departments.csv, aisles.csv
@@ -97,7 +100,6 @@ timely/ (Current Implementation Status)
 │   ├── category_details.csv           # Category images and descriptions
 │   ├── init.sql                        # SQL schema (if needed)
 │   ├── package.json, tsconfig.json    # Node.js dependencies
-│   ├── requirements.txt                # Python dependencies (unused)
 │   └── Dockerfile                      # Database initialization container
 │
 ├── docker-compose.yml                  # Complete orchestration (5 services)

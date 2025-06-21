@@ -1,77 +1,106 @@
-// /database/init-database.ts
+// database/init-database.ts
+// UPDATED: Using Sequelize instead of TypeORM, handling UUID/INTEGER conflicts
 
-import { DataSource, DataSourceOptions } from 'typeorm';
-import * as bcrypt from 'bcrypt';
+import { Sequelize } from 'sequelize-typescript';
+import * as bcrypt from 'bcryptjs';
 import * as path from 'path';
 import * as fs from 'fs';
 import csv from 'csv-parser';
 import { config } from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
 
 // Load environment variables from the root .env file
-config({ path: path.resolve(__dirname, '../../.env') });
+config({ path: path.resolve(__dirname, '../.env') });
 
-// --- Manually define entities here ---
-import { User } from '../../backend/src/models/user.model';
-import { Category } from '../../backend/src/models/category.model';
-import { Product } from '../../backend/src/models/product.model';
+// Import models from backend
+import { User, UserRole } from '../backend/src/models/user.model';
+import { Category } from '../backend/src/models/category.model';
+import { Product } from '../backend/src/models/product.model';
 
-// --- Logger ---
+// Logger
 const logger = {
   info: (message: string) => console.log(`[INFO] ${message}`),
   error: (message: string, error?: any) => console.error(`[ERROR] ${message}`, error || ''),
 };
 
-// --- Database Configuration ---
-const dataSourceOptions: DataSourceOptions = {
-    type: 'postgres',
-    host: process.env.DB_HOST || 'db',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    username: process.env.POSTGRES_USER,
-    password: process.env.POSTGRES_PASSWORD,
-    database: process.env.POSTGRES_DB,
-    synchronize: false,
-    logging: false,
-    entities: [path.join(__dirname, '../../backend/src/models/**/*.ts')],
-    migrations: [path.join(__dirname, '../../backend/src/database/migrations/**/*.ts')],
-    migrationsTableName: 'migrations',
-};
+// Database Configuration - Using Sequelize
+const DATABASE_URL = process.env.DATABASE_URL || 
+  `postgresql://${process.env.POSTGRES_USER}:${process.env.POSTGRES_PASSWORD}@${process.env.DB_HOST || 'db'}:${process.env.DB_PORT || '5432'}/${process.env.POSTGRES_DB}`;
 
-const AppDataSource = new DataSource(dataSourceOptions);
+const sequelize = new Sequelize(DATABASE_URL, {
+  dialect: 'postgres',
+  logging: false,
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000
+  },
+  define: {
+    underscored: true,
+    timestamps: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at'
+  },
+  models: [User, Category, Product]
+});
 
-// --- Main Initialization Logic ---
+// ID mapping to handle CSV INTEGER -> UUID conversion
+const categoryIdMap = new Map<number, string>();
+const productIdMap = new Map<number, string>();
 
+// User seeding function - Updated for Sequelize
 async function seedUsers() {
   logger.info("Seeding users...");
-  const userRepository = AppDataSource.getRepository(User);
+  
   const usersToCreate = [
-    { email: 'admin@timely.com', password: 'password', role: 'ADMIN', firstName: 'Admin' },
-    { email: 'test@timely.com', password: 'password', role: 'USER', firstName: 'Test' }
+    { 
+      email: 'admin@timely.com', 
+      password: 'password', 
+      role: UserRole.ADMIN,
+      firstName: 'Admin',
+      lastName: 'User'
+    },
+    { 
+      email: 'test@timely.com', 
+      password: 'password', 
+      role: UserRole.USER,
+      firstName: 'Test',
+      lastName: 'User'
+    }
   ];
 
   for (const userData of usersToCreate) {
-    const userExists = await userRepository.findOne({ where: { email: userData.email } });
+    const userExists = await User.findOne({ where: { email: userData.email } });
     if (!userExists) {
-      const salt = await bcrypt.genSalt();
-      const hashedPassword = await bcrypt.hash(userData.password, salt);
-      const user = userRepository.create({ ...userData, password: hashedPassword });
-      await userRepository.save(user);
+      const hashedPassword = await bcrypt.hash(userData.password, 10);
+      await User.create({ 
+        ...userData, 
+        password: hashedPassword,
+        isActive: true,
+        metadata: {}
+      });
       logger.info(`✅ User '${userData.email}' seeded.`);
+    } else {
+      logger.info(`ℹ️ User '${userData.email}' already exists, skipping.`);
     }
   }
 }
 
+// Category and Product seeding function - Updated for Sequelize with UUID handling
 async function populateFromCsv() {
     logger.info("Populating categories and products from CSV...");
-    const categoryRepository = AppDataSource.getRepository(Category);
-    const productRepository = AppDataSource.getRepository(Product);
 
-    // --- Step 1: Read category details from our new CSV ---
+    // Read category details from CSV
     const categoryDetailsMap = new Map<string, { description: string, imageUrl: string }>();
     await new Promise<void>((resolve, reject) => {
         fs.createReadStream(path.join(__dirname, 'category_details.csv'))
             .pipe(csv())
             .on('data', (row) => {
-                categoryDetailsMap.set(row.department_name, { description: row.description, imageUrl: row.imageUrl });
+                categoryDetailsMap.set(row.department_name, { 
+                  description: row.description, 
+                  imageUrl: row.imageUrl 
+                });
             })
             .on('end', () => {
                 logger.info(`Loaded details for ${categoryDetailsMap.size} categories from CSV.`);
@@ -81,127 +110,128 @@ async function populateFromCsv() {
     });
     
     // Default details for fallback
-    const defaultDetails = { description: "A variety of quality products.", imageUrl: "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" };
+    const defaultDetails = { 
+      description: "A variety of quality products.", 
+      imageUrl: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=400" 
+    };
 
-    // --- Step 2: Read departments.csv and create categories ---
-    const departments: { id: number; name: string }[] = [];
+    // Read and process categories - Generate UUIDs for INTEGER IDs
+    const categoriesData: any[] = [];
     await new Promise<void>((resolve, reject) => {
-        fs.createReadStream('/training-data/departments.csv')
+        fs.createReadStream(path.join(__dirname, '../ml-service/training-data/departments.csv'))
             .pipe(csv())
             .on('data', (row) => {
-                departments.push({ id: parseInt(row.department_id), name: row.department });
-            })
-            .on('end', resolve)
-            .on('error', reject);
-    });
-
-    for (const dept of departments) {
-        const details = categoryDetailsMap.get(dept.name) || defaultDetails;
-        const category = categoryRepository.create({
-            id: dept.id,
-            name: dept.name,
-            description: details.description,
-            imageUrl: details.imageUrl,
-        });
-        await categoryRepository.save(category);
-    }
-    logger.info(`✅ Populated ${departments.length} categories.`);
-    
-    // --- Step 3: Read and populate products ---
-    const products: { id: number; name: string; categoryId: number; imageUrl: string; price: number; sku: string }[] = [];
-    await new Promise<void>((resolve, reject) => {
-        fs.createReadStream('/training-data/products.csv')
-            .pipe(csv())
-            .on('data', (row) => {
-                // Generate a consistent image URL based on product name for deterministic results
-                const productName = row.product_name.toLowerCase();
-                let imageUrl = '';
+                const csvId = parseInt(row.department_id);
+                const uuid = uuidv4();
+                categoryIdMap.set(csvId, uuid); // Map CSV ID to UUID
                 
-                // Assign images based on product categories and common food items
-                if (productName.includes('banana')) imageUrl = 'https://images.pexels.com/photos/2316466/pexels-photo-2316466.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('apple')) imageUrl = 'https://images.pexels.com/photos/102104/pexels-photo-102104.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('milk')) imageUrl = 'https://images.pexels.com/photos/236010/pexels-photo-236010.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('bread') || productName.includes('loaf')) imageUrl = 'https://images.pexels.com/photos/209403/pexels-photo-209403.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('egg')) imageUrl = 'https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('cheese')) imageUrl = 'https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('yogurt')) imageUrl = 'https://images.pexels.com/photos/4061662/pexels-photo-4061662.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('chicken')) imageUrl = 'https://images.pexels.com/photos/616401/pexels-photo-616401.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('beef') || productName.includes('steak')) imageUrl = 'https://images.pexels.com/photos/65175/pexels-photo-65175.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('salmon') || productName.includes('fish') || productName.includes('tuna')) imageUrl = 'https://images.pexels.com/photos/725992/pexels-photo-725992.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('tomato')) imageUrl = 'https://images.pexels.com/photos/533280/pexels-photo-533280.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('lettuce') || productName.includes('salad') || productName.includes('greens')) imageUrl = 'https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('carrot')) imageUrl = 'https://images.pexels.com/photos/143133/pexels-photo-143133.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('potato')) imageUrl = 'https://images.pexels.com/photos/144248/potatoes-vegetables-erdfrucht-bio-144248.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('orange') || productName.includes('citrus')) imageUrl = 'https://images.pexels.com/photos/327098/pexels-photo-327098.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('pasta') || productName.includes('noodle') || productName.includes('spaghetti')) imageUrl = 'https://images.pexels.com/photos/1487511/pexels-photo-1487511.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('rice')) imageUrl = 'https://images.pexels.com/photos/723198/pexels-photo-723198.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('cereal') || productName.includes('oats') || productName.includes('granola')) imageUrl = 'https://images.pexels.com/photos/103124/pexels-photo-103124.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('coffee') || productName.includes('espresso')) imageUrl = 'https://images.pexels.com/photos/302899/pexels-photo-302899.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('tea')) imageUrl = 'https://images.pexels.com/photos/230477/pexels-photo-230477.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('water') || productName.includes('sparkling') || productName.includes('juice')) imageUrl = 'https://images.pexels.com/photos/416528/pexels-photo-416528.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('chocolate') || productName.includes('candy') || productName.includes('sweet')) imageUrl = 'https://images.pexels.com/photos/918327/pexels-photo-918327.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('cookie') || productName.includes('biscuit')) imageUrl = 'https://images.pexels.com/photos/890577/pexels-photo-890577.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('cake') || productName.includes('muffin')) imageUrl = 'https://images.pexels.com/photos/291528/pexels-photo-291528.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('ice cream') || productName.includes('frozen')) imageUrl = 'https://images.pexels.com/photos/1352278/pexels-photo-1352278.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('pizza')) imageUrl = 'https://images.pexels.com/photos/315755/pexels-photo-315755.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('soup') || productName.includes('broth')) imageUrl = 'https://images.pexels.com/photos/539451/pexels-photo-539451.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('sauce') || productName.includes('dressing')) imageUrl = 'https://images.pexels.com/photos/1640774/pexels-photo-1640774.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('oil') || productName.includes('vinegar')) imageUrl = 'https://images.pexels.com/photos/33783/olive-oil-salad-dressing-cooking-olive.jpg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('spice') || productName.includes('salt') || productName.includes('pepper')) imageUrl = 'https://images.pexels.com/photos/277253/pexels-photo-277253.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('nuts') || productName.includes('almond') || productName.includes('peanut')) imageUrl = 'https://images.pexels.com/photos/1295572/pexels-photo-1295572.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('berry') || productName.includes('strawberry') || productName.includes('blueberry')) imageUrl = 'https://images.pexels.com/photos/89778/strawberries-frisch-ripe-sweet-89778.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('soap') || productName.includes('shampoo') || productName.includes('body wash')) imageUrl = 'https://images.pexels.com/photos/3762875/pexels-photo-3762875.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('detergent') || productName.includes('clean') || productName.includes('dish')) imageUrl = 'https://images.pexels.com/photos/4239031/pexels-photo-4239031.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('diaper') || productName.includes('baby')) imageUrl = 'https://images.pexels.com/photos/3995441/pexels-photo-3995441.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('pet') || productName.includes('dog') || productName.includes('cat')) imageUrl = 'https://images.pexels.com/photos/45201/kitty-cat-kitten-pet-45201.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('wine') || productName.includes('beer') || productName.includes('alcohol')) imageUrl = 'https://images.pexels.com/photos/978512/pexels-photo-978512.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('can') || productName.includes('canned')) imageUrl = 'https://images.pexels.com/photos/8851531/pexels-photo-8851531.jpeg?auto=compress&cs=tinysrgb&w=400';
-                else if (productName.includes('snack') || productName.includes('chip') || productName.includes('cracker')) imageUrl = 'https://images.pexels.com/photos/20967/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=400';
-                else {
-                    // Default to a generic grocery image
-                    imageUrl = 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=400';
-                }
-
-                products.push({
-                    id: parseInt(row.product_id),
-                    name: row.product_name,
-                    categoryId: parseInt(row.department_id),
-                    imageUrl: imageUrl,
-                    price: Math.round((Math.random() * 20 + 1) * 100) / 100, // Random price between $1-$21
-                    sku: `PROD-${String(row.product_id).padStart(7, '0')}` // Generate SKU as expected by admin controller
+                const details = categoryDetailsMap.get(row.department) || defaultDetails;
+                categoriesData.push({
+                    id: uuid, // Use UUID instead of CSV integer
+                    name: row.department,
+                    description: details.description,
+                    imageUrl: details.imageUrl,
+                    isActive: true
                 });
             })
             .on('end', resolve)
             .on('error', reject);
     });
 
-    await AppDataSource.createQueryBuilder()
-        .insert()
-        .into(Product)
-        .values(products)
-        .orIgnore()
-        .execute();
+    // Insert categories using Sequelize bulkCreate
+    await Category.bulkCreate(categoriesData, { 
+      ignoreDuplicates: true,
+      validate: true 
+    });
     
-    logger.info(`✅ Populated ${products.length} products.`);
+    logger.info(`✅ Populated ${categoriesData.length} categories.`);
+
+    // Read and process products - Map category IDs to UUIDs
+    const productsData: any[] = [];
+    await new Promise<void>((resolve, reject) => {
+        fs.createReadStream(path.join(__dirname, '../ml-service/training-data/products.csv'))
+            .pipe(csv())
+            .on('data', (row) => {
+                const csvProductId = parseInt(row.product_id);
+                const csvCategoryId = parseInt(row.department_id);
+                const productUuid = uuidv4();
+                const categoryUuid = categoryIdMap.get(csvCategoryId);
+                
+                if (!categoryUuid) {
+                    logger.error(`Category UUID not found for CSV ID: ${csvCategoryId}`);
+                    return;
+                }
+                
+                productIdMap.set(csvProductId, productUuid);
+                
+                const productName = row.product_name.toLowerCase();
+                let imageUrl: string;
+
+                // Smart image assignment based on product names
+                if (productName.includes('organic') || productName.includes('fresh')) 
+                    imageUrl = 'https://images.pexels.com/photos/1300972/pexels-photo-1300972.jpeg?auto=compress&cs=tinysrgb&w=400';
+                else if (productName.includes('milk') || productName.includes('yogurt') || productName.includes('cheese')) 
+                    imageUrl = 'https://images.pexels.com/photos/236010/pexels-photo-236010.jpeg?auto=compress&cs=tinysrgb&w=400';
+                else if (productName.includes('bread') || productName.includes('bakery')) 
+                    imageUrl = 'https://images.pexels.com/photos/209206/pexels-photo-209206.jpeg?auto=compress&cs=tinysrgb&w=400';
+                else if (productName.includes('fruit') || productName.includes('apple') || productName.includes('banana') || productName.includes('orange')) 
+                    imageUrl = 'https://images.pexels.com/photos/1132047/pexels-photo-1132047.jpeg?auto=compress&cs=tinysrgb&w=400';
+                else if (productName.includes('vegetable') || productName.includes('carrot') || productName.includes('lettuce') || productName.includes('tomato')) 
+                    imageUrl = 'https://images.pexels.com/photos/3995441/pexels-photo-3995441.jpeg?auto=compress&cs=tinysrgb&w=400';
+                else if (productName.includes('meat') || productName.includes('chicken') || productName.includes('beef')) 
+                    imageUrl = 'https://images.pexels.com/photos/65175/pexels-photo-65175.jpeg?auto=compress&cs=tinysrgb&w=400';
+                else 
+                    imageUrl = 'https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=400';
+
+                productsData.push({
+                    id: productUuid, // Use UUID instead of CSV integer
+                    name: row.product_name,
+                    categoryId: categoryUuid, // Use mapped category UUID
+                    sku: `PROD-${String(csvProductId).padStart(7, '0')}`, // Keep original ID in SKU for reference
+                    imageUrl: imageUrl,
+                    price: Math.round((Math.random() * 20 + 1) * 100) / 100, // Random price between $1-$21
+                    isActive: true,
+                    stock: Math.floor(Math.random() * 100) + 10, // Random stock 10-110
+                    unit: 'each',
+                    brand: 'Generic',
+                    tags: [],
+                    additionalImages: [],
+                    nutritionalInfo: {},
+                    metadata: { originalCsvId: csvProductId } // Store original CSV ID for reference
+                });
+            })
+            .on('end', resolve)
+            .on('error', reject);
+    });
+
+    // Insert products using Sequelize bulkCreate
+    await Product.bulkCreate(productsData, { 
+      ignoreDuplicates: true,
+      validate: true 
+    });
+    
+    logger.info(`✅ Populated ${productsData.length} products.`);
 }
 
-
+// Main initialization function - Updated for Sequelize
 async function main() {
   logger.info("Starting database initialization process...");
   try {
-    await AppDataSource.initialize();
-    logger.info("Database connection established.");
+    await sequelize.authenticate();
+    logger.info("✅ Database connection established.");
 
-    await AppDataSource.runMigrations();
-    logger.info("✅ Migrations executed successfully.");
+    // Sync models with database (alternative to migrations for development)
+    await sequelize.sync({ alter: false }); // Don't alter existing tables
+    logger.info("✅ Database models synchronized.");
 
+    // Seed users and products
     await seedUsers();
     await populateFromCsv();
 
-    await AppDataSource.destroy();
+    await sequelize.close();
     logger.info("🎉 Database initialization process completed successfully!");
   } catch (error) {
-    logger.error("Database initialization failed:", error);
+    logger.error("❌ Database initialization failed:", error);
     process.exit(1);
   }
 }
