@@ -337,13 +337,19 @@ POST /api/user/favorites/add
 ## 📊 Data & ML Pipeline
 
 1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/training-data/
-2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets
+2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets (internally)
 3. **Model Training**: Two-stage stacked model: a LightGBM model + A Scikit-learn GradientBoostingClassifier
 4. **Prediction Service**: Real-time predictions via FastAPI endpoints
 5. **Performance Monitoring**: Metrics tracking with Precision@K, Recall@K, NDCG, F1
 6. **Feedback Loop**: User interactions improve future predictions - Architecturely laid, further enhancements to be deployed
 
 ## ML Model Details
+
+### Model Architecture
+- **Internal Processing**: Advanced feature engineering and data preprocessing
+- **Stage 1**: Candidate generation using ensemble methods
+- **Stage 2**: Basket optimization and ranking
+- **Output**: Personalized product recommendations with confidence scores
 
 ### Training Data
 - Dataset: Instacart Market Basket Analysis
@@ -378,10 +384,11 @@ POST /api/user/favorites/add
 
 ### Admin Features
 - **Analytics Dashboard**: Real-time metrics and model performance
+- **Model Evaluation**: On-demand performance assessment  
+- **ML Model Monitoring**: Track prediction accuracy and performance metrics
+- **Demo Simulation**: Interactive prediction demonstrations
 - **Product Management**: Add, edit, and categorize products
 - **User Management**: Monitor user activity and preferences
-- **ML Model Monitoring**: Track prediction accuracy and performance metrics
-- **Sales Analytics**: Revenue tracking and trend analysis
 
 ### ML Features
 - **Real-time Predictions**: Dynamic basket recommendations

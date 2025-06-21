@@ -37,29 +37,6 @@ class CandidateGenerator:
                        callbacks=[lgb.early_stopping(100, verbose=True)])
         print("--- Stage 1 Training Complete ---")
 
-        print("--- Saving Stage 1 Feature Importance ---")
-        feature_names = self.model.feature_name_
-        importances = self.model.feature_importances_
-        
-        # Create a list of objects for easy JSON conversion
-        feature_importance_list = [
-            {"feature": name, "importance": float(imp)} 
-            for name, imp in zip(feature_names, importances)
-        ]
-
-        # Sort by importance, descending
-        feature_importance_list.sort(key=lambda x: x['importance'], reverse=True)
-
-        # Define path for the output file
-        # Using MODEL_PATH from .env is best practice, but for simplicity here we hardcode it
-        output_path = "models/binaries/"
-        os.makedirs(output_path, exist_ok=True)
-        
-        with open(os.path.join(output_path, 'feature_importances.json'), 'w') as f:
-            json.dump(feature_importance_list, f, indent=2)
-
-        print(f"✅ Feature importances saved to {os.path.join(output_path, 'feature_importances.json')}")
-
     def generate_candidates_and_meta_features(self, features: pd.DataFrame) -> Tuple[pd.DataFrame, List[pd.DataFrame]]:
         """
         Takes features for an order, predicts probabilities, and generates candidate baskets

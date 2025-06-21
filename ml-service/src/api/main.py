@@ -16,7 +16,6 @@ from typing import List
 # Assuming these are the correct paths from your project structure
 from ..models.stacked_basket_model import StackedBasketModel
 from ..evaluation.evaluator import BasketPredictionEvaluator
-from ..services.feature_engineering import FeatureEngineer
 from ..services.prediction_service import PredictionService # Main prediction service
 from ..database.connection import get_db, engine # get_db might not be used if using SQLAlchemy engine directly
 from ..database.models import Base # For table creation
@@ -71,13 +70,7 @@ async def lifespan(app: FastAPI):
         except Exception as e:
             logger.error(f"Error loading global features_df: {e}", exc_info=True)
 
-
-    # --- 3. Load Feature Engineering Components ---
-    # This is for real-time prediction, not batch evaluation.
-    app.state.feature_engineer = FeatureEngineer(PROCESSED_DATA_PATH)
-    logger.info("FeatureEngineer initialized.")
-
-    # --- 4. Initialize Prediction Service ---
+    # --- 3. Initialize Prediction Service ---
     # This service encapsulates prediction logic, called by other endpoints.    
     if app.state.model and app.state.feature_engineer:
         app.state.prediction_service = PredictionService(app.state.model, app.state.feature_engineer, app.state.features_df)
@@ -219,27 +212,6 @@ def get_instacart_user_order_history(user_id: int):
 @app.get("/")
 async def root():
     return {"service": "Timely ML Service", "status": "running", "timestamp": datetime.utcnow().isoformat()}
-
-@app.get("/model/feature-importance")
-async def get_feature_importance():
-    """
-    Retrieves saved feature importance data from the JSON file created during training.
-    """
-    try:
-        # Construct the path relative to the model storage location
-        importance_path = os.path.join(MODEL_PATH_BASE, "feature_importances.json")
-        with open(importance_path, 'r') as f:
-            importance_data = json.load(f)
-        
-        # The data is already sorted and formatted correctly by our training script
-        return importance_data[:20] # Return top 20 features
-
-    except FileNotFoundError:
-        logger.error(f"feature_importances.json not found at {importance_path}", exc_info=True)
-        raise HTTPException(status_code=404, detail="Feature importance data not found. The model may need to be (re)trained.")
-    except Exception as e:
-        logger.error(f"Error reading feature importance file: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Could not load feature importance data.")
 
 
 @app.post("/predict/from-db-history", tags=["Prediction"])

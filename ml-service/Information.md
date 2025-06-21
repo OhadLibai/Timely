@@ -1,4 +1,4 @@
-/CSVs -> ML preprocessing -> ML training -> API usage.
+Data Flow: CSVs → ML preprocessing → ML training → API usage.
 
 Raw Data: Instacart CSVs in ml-service/training-data/.
 

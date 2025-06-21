@@ -25,15 +25,6 @@ router.post(
   adminController.seedDemoUser
 );
 
-
-// ... other imports and routes
-router.get(
-  '/feature-importance',
-  authMiddleware,
-  adminMiddleware,
-  adminController.getFeatureImportance
-);
-
 // Demo Simulation Routes
 router.get('/demo/user-ids', adminController.getDemoUserIds);
 router.get('/demo/user-prediction/:userId', adminController.getDemoUserPrediction);

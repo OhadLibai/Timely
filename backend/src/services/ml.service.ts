@@ -14,11 +14,6 @@ export const getInstacartUserHistory = async (instacartUserId: string): Promise<
 export const getGroundTruthBasket = async (instacartUserId: string): Promise<any> => {
   const response = await mlApiClient.get(`/demo-data/user-future-basket/${instacartUserId}`);
   return response.data;
-}
-
-export const getFeatureImportance = async (): Promise<{ feature: string; importance: number }[]> => {
-  const response = await mlServiceApiClient.get('/feature-importance');
-  return response.data;
 };
 
 export const mlApiClient = axios.create({

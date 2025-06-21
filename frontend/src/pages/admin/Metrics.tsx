@@ -9,7 +9,7 @@ import {
 } from 'lucide-react';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
-  RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
+  PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ScatterChart, Scatter, XAxis, YAxis, CartesianGrid,
   Tooltip, Legend, ResponsiveContainer, Cell
 } from 'recharts';
@@ -58,13 +58,6 @@ const AdminMetrics: React.FC = () => {
     'online-metrics',
     predictionService.getOnlineMetrics,
     { staleTime: 5 * 60 * 1000 }
-  );
-
-  // Fetch feature importance
-  const { data: featureImportance } = useQuery(
-    'feature-importance',
-    adminService.getFeatureImportance,
-    { staleTime: 30 * 60 * 1000 }
   );
 
   // Exporting the results (JSON format)
@@ -305,36 +298,6 @@ const AdminMetrics: React.FC = () => {
                 />
                 <Tooltip />
               </RadarChart>
-            </ResponsiveContainer>
-          </motion.div>
-
-          {/* Feature Importance */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              Top Feature Importance
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={featureImportance?.slice(0, 10) || []} layout="vertical">
-                <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.2} />
-                <XAxis type="number" stroke="#9CA3AF" />
-                <YAxis dataKey="feature" type="category" stroke="#9CA3AF" width={150} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: '#1F2937', 
-                    border: 'none', 
-                    borderRadius: '0.5rem' 
-                  }} 
-                />
-                <Bar dataKey="importance" radius={[0, 4, 4, 0]}>
-                  {featureImportance?.slice(0, 10).map((entry: any, index: number) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
             </ResponsiveContainer>
           </motion.div>
 

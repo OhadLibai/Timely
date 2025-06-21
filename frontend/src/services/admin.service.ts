@@ -32,12 +32,6 @@ export interface DashboardStats {
   }>;
 }
 
-export interface FeatureImportance {
-  feature: string;
-  importance: number;
-  category: string;
-}
-
 export interface UserManagementData {
   users: User[];
   total: number;
@@ -89,12 +83,6 @@ class AdminService {
   async triggerModelEvaluation(): Promise<any> {
     // This calls the backend, which will then call the ml-service
     return api.post('/admin/evaluation');
-  }
-
-  // ML Metric
-  async getFeatureImportance(): Promise<FeatureImportance[]> {
-    // This calls the backend, which acts as a proxy
-    return api.get<FeatureImportance[]>('/admin/feature-importance');
   }
 
   // User Management

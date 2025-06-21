@@ -207,19 +207,6 @@ export class AdminController {
         }
     }
 
-
-    async getFeatureImportance(req: Request, res: Response, next: NextFunction) {
-        try {
-            logger.info('Requesting feature importance from ML service...');
-            // The mlApiClient makes a GET request to the ml-service
-            const response = await mlApiClient.get('/model/feature-importance');
-            res.json(response.data);
-        } catch (error) {
-            logger.error('Error fetching feature importance:', error);
-            next(error);
-        }
-    }
-
     // Placeholder for other admin functionalities
     // async getDashboardStats(req: Request, res: Response, next: NextFunction) { /* ... */ }
     // async getUsers(req: Request, res: Response, next: NextFunction) { /* ... */ }
