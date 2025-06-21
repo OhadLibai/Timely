@@ -1,5 +1,5 @@
 // backend/src/controllers/admin.controller.ts
-// UPDATED: Removed feature importance, added ML service monitoring
+// UPDATED: Removed feature importance, black box ML, maintained demo functionality
 
 import { Request, Response, NextFunction } from 'express';
 import { User, UserRole } from '../models/user.model';
@@ -18,20 +18,21 @@ const DEMO_INSTACART_USER_IDS: string[] = ['1', '7', '13', '25', '31', '42', '55
 export class AdminController {
     
     /**
-     * Trigger model evaluation in ML service (BLACK BOX - no feature importance)
+     * Trigger BLACK BOX model evaluation (no feature importance exposure)
      */
     async triggerModelEvaluation(req: Request, res: Response, next: NextFunction) {
         try {
-            logger.info('Triggering model evaluation...');
+            logger.info('Triggering BLACK BOX model evaluation...');
             
             const evaluationResponse = await mlService.triggerModelEvaluation();
             
-            logger.info('Model evaluation completed successfully');
+            logger.info('BLACK BOX model evaluation completed successfully');
             
-            // Return evaluation results without feature importance
+            // Return evaluation results WITHOUT feature importance
             res.status(200).json({
                 message: "Model evaluation completed",
                 metrics: evaluationResponse.metrics,
+                architecture: "direct_database_access",
                 feature_engineering: "black_box",
                 timestamp: evaluationResponse.timestamp || new Date().toISOString()
             });
@@ -50,7 +51,8 @@ export class AdminController {
             res.json({
                 userIds: DEMO_INSTACART_USER_IDS,
                 message: "Demo Instacart user IDs for prediction testing",
-                count: DEMO_INSTACART_USER_IDS.length
+                count: DEMO_INSTACART_USER_IDS.length,
+                feature_engineering: "black_box"
             });
         } catch (error) {
             logger.error('Error fetching demo user IDs:', error);
@@ -59,7 +61,7 @@ export class AdminController {
     }
 
     /**
-     * Get demo prediction comparison (AI vs actual)
+     * Get demo prediction comparison (AI vs actual) - MAINTAINED FUNCTIONALITY
      */
     async getDemoUserPrediction(req: Request, res: Response, next: NextFunction) {
         const { userId: instacartUserIdStr } = req.params;
@@ -74,7 +76,7 @@ export class AdminController {
         logger.info(`Fetching demo prediction for Instacart User ID: ${instacartUserIdStr}`);
 
         try {
-            // 1. Call ML service for AI prediction
+            // 1. Call ML service for AI prediction using BLACK BOX
             const mlPredictionResponse = await mlApiClient.post('/predict/for-user-history', {
                 user_id: instacartUserIdStr,
             });
@@ -146,10 +148,12 @@ export class AdminController {
                 };
             }).filter(Boolean);
 
+            // Return demo comparison - BLACK BOX approach
             res.json({
                 userId: instacartUserIdStr,
                 predictedBasket: detailedPredictedBasket,
                 trueFutureBasket: detailedTrueFutureBasket,
+                architecture: "direct_database_access",
                 feature_engineering: "black_box",
                 comparisonMetrics: {
                     predictedCount: detailedPredictedBasket.length,
@@ -178,7 +182,8 @@ export class AdminController {
             let user = await User.findOne({ where: { email } });
             if (user) {
                 return res.status(409).json({ 
-                    message: 'This demo user has already been seeded.' 
+                    message: 'This demo user has already been seeded.',
+                    feature_engineering: "black_box"
                 });
             }
 
@@ -194,184 +199,150 @@ export class AdminController {
                 emailVerified: true
             });
 
-            // 3. Get order history from ML service
-            const orderHistory = await mlService.getInstacartUserHistory(instacartUserId);
-
-            // 4. Create orders with proper temporal fields
-            let orderCount = 0;
-            for (const orderData of orderHistory) {
-                orderCount++;
-                
-                // Calculate temporal fields for this order
-                const orderDate = new Date();
-                orderDate.setDate(orderDate.getDate() - (orderHistory.length - orderCount) * 7); // Weekly orders
-                
-                const daysSincePrior = orderCount === 1 ? 0 : 7; // Weekly pattern
-                const orderDow = orderDate.getDay() === 0 ? 6 : orderDate.getDay() - 1; // Convert to 0=Monday
-                const orderHourOfDay = 10; // Default shopping hour
-
-                const order = await Order.create({
-                    userId: user.id,
-                    orderNumber: `DEMO-${instacartUserId}-${orderCount}`,
-                    daysSincePriorOrder: daysSincePrior,
-                    orderDow: orderDow,
-                    orderHourOfDay: orderHourOfDay,
-                    status: 'delivered',
-                    subtotal: 50.00,
-                    tax: 4.38,
-                    deliveryFee: 0,
-                    total: 54.38,
-                    paymentStatus: 'paid',
-                    createdAt: orderDate
+            // 3. Get Instacart order history for this user (BLACK BOX)
+            const instacartHistory = await mlService.getInstacartUserOrderHistory(parseInt(instacartUserId));
+            
+            if (!instacartHistory.orders || instacartHistory.orders.length === 0) {
+                return res.status(404).json({ 
+                    error: 'No order history found for this Instacart user ID',
+                    feature_engineering: "black_box"
                 });
-
-                // Create order items (mock products with generated IDs)
-                const orderItems = orderData.product_id.map((productId: number) => ({
-                    orderId: order.id,
-                    productId: `00000000-0000-0000-0000-${String(productId).padStart(12, '0')}`, // Mock UUID
-                    quantity: 1,
-                    price: 3.99,
-                    total: 3.99
-                }));
-                
-                await OrderItem.bulkCreate(orderItems);
             }
 
-            res.status(201).json({ 
-                message: `Successfully seeded demo user ${email} with ${orderHistory.length} orders`,
+            // 4. Create orders in our database with EXACT temporal calculations
+            for (const instacartOrder of instacartHistory.orders) {
+                const productSkus = instacartOrder.products.map((productId: number) => 
+                    `PROD-${String(productId).padStart(7, '0')}`
+                );
+
+                const products = await Product.findAll({
+                    where: { sku: productSkus }
+                });
+
+                if (products.length === 0) continue;
+
+                // Calculate order total
+                const orderTotal = products.reduce((sum, product) => sum + product.price, 0);
+
+                // Create order with TEMPORAL FIELDS (exact as Instacart training data)
+                const order = await Order.create({
+                    userId: user.id,
+                    orderNumber: `DEMO-${user.id}-${instacartOrder.order_number}`,
+                    // CRITICAL: Use exact temporal fields from Instacart data
+                    daysSincePriorOrder: instacartOrder.days_since_prior_order,
+                    orderDow: instacartOrder.order_dow,
+                    orderHourOfDay: instacartOrder.order_hour_of_day,
+                    status: 'completed',
+                    subtotal: orderTotal,
+                    total: orderTotal
+                });
+
+                // Create order items
+                for (const product of products) {
+                    await OrderItem.create({
+                        orderId: order.id,
+                        productId: product.id,
+                        quantity: 1,
+                        price: product.price,
+                        total: product.price
+                    });
+                }
+            }
+
+            logger.info(`Demo user ${instacartUserId} seeded successfully with ${instacartHistory.orders.length} orders`);
+
+            res.status(201).json({
+                message: `Demo user created and seeded with ${instacartHistory.orders.length} orders`,
                 user: {
                     id: user.id,
                     email: user.email,
-                    orderCount: orderHistory.length
-                }
+                    firstName: user.firstName,
+                    lastName: user.lastName
+                },
+                ordersCreated: instacartHistory.orders.length,
+                architecture: "direct_database_access",
+                feature_engineering: "black_box"
             });
 
-        } catch (error) {
+        } catch (error: any) {
             logger.error(`Error seeding demo user ${instacartUserId}:`, error);
             next(error);
         }
     }
 
     /**
-     * NEW: ML Service health monitoring
-     */
-    async getMLServiceStatus(req: Request, res: Response, next: NextFunction) {
-        try {
-            logger.info('Checking ML service health status...');
-            
-            const [mlHealth, databaseStatus, serviceStats] = await Promise.allSettled([
-                mlService.checkMLServiceHealth(),
-                mlService.checkDatabaseStatus(),
-                mlService.getServiceStats()
-            ]);
-            
-            res.json({
-                mlService: mlHealth.status === 'fulfilled' ? mlHealth.value : { error: mlHealth.reason?.message },
-                database: databaseStatus.status === 'fulfilled' ? databaseStatus.value : { error: databaseStatus.reason?.message },
-                stats: serviceStats.status === 'fulfilled' ? serviceStats.value : { error: serviceStats.reason?.message },
-                timestamp: new Date().toISOString()
-            });
-
-        } catch (error) {
-            logger.error('Error checking ML service status:', error);
-            res.status(503).json({
-                error: 'Unable to check ML service status',
-                details: error instanceof Error ? error.message : 'Unknown error'
-            });
-        }
-    }
-
-    /**
-     * NEW: Architecture status overview
-     */
-    async getArchitectureStatus(req: Request, res: Response, next: NextFunction) {
-        try {
-            const mlHealth = await mlService.checkMLServiceHealth();
-            
-            const architectureInfo = {
-                deployment_version: "2.0.0",
-                architecture_type: "direct_database_access",
-                feature_engineering: "black_box",
-                database_connected: mlHealth.services?.database === 'Connected',
-                model_loaded: mlHealth.services?.model === 'Loaded',
-                prediction_service: mlHealth.services?.prediction_service || 'Unknown',
-                endpoints: {
-                    primary: '/predict/from-database',
-                    legacy_fallback: '/predict/from-db-history',
-                    demo_data: '/demo-data/*',
-                    health_check: '/health'
-                },
-                features: {
-                    direct_database_access: true,
-                    temporal_field_storage: true,
-                    backend_data_fetching: false,
-                    feature_importance_exposure: false
-                },
-                performance: {
-                    eliminated_backend_queries: true,
-                    centralized_ml_logic: true,
-                    black_box_feature_engineering: true
-                }
-            };
-
-            res.json(architectureInfo);
-
-        } catch (error) {
-            logger.error('Error getting architecture status:', error);
-            res.status(503).json({
-                error: 'Unable to get architecture status',
-                details: error instanceof Error ? error.message : 'Unknown error'
-            });
-        }
-    }
-
-    /**
-     * Dashboard statistics (simplified)
+     * Get admin dashboard statistics - BLACK BOX approach
      */
     async getDashboardStats(req: Request, res: Response, next: NextFunction) {
         try {
-            const { startDate, endDate } = req.query;
-            
-            // Get basic statistics
-            const totalUsers = await User.count();
-            const totalOrders = await Order.count();
-            const totalRevenue = await Order.sum('total') || 0;
-            const totalProducts = await Product.count();
+            const [totalUsers, totalProducts, totalOrders] = await Promise.all([
+                User.count({ where: { role: UserRole.USER } }),
+                Product.count({ where: { isActive: true } }),
+                Order.count()
+            ]);
 
-            // Get recent activity
-            const recentOrders = await Order.findAll({
-                limit: 10,
-                order: [['createdAt', 'DESC']],
-                include: [{ model: User, attributes: ['firstName', 'lastName'] }]
-            });
+            // Get ML service stats without exposing internals
+            let mlServiceStats = null;
+            try {
+                const mlStatsResponse = await mlApiClient.get('/service-info');
+                mlServiceStats = {
+                    status: mlStatsResponse.data.mode || 'unknown',
+                    architecture: mlStatsResponse.data.architecture || 'unknown',
+                    feature_engineering: "black_box"
+                };
+            } catch (error) {
+                logger.warn('Could not fetch ML service stats:', error);
+            }
 
             res.json({
-                overview: {
-                    totalUsers,
-                    totalOrders,
-                    totalRevenue: totalRevenue.toFixed(2),
-                    totalProducts
-                },
-                recentActivity: recentOrders.map(order => ({
-                    id: order.id,
-                    orderNumber: order.orderNumber,
-                    customerName: `${order.user.firstName} ${order.user.lastName}`,
-                    total: order.total,
-                    status: order.status,
-                    createdAt: order.createdAt
-                })),
-                mlService: {
-                    feature_engineering: "black_box",
-                    direct_database_access: true
-                },
+                totalUsers,
+                totalProducts,
+                totalOrders,
+                mlService: mlServiceStats,
+                architecture: "direct_database_access",
+                feature_engineering: "black_box",
                 timestamp: new Date().toISOString()
             });
 
         } catch (error) {
-            logger.error('Error getting dashboard stats:', error);
+            logger.error('Error fetching dashboard stats:', error);
             next(error);
         }
     }
 
-    // REMOVED: getFeatureImportance method (feature engineering is now black box)
+    /**
+     * Get system health status - BLACK BOX approach
+     */
+    async getSystemHealth(req: Request, res: Response, next: NextFunction) {
+        try {
+            // Test database connectivity
+            const dbHealth = await User.count().then(() => true).catch(() => false);
+            
+            // Test ML service health
+            let mlHealth = false;
+            try {
+                const mlResponse = await mlApiClient.get('/health');
+                mlHealth = mlResponse.status === 200;
+            } catch (error) {
+                logger.warn('ML service health check failed:', error);
+            }
+
+            const overallHealth = dbHealth && mlHealth;
+
+            res.json({
+                status: overallHealth ? 'healthy' : 'degraded',
+                services: {
+                    database: dbHealth ? 'healthy' : 'unhealthy',
+                    mlService: mlHealth ? 'healthy' : 'unhealthy'
+                },
+                architecture: "direct_database_access",
+                feature_engineering: "black_box",
+                timestamp: new Date().toISOString()
+            });
+
+        } catch (error) {
+            logger.error('Error checking system health:', error);
+            next(error);
+        }
+    }
 }

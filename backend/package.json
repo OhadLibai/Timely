@@ -7,8 +7,6 @@
     "dev": "nodemon --exec ts-node src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "migrate": "node dist/database/migrate.js",
-    "migrate:dev": "ts-node src/database/migrate.ts",
     "seed": "node dist/database/database.seed.js",
     "seed:dev": "ts-node src/database/database.seed.ts",
     "test": "jest",
