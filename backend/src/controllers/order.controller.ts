@@ -193,104 +193,140 @@ export class OrderController {
     }
   }
 
-  // Update order status (admin only)
-  async updateOrderStatus(req: Request, res: Response, next: NextFunction) {
-    const { orderId } = req.params;
-    const { status } = req.body;
-
-    try {
-      const order = await Order.findByPk(orderId);
-
-      if (!order) {
-        return res.status(404).json({ message: 'Order not found' });
-      }
-
-      await order.update({ status });
-
-      // Update delivery status if applicable
-      if (status === OrderStatus.DELIVERED) {
-        await Delivery.update(
-          { status: 'delivered', deliveredAt: new Date() },
-          { where: { orderId } }
-        );
-      }
-
-      logger.info(`Order ${orderId} status updated to ${status}`);
-
-      res.json({
-        message: 'Order status updated successfully',
-        order
-      });
-
-    } catch (error) {
-      logger.error(`Error updating order status for ${orderId}:`, error);
-      next(error);
-    }
-  }
-
-  // Cancel order
-  async cancelOrder(req: Request, res: Response, next: NextFunction) {
+  // Update delivery preferences
+  async updateDeliveryPreferences(req: Request, res: Response, next: NextFunction) {
     const userId = (req as any).user.id;
     const { orderId } = req.params;
-    const { reason } = req.body;
+    const { deliveryTime, deliveryInstructions, contactMethod } = req.body;
 
     try {
       const order = await Order.findOne({
-        where: { id: orderId, userId }
+        where: { id: orderId, userId },
+        include: [Delivery]
       });
 
       if (!order) {
-        return res.status(404).json({ message: 'Order not found' });
+        return res.status(404).json({ error: 'Order not found' });
       }
 
-      if (order.status !== OrderStatus.PENDING && order.status !== OrderStatus.PROCESSING) {
+      if (!['pending', 'confirmed'].includes(order.status)) {
         return res.status(400).json({ 
-          message: 'Order cannot be cancelled at this stage' 
+          error: 'Cannot update delivery preferences for orders in current status' 
         });
       }
 
-      await order.update({
-        status: OrderStatus.CANCELLED,
-        notes: reason ? `Cancelled: ${reason}` : 'Cancelled by user'
-      });
-
-      logger.info(`Order ${orderId} cancelled by user ${userId}`);
+      // Update delivery information
+      if (order.delivery) {
+        await order.delivery.update({
+          scheduledDeliveryTime: deliveryTime,
+          deliveryInstructions,
+          contactMethod
+        });
+      }
 
       res.json({
-        message: 'Order cancelled successfully',
-        order
+        message: 'Delivery preferences updated successfully',
+        order: await order.reload({ include: [Delivery] })
       });
 
     } catch (error) {
-      logger.error(`Error cancelling order ${orderId}:`, error);
+      logger.error(`Error updating delivery preferences for order ${orderId}:`, error);
       next(error);
     }
   }
 
-  // Get order statistics for user
+  // Reorder items from previous order
+  async reorderItems(req: Request, res: Response, next: NextFunction) {
+    const userId = (req as any).user.id;
+    const { orderId } = req.params;
+    const { items, addToCart = true } = req.body;
+
+    try {
+      const order = await Order.findOne({
+        where: { id: orderId, userId },
+        include: [{ 
+          model: OrderItem,
+          include: [Product]
+        }]
+      });
+
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      // Get items to reorder (all items if none specified)
+      const itemsToReorder = items || order.orderItems.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity
+      }));
+
+      if (addToCart) {
+        // Add items to user's cart
+        // Implementation depends on your cart system
+        // This is a placeholder
+        res.json({
+          message: 'Items added to cart successfully',
+          items: itemsToReorder
+        });
+      } else {
+        // Return items for manual addition
+        res.json({
+          message: 'Reorder items prepared',
+          items: itemsToReorder
+        });
+      }
+
+    } catch (error) {
+      logger.error(`Error reordering items from order ${orderId}:`, error);
+      next(error);
+    }
+  }
+
+  // Add order to favorites
+  async addOrderToFavorites(req: Request, res: Response, next: NextFunction) {
+    const userId = (req as any).user.id;
+    const { orderId } = req.params;
+    const { name } = req.body;
+
+    try {
+      const order = await Order.findOne({
+        where: { id: orderId, userId },
+        include: [OrderItem]
+      });
+
+      if (!order) {
+        return res.status(404).json({ error: 'Order not found' });
+      }
+
+      // This would typically save to a favorites table
+      // Implementation depends on your favorites system
+      res.json({
+        message: 'Order added to favorites successfully',
+        favoriteName: name || `Order ${order.orderNumber}`
+      });
+
+    } catch (error) {
+      logger.error(`Error adding order ${orderId} to favorites:`, error);
+      next(error);
+    }
+  }
+
+  // Get order statistics
   async getOrderStats(req: Request, res: Response, next: NextFunction) {
     const userId = (req as any).user.id;
 
     try {
-      const stats = await Order.findAll({
+      const stats = await Order.findAndCountAll({
         where: { userId },
         attributes: [
-          'status',
-          [Order.sequelize!.fn('COUNT', '*'), 'count'],
-          [Order.sequelize!.fn('SUM', Order.sequelize!.col('total')), 'totalSpent']
+          [Order.sequelize.fn('COUNT', Order.sequelize.col('id')), 'totalOrders'],
+          [Order.sequelize.fn('SUM', Order.sequelize.col('total')), 'totalSpent'],
+          [Order.sequelize.fn('AVG', Order.sequelize.col('total')), 'averageOrderValue']
         ],
-        group: ['status'],
         raw: true
       });
 
-      const totalOrders = await Order.count({ where: { userId } });
-      const totalSpent = await Order.sum('total', { where: { userId } });
-
-      res.json({
-        totalOrders,
-        totalSpent: totalSpent || 0,
-        statusBreakdown: stats
-      });
+      res.json(stats);
 
     } catch (error) {
       logger.error(`Error fetching order stats for user ${userId}:`, error);

@@ -1,14 +1,12 @@
 // backend/src/controllers/cart.controller.ts
 import { Request, Response, NextFunction } from 'express';
+import { Op } from 'sequelize';
 import { Cart } from '../models/cart.model';
 import { CartItem } from '../models/cartItem.model';
 import { Product } from '../models/product.model';
 import { Category } from '../models/category.model';
-import { PredictedBasket } from '../models/predictedBasket.model';
-import { PredictedBasketItem } from '../models/predictedBasketItem.model';
-import { mlApiClient } from '../services/ml.service';
+import { User } from '../models/user.model';
 import logger from '../utils/logger';
-import { Op } from 'sequelize'; // Import 'Op' directly
 
 // Define a more specific type for populated cart items for better type safety
 interface CartItemWithProduct extends CartItem {
@@ -311,26 +309,6 @@ export class CartController {
     }
   }
 
-  // Apply coupon code
-  async applyCoupon(req: Request, res: Response, next: NextFunction) {
-    try {
-      // TODO: Implement coupon logic
-      res.status(501).json({ error: 'Coupon feature not implemented yet' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  // Remove coupon
-  async removeCoupon(req: Request, res: Response, next: NextFunction) {
-    try {
-      // TODO: Implement coupon logic
-      res.status(501).json({ error: 'Coupon feature not implemented yet' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
   // Sync with predicted basket
   async syncWithPredictedBasket(req: Request, res: Response, next: NextFunction) {
     try {
@@ -571,32 +549,72 @@ export class CartController {
     }
   }
 
-  // Save for later
-  async saveForLater(req: Request, res: Response, next: NextFunction) {
-    try {
-      // TODO: Implement save for later
-      res.status(501).json({ error: 'Save for later feature not implemented yet' });
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  // Move to cart
+  // FIXED: Implement move to cart functionality
   async moveToCart(req: Request, res: Response, next: NextFunction) {
     try {
-      // TODO: Implement move to cart
-      res.status(501).json({ error: 'Move to cart feature not implemented yet' });
-    } catch (error) {
-      next(error);
-    }
-  }
+      const userId = (req as any).user.id;
+      const { savedItemId } = req.params;
 
-  // Get saved items
-  async getSavedItems(req: Request, res: Response, next: NextFunction) {
-    try {
-      // TODO: Implement get saved items
-      res.json({ items: [] });
+      // Find the saved item
+      const savedItem = await CartItem.findOne({
+        where: { id: savedItemId },
+        include: [{
+          model: Cart,
+          where: { userId, cartType: 'saved', isActive: true }
+        }]
+      });
+
+      if (!savedItem) {
+        return res.status(404).json({ error: 'Saved item not found' });
+      }
+
+      // Get or create active cart
+      let activeCart = await Cart.findOne({
+        where: { userId, cartType: 'shopping', isActive: true }
+      });
+
+      if (!activeCart) {
+        activeCart = await Cart.create({
+          userId,
+          cartType: 'shopping',
+          isActive: true
+        });
+      }
+
+      // Check if item already exists in cart
+      const existingCartItem = await CartItem.findOne({
+        where: {
+          cartId: activeCart.id,
+          productId: savedItem.productId
+        }
+      });
+
+      if (existingCartItem) {
+        // Update quantity
+        await existingCartItem.update({
+          quantity: existingCartItem.quantity + savedItem.quantity
+        });
+      } else {
+        // Create new cart item
+        await CartItem.create({
+          cartId: activeCart.id,
+          productId: savedItem.productId,
+          quantity: savedItem.quantity,
+          price: savedItem.price
+        });
+      }
+
+      // Remove from saved items
+      await savedItem.destroy();
+
+      logger.info(`Saved item moved to cart for user ${userId}`);
+
+      res.json({
+        message: 'Item moved to cart successfully'
+      });
+
     } catch (error) {
+      logger.error('Error moving item to cart:', error);
       next(error);
     }
   }
