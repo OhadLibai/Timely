@@ -1,15 +1,17 @@
 // backend/src/routes/product.routes.ts
+// SANITIZED: Removed file uploads and admin CRUD - READ-ONLY catalog for dev/test
+
 import { Router } from 'express';
-import { body, query, param } from 'express-validator';
+import { query, param } from 'express-validator';
 import { ProductController } from '../controllers/product.controller';
 import { validateRequest } from '../middleware/validation.middleware';
-import { authMiddleware } from '../middleware/auth.middleware';
-import { upload } from '../middleware/upload.middleware';
 
 const router = Router();
 const productController = new ProductController();
 
-// Public routes
+// ============================================================================
+// PUBLIC READ-ONLY ROUTES (Core functionality for users)
+// ============================================================================
 
 // Get all products with filters
 router.get(
@@ -52,13 +54,13 @@ router.get(
   productController.getRecommendations
 );
 
-// Get categories
+// Get categories (read-only)
 router.get(
   '/categories',
   productController.getCategories
 );
 
-// Get category by ID
+// Get category by ID (read-only)
 router.get(
   '/categories/:id',
   [
@@ -84,144 +86,14 @@ router.post(
   productController.trackView
 );
 
-// Admin routes
-
-// Create product
-router.post(
-  '/',
-  authMiddleware,
-  adminMiddleware,
-  upload.array('images', 5),
-  [
-    body('sku').notEmpty().trim(),
-    body('name').notEmpty().trim(),
-    body('description').optional().trim(),
-    body('price').isFloat({ min: 0 }),
-    body('compareAtPrice').optional().isFloat({ min: 0 }),
-    body('categoryId').isUUID(),
-    body('stock').optional().isInt({ min: 0 }),
-    body('trackInventory').optional().isBoolean(),
-    body('isActive').optional().isBoolean(),
-    body('isFeatured').optional().isBoolean(),
-    body('tags').optional().isArray()
-  ],
-  validateRequest,
-  productController.createProduct
-);
-
-// Update product
-router.put(
-  '/:id',
-  authMiddleware,
-  adminMiddleware,
-  upload.array('images', 5),
-  [
-    param('id').isUUID(),
-    body('sku').optional().trim(),
-    body('name').optional().trim(),
-    body('description').optional().trim(),
-    body('price').optional().isFloat({ min: 0 }),
-    body('compareAtPrice').optional().isFloat({ min: 0 }),
-    body('categoryId').optional().isUUID(),
-    body('stock').optional().isInt({ min: 0 }),
-    body('trackInventory').optional().isBoolean(),
-    body('isActive').optional().isBoolean(),
-    body('isFeatured').optional().isBoolean(),
-    body('isOnSale').optional().isBoolean(),
-    body('salePercentage').optional().isFloat({ min: 0, max: 100 }),
-    body('tags').optional().isArray()
-  ],
-  validateRequest,
-  productController.updateProduct
-);
-
-// Delete product
-router.delete(
-  '/:id',
-  authMiddleware,
-  adminMiddleware,
-  [
-    param('id').isUUID()
-  ],
-  validateRequest,
-  productController.deleteProduct
-);
-
-// Bulk update products
-router.post(
-  '/bulk-update',
-  authMiddleware,
-  adminMiddleware,
-  [
-    body('updates').isArray().notEmpty(),
-    body('updates.*.id').isUUID(),
-    body('updates.*.updates').isObject()
-  ],
-  validateRequest,
-  productController.bulkUpdate
-);
-
-// Import products
-router.post(
-  '/import',
-  authMiddleware,
-  adminMiddleware,
-  upload.single('file'),
-  productController.importProducts
-);
-
-// Export products
-router.get(
-  '/export',
-  authMiddleware,
-  adminMiddleware,
-  productController.exportProducts
-);
-
-// Category management
-
-// Create category
-router.post(
-  '/categories',
-  authMiddleware,
-  adminMiddleware,
-  upload.single('image'),
-  [
-    body('name').notEmpty().trim(),
-    body('description').optional().trim(),
-    body('parentId').optional().isUUID()
-  ],
-  validateRequest,
-  productController.createCategory
-);
-
-// Update category
-router.put(
-  '/categories/:id',
-  authMiddleware,
-  adminMiddleware,
-  upload.single('image'),
-  [
-    param('id').isUUID(),
-    body('name').optional().trim(),
-    body('description').optional().trim(),
-    body('parentId').optional().isUUID(),
-    body('isActive').optional().isBoolean()
-  ],
-  validateRequest,
-  productController.updateCategory
-);
-
-// Delete category
-router.delete(
-  '/categories/:id',
-  authMiddleware,
-  adminMiddleware,
-  [
-    param('id').isUUID()
-  ],
-  validateRequest,
-  productController.deleteCategory
-);
+// ============================================================================
+// REMOVED: All admin CRUD operations (create, update, delete)
+// REMOVED: All file upload functionality
+// REMOVED: Bulk operations
+// REMOVED: Import/export functionality
+// 
+// Products and categories are now populated ONLY via database seeding
+// This creates a clean, read-only catalog for dev/test demonstrations
+// ============================================================================
 
 export default router;

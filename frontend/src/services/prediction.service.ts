@@ -1,5 +1,7 @@
 // frontend/src/services/prediction.service.ts
-import { api, mlApi } from './api.client';
+// FIXED: Use backend proxy for model metrics instead of direct ML service calls
+
+import { api } from './api.client'; // REMOVED: mlApi import
 import { Product } from './product.service';
 
 export interface PredictedBasketItem {
@@ -111,44 +113,23 @@ class PredictionService {
       quantity?: number;
       isAccepted?: boolean;
     }
-  ): Promise<PredictedBasket> {
-    return api.put<PredictedBasket>(
-      `/predictions/baskets/${basketId}/items/${itemId}`,
-      data
-    );
+  ): Promise<PredictedBasketItem> {
+    return api.put<PredictedBasketItem>(`/predictions/baskets/${basketId}/items/${itemId}`, data);
   }
 
   // Remove item from predicted basket
-  async removeBasketItem(basketId: string, itemId: string): Promise<PredictedBasket> {
-    return api.delete<PredictedBasket>(
-      `/predictions/baskets/${basketId}/items/${itemId}`
-    );
+  async removeBasketItem(basketId: string, itemId: string): Promise<void> {
+    return api.delete(`/predictions/baskets/${basketId}/items/${itemId}`);
   }
 
-  // Add item to predicted basket
-  async addBasketItem(
-    basketId: string,
-    data: {
-      productId: string;
-      quantity: number;
-    }
-  ): Promise<PredictedBasket> {
-    return api.post<PredictedBasket>(
-      `/predictions/baskets/${basketId}/items`,
-      data
-    );
+  // Accept entire basket
+  async acceptBasket(basketId: string): Promise<PredictedBasket> {
+    return api.post<PredictedBasket>(`/predictions/baskets/${basketId}/accept`);
   }
 
-  // Accept predicted basket
-  async acceptBasket(basketId: string): Promise<{ orderId: string }> {
-    return api.post<{ orderId: string }>(
-      `/predictions/baskets/${basketId}/accept`
-    );
-  }
-
-  // Reject predicted basket
-  async rejectBasket(basketId: string, reason?: string): Promise<void> {
-    return api.post(`/predictions/baskets/${basketId}/reject`, { reason });
+  // Reject basket
+  async rejectBasket(basketId: string, reason?: string): Promise<PredictedBasket> {
+    return api.post<PredictedBasket>(`/predictions/baskets/${basketId}/reject`, { reason });
   }
 
   // Submit feedback
@@ -156,9 +137,9 @@ class PredictionService {
     return api.post('/predictions/feedback', feedback);
   }
 
-  // Get model metrics
+  // FIXED: Get model metrics through backend proxy instead of direct ML service call
   async getModelMetrics(): Promise<ModelMetrics> {
-    return mlApi.get<ModelMetrics>('/metrics/model-performance');
+    return api.get<ModelMetrics>('/admin/ml/metrics/model-performance');
   }
 
   // Get online metrics
@@ -169,94 +150,51 @@ class PredictionService {
   // Get personalized recommendations
   async getRecommendations(options?: {
     limit?: number;
-    category?: string;
+    categoryId?: string;
     excludeBasket?: boolean;
-  }): Promise<Array<{ product: Product; score: number; reason: string }>> {
+  }): Promise<Product[]> {
     const params = new URLSearchParams();
     if (options?.limit) params.append('limit', options.limit.toString());
-    if (options?.category) params.append('category', options.category);
+    if (options?.categoryId) params.append('category', options.categoryId);
     if (options?.excludeBasket) params.append('excludeBasket', 'true');
 
-    return api.get(`/predictions/recommendations?${params.toString()}`);
+    return api.get<Product[]>(`/predictions/recommendations?${params.toString()}`);
   }
 
   // Get prediction explanation
-  async getPredictionExplanation(
-    basketId: string,
-    productId: string
-  ): Promise<{
-    factors: Array<{ name: string; impact: number; description: string }>;
-    historicalData: Array<{ date: string; purchased: boolean; quantity?: number }>;
-    confidence: number;
-  }> {
-    return api.get(
-      `/predictions/baskets/${basketId}/items/${productId}/explanation`
-    );
+  async getPredictionExplanation(basketId: string, productId: string): Promise<any> {
+    return api.get(`/predictions/baskets/${basketId}/items/${productId}/explanation`);
   }
 
-  // Schedule automatic basket generation
-  async updateSchedule(schedule: {
-    enabled: boolean;
-    dayOfWeek: number; // 0-6, 0 = Sunday
-    timeOfDay: string; // HH:MM format
-  }): Promise<void> {
-    return api.put('/predictions/schedule', schedule);
-  }
-
-  // Get user's prediction preferences
-  async getPreferences(): Promise<{
-    autoBasketEnabled: boolean;
-    autoBasketDay: number;
-    autoBasketTime: string;
-    minConfidenceThreshold: number;
-    excludeCategories: string[];
-    maxBasketSize: number;
-  }> {
+  // Get user preferences
+  async getPreferences(): Promise<any> {
     return api.get('/predictions/preferences');
   }
 
-  // Update prediction preferences
-  async updatePreferences(preferences: {
-    autoBasketEnabled?: boolean;
-    autoBasketDay?: number;
-    autoBasketTime?: string;
-    minConfidenceThreshold?: number;
-    excludeCategories?: string[];
-    maxBasketSize?: number;
-  }): Promise<void> {
+  // Update user preferences
+  async updatePreferences(preferences: any): Promise<any> {
     return api.put('/predictions/preferences', preferences);
   }
 
-  // Utility functions
-  calculateAccuracy(basket: PredictedBasket): number {
-    const acceptedItems = basket.items.filter(item => item.isAccepted).length;
-    return basket.items.length > 0 ? (acceptedItems / basket.items.length) * 100 : 0;
+  // Get prediction schedule
+  async getSchedule(): Promise<any> {
+    return api.get('/predictions/schedule');
   }
 
-  getConfidenceLevel(score: number): {
-    level: 'high' | 'medium' | 'low';
-    color: string;
-    description: string;
-  } {
-    if (score >= 0.8) {
-      return {
-        level: 'high',
-        color: 'green',
-        description: 'Very likely to be needed'
-      };
-    } else if (score >= 0.6) {
-      return {
-        level: 'medium',
-        color: 'yellow',
-        description: 'Likely to be needed'
-      };
-    } else {
-      return {
-        level: 'low',
-        color: 'orange',
-        description: 'Possibly needed'
-      };
-    }
+  // Update prediction schedule
+  async updateSchedule(schedule: any): Promise<any> {
+    return api.put('/predictions/schedule', schedule);
+  }
+
+  // Get prediction history
+  async getPredictionHistory(days?: number): Promise<any> {
+    const params = days ? `?days=${days}` : '';
+    return api.get(`/predictions/history${params}`);
+  }
+
+  // Evaluate prediction accuracy
+  async evaluatePrediction(basketId: string): Promise<any> {
+    return api.get(`/predictions/baskets/${basketId}/evaluate`);
   }
 }
 

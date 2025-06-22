@@ -1,6 +1,8 @@
-# docker-compose.yml - UPDATED for new architecture
+# docker-compose.yml - SANITIZED for ML Demo Focus
+version: '3.8'
 
 services:
+  # PostgreSQL Database
   db:
     container_name: timely-db
     image: postgres:13
@@ -18,25 +20,31 @@ services:
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    networks:
+      - timely-network
   
+  # Database Initialization Service
   init-db:
     container_name: timely-init-db
     build:
       context: ./database
       dockerfile: Dockerfile
     volumes:
-      - ./ml-service/training-data:/training-data
-      - ./backend:/usr/src/app/backend
+      - ./ml-service/training-data:/training-data:ro
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
       - DB_HOST=db
+      - NODE_ENV=development
     depends_on:
       db:
         condition: service_healthy
     restart: on-failure
+    networks:
+      - timely-network
 
+  # Node.js Backend API (Single Gateway)
   backend:
     build:
       context: ./backend
@@ -54,6 +62,10 @@ services:
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - ML_SERVICE_URL=http://ml-service:8000
       - FRONTEND_URL=http://localhost:3000
+      # Sanitized settings
+      - FEATURE_ENGINEERING=black_box
+      - ARCHITECTURE=direct_database_access
+      - BACKGROUND_JOBS=disabled
     ports:
       - "5000:5000"
     depends_on:
@@ -62,12 +74,20 @@ services:
       init-db:
         condition: service_completed_successfully
     volumes:
-      - ./backend/uploads:/app/uploads
-      - ./backend:/app # Development mode
-      - /app/node_modules 
-    command: npm run dev 
+      # Minimal volume mapping for development
+      - ./backend:/app
+      - /app/node_modules
+    command: npm run dev
     restart: unless-stopped
+    networks:
+      - timely-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # Python ML Service
   ml-service:
     container_name: timely-ml-service
     build:
@@ -79,43 +99,73 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
-      - USE_DATABASE=true  # Direct database access
+      - PYTHONPATH=/app
+      # ML Configuration
+      - MODEL_PATH=/app/models
+      - DATA_PATH=/app/training-data
+      - PROCESSED_DATA_PATH=/app/training-data/processed
     ports:
       - "8000:8000"
-    volumes:
-      - ./ml-service/models:/app/models
-      - ./ml-service/training-data:/app/training-data
     depends_on:
       db:
         condition: service_healthy
       init-db:
         condition: service_completed_successfully
+    volumes:
+      - ./ml-service:/app
+      - ./ml-service/training-data:/app/training-data:ro
+      - ./ml-service/models:/app/models
     restart: unless-stopped
+    networks:
+      - timely-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
+  # React Frontend (Production Build)
   frontend:
-    container_name: timely-frontend
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        VITE_API_URL: ${VITE_API_URL}
-        VITE_ML_API_URL: ${VITE_ML_API_URL}
+    container_name: timely-frontend
     environment:
-      - VITE_API_URL=${VITE_API_URL}
-      - VITE_ML_API_URL=${VITE_ML_API_URL}
+      - NODE_ENV=production
+      - VITE_API_URL=http://localhost:5000/api
     ports:
-      - "3000:3000" 
+      - "3000:80"
     depends_on:
       - backend
-    volumes:
-      - ./frontend:/app # Development mode
-      - /app/node_modules
-    command: npm run dev 
     restart: unless-stopped
+    networks:
+      - timely-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_data:
 
 networks:
-  default:
-    name: timely-network
+  timely-network:
+    driver: bridge
+
+# ============================================================================
+# REMOVED FEATURES:
+# - File upload volumes (no longer needed)
+# - Delivery service containers (simplified checkout)
+# - Background job schedulers (user-initiated actions only)
+# - Complex networking (simplified to single network)
+# - Redis cache (not needed for demo)
+# - Monitoring services (focus on core functionality)
+#
+# SIMPLIFIED CONFIGURATION:
+# - Minimal volume mappings
+# - Essential environment variables only
+# - Health checks for all services
+# - Single network for all services
+# - Clean dependencies between services
+# ============================================================================

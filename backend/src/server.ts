@@ -1,4 +1,6 @@
-// timely/backend/src/server.ts
+// backend/src/server.ts
+// SIMPLIFIED: Removed cron jobs - all actions are now user-initiated for demos
+
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -21,18 +23,23 @@ import orderRoutes from './routes/order.routes';
 import userRoutes from './routes/user.routes';
 import predictionRoutes from './routes/prediction.routes';
 import adminRoutes from './routes/admin.routes';
-import deliveryRoutes from './routes/delivery.routes';
+// REMOVED: import deliveryRoutes from './routes/delivery.routes';
 
 import { errorHandler } from './middleware/error.middleware';
 import { authMiddleware } from './middleware/auth.middleware';
 
-import './jobs/cartGeneration.job';
-import './jobs/metrics.job';
+// REMOVED: Background job imports
+// import './jobs/cartGeneration.job';
+// import './jobs/metrics.job';
 
 import logger from './utils/logger';
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
+
+// ============================================================================
+// MIDDLEWARE SETUP
+// ============================================================================
 
 app.use(helmet());
 app.use(cors({
@@ -41,93 +48,110 @@ app.use(cors({
 }));
 
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.'
 });
-app.use('/api/', limiter);
 
+app.use(limiter);
+app.use(compression());
+app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(compression());
 
-app.use(morgan('combined', {
-  stream: {
-    write: (message: string) => logger.info(message.trim())
-  }
-}));
-
+// Static file serving for uploads (if any legacy files exist)
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-app.get('/health', async (req: Request, res: Response) => {
-  try {
-    await sequelize.authenticate();
-    res.status(200).json({
-      status: 'healthy',
-      timestamp: new Date().toISOString(),
-      services: {
-        database: 'connected'
-      }
-    });
-  } catch (error) {
-    res.status(503).json({
-      status: 'unhealthy',
-      error: (error as Error).message, // Correctly cast error to access message
-    });
-  }
+// ============================================================================
+// ROUTES SETUP
+// ============================================================================
+
+// Health check
+app.get('/health', (req: Request, res: Response) => {
+  res.json({ 
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    mode: 'dev-test',
+    backgroundJobs: 'disabled' // Indicates no cron jobs running
+  });
 });
 
-// API Routes
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', authMiddleware, cartRoutes);
 app.use('/api/orders', authMiddleware, orderRoutes);
 app.use('/api/user', authMiddleware, userRoutes);
 app.use('/api/predictions', authMiddleware, predictionRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/delivery', authMiddleware, deliveryRoutes);
+app.use('/api/admin', adminRoutes); // Auth middleware applied within admin routes
 
-app.use((req: Request, res: Response) => {
-  res.status(404).json({
-    error: 'Not Found',
-    message: 'The requested resource was not found'
-  });
+// REMOVED: Delivery routes (simplifies checkout process)
+// app.use('/api/delivery', authMiddleware, deliveryRoutes);
+
+// Catch-all route
+app.get('*', (req: Request, res: Response) => {
+  res.status(404).json({ error: 'Route not found' });
 });
 
+// Error handling middleware
 app.use(errorHandler);
 
-const server = createServer(app);
+// ============================================================================
+// SERVER STARTUP
+// ============================================================================
 
-process.on('SIGTERM', async () => {
-  logger.info('SIGTERM signal received: closing HTTP server');
-  server.close(async () => {
-    logger.info('HTTP server closed');
-    await sequelize.close();
-    logger.info('Database connection closed');
-    process.exit(0);
-  });
-});
-
-const startServer = async () => {
+async function startServer() {
   try {
+    // Test database connection
     await sequelize.authenticate();
-    logger.info('Database connection established successfully');
-    
+    logger.info('✅ Database connection established successfully');
+
+    // Sync database models (in development)
     if (process.env.NODE_ENV === 'development') {
       await sequelize.sync({ alter: true });
-      logger.info('Database models synchronized');
+      logger.info('✅ Database models synchronized');
     }
+
+    // Start HTTP server
+    const server = createServer(app);
     
     server.listen(PORT, () => {
-      logger.info(`Server is running on port ${PORT}`);
-      logger.info(`Environment: ${process.env.NODE_ENV}`);
+      logger.info(`🚀 Server is running on port ${PORT}`);
+      logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`🎯 Mode: dev-test (user-initiated actions only)`);
+      logger.info(`⏰ Background jobs: DISABLED`);
+      logger.info(`🔗 Health check: http://localhost:${PORT}/health`);
     });
+
+    // Graceful shutdown
+    process.on('SIGTERM', () => {
+      logger.info('SIGTERM received, shutting down gracefully...');
+      server.close(() => {
+        sequelize.close();
+        process.exit(0);
+      });
+    });
+
   } catch (error) {
-    logger.error('Unable to start server:', error);
+    logger.error('❌ Failed to start server:', error);
     process.exit(1);
   }
-};
+}
 
 startServer();
 
-export default app;
+// ============================================================================
+// REMOVED FEATURES:
+// - cartGeneration.job.ts (automatic basket generation)
+// - metrics.job.ts (background metrics collection)
+// - Any other cron/scheduled tasks
+// - Delivery route integration
+//
+// All functionality is now user-initiated:
+// - Basket generation via "Generate Basket" button
+// - Metrics via "Evaluate Model" button in admin panel  
+// - Orders via manual checkout process
+//
+// This creates a clean, controlled demo environment where every action
+// is triggered by user interaction, making it perfect for demonstrations.
+// ============================================================================

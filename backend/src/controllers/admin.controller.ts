@@ -1,476 +1,385 @@
-// backend/src/controllers/admin.controller.ts
-// FIXED: Removed hardcoded user ID restrictions to allow ANY Instacart user ID
+// backend/src/controllers/admin.controller.ts 
+// SIMPLIFIED: Removed product CRUD - focus on ML demo functionality only
 
 import { Request, Response, NextFunction } from 'express';
-import { User, UserRole } from '../models/user.model';
-import { Product } from '../models/product.model';
-import { Category } from '../models/category.model';
-import { Order } from '../models/order.model';
-import { OrderItem } from '../models/orderItem.model';
-import { mlApiClient } from '../services/ml.service';
-import * as mlService from '../services/ml.service';
+import { Op } from 'sequelize';
 import logger from '../utils/logger';
-import bcrypt from 'bcryptjs';
+import { User, Product, Order, Category, OrderItem } from '../models';
+import * as mlService from '../services/ml.service';
 
 export class AdminController {
-    
-    // ============================================================================
-    // ML MODEL EVALUATION & MONITORING (BLACK BOX)
-    // ============================================================================
-    
-    /**
-     * Trigger BLACK BOX model evaluation (no feature importance exposure)
-     */
-    async triggerModelEvaluation(req: Request, res: Response, next: NextFunction) {
-        try {
-            logger.info('Triggering BLACK BOX model evaluation...');
-            
-            const evaluationResponse = await mlService.triggerModelEvaluation();
-            
-            logger.info('BLACK BOX model evaluation completed successfully');
-            
-            // Return evaluation results WITHOUT feature importance
-            res.status(200).json({
-                message: "Model evaluation completed",
-                metrics: evaluationResponse.metrics,
-                architecture: "direct_database_access",
-                feature_engineering: "black_box",
-                timestamp: evaluationResponse.timestamp || new Date().toISOString()
-            });
-
-        } catch (error) {
-            logger.error('Error triggering model evaluation:', error);
-            next(error);
-        }
-    }
-
-    /**
-     * Get ML service status
-     */
-    async getMLServiceStatus(req: Request, res: Response, next: NextFunction) {
-        try {
-            logger.info('Checking ML service status...');
-            
-            // Check ML service health
-            const healthResponse = await mlService.checkMLServiceHealth();
-            
-            // Check database connectivity from ML service
-            const dbStatusResponse = await mlService.checkDatabaseStatus();
-            
-            res.json({
-                status: healthResponse.status || 'unknown',
-                health: healthResponse,
-                database: dbStatusResponse,
-                architecture: "direct_database_access",
-                feature_engineering: "black_box",
-                timestamp: new Date().toISOString()
-            });
-
-        } catch (error) {
-            logger.error('Error checking ML service status:', error);
-            next(error);
-        }
-    }
-
-    /**
-     * Get comprehensive architecture status
-     */
-    async getArchitectureStatus(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Test database connectivity
-            const dbHealth = await User.count().then(() => true).catch(() => false);
-            
-            // Get service stats
-            let mlServiceInfo = null;
-            let serviceStats = null;
-            let mlHealth = false;
-            
-            try {
-                mlServiceInfo = await mlService.getServiceStats();
-                const healthResponse = await mlService.checkMLServiceHealth();
-                mlHealth = healthResponse.status === 'healthy';
-                serviceStats = { mlService: mlServiceInfo };
-            } catch (error) {
-                logger.warn('ML service info unavailable:', error);
-                serviceStats = { mlService: { status: 'unavailable' } };
-            }
-
-            const overallHealth = dbHealth && mlHealth;
-
-            res.json({
-                status: overallHealth ? 'healthy' : 'degraded',
-                architecture: "direct_database_access",
-                feature_engineering: "black_box",
-                services: {
-                    database: { status: dbHealth ? 'healthy' : 'unhealthy', connection: dbHealth },
-                    mlService: { status: mlHealth ? 'healthy' : 'unhealthy', connection: mlHealth, info: mlServiceInfo }
-                },
-                stats: serviceStats,
-                timestamp: new Date().toISOString()
-            });
-
-        } catch (error) {
-            logger.error('Error checking architecture status:', error);
-            next(error);
-        }
-    }
-
-    // ============================================================================
-    // DEMO PREDICTION SYSTEM (ML-FAITHFUL) - FIXED: NO HARDCODED LIMITATIONS
-    // ============================================================================
-
-    /**
-     * FIXED: Now returns a message that ANY Instacart user ID can be used
-     * No longer restricted to hardcoded list
-     */
-    async getDemoUserIds(req: Request, res: Response, next: NextFunction) {
-        try {
-            res.json({
-                message: "Any valid Instacart user ID can be used for demo prediction",
-                note: "The system will validate user existence in the Instacart dataset",
-                feature_engineering: "black_box",
-                restriction: "none"
-            });
-        } catch (error) {
-            logger.error('Error in getDemoUserIds:', error);
-            next(error);
-        }
-    }
-
-    /**
-     * DEMAND 3: Get live demo prediction comparison (AI vs actual ground truth)
-     * FIXED: Now accepts ANY Instacart user ID - no hardcoded restrictions
-     */
-    async getDemoUserPrediction(req: Request, res: Response, next: NextFunction) {
-        const { userId: instacartUserIdStr } = req.params;
-        
-        // FIXED: Removed hardcoded user ID check - now accepts ANY user ID
-        logger.info(`Fetching LIVE demo prediction for Instacart User ID: ${instacartUserIdStr}`);
-
-        try {
-            // 1. Call ML service endpoint that performs a temporary prediction from CSVs
-            const mlPredictionResponse = await mlService.getPredictionForDemo(instacartUserIdStr);
-            const { predicted_products, user_id } = mlPredictionResponse;
-
-            // 2. Get ground truth basket from a separate ML service endpoint
-            const trueFutureResponse = await mlService.getGroundTruthBasket(instacartUserIdStr);
-            const trueFutureProductIds = trueFutureResponse.products || [];
-
-            // 3. Collect all unique product IDs to fetch details from our DB
-            const allProductIds = [...new Set([...predicted_products, ...trueFutureProductIds])];
-            const allProductSkus = allProductIds.map((id: number) => `PROD-${String(id).padStart(7, '0')}`);
-            
-            // 4. Enrich with product details from our application's database
-            const products = await Product.findAll({
-                where: { sku: allProductSkus },
-                include: [{ model: Category, attributes: ['name'] }]
-            });
-            const productMapBySku = new Map(products.map(p => [p.sku, p]));
-
-            // 5. Build detailed predicted basket for the frontend
-            const detailedPredictedBasket = predicted_products.map((productId: number) => {
-                const product = productMapBySku.get(`PROD-${String(productId).padStart(7, '0')}`);
-                return product ? {
-                    id: product.id, name: product.name, imageUrl: product.imageUrl, price: product.price, category: product.category?.name
-                } : null;
-            }).filter(Boolean);
-
-            // 6. Build detailed ground truth basket for the frontend
-            const detailedTrueFutureBasket = trueFutureProductIds.map((productId: number) => {
-                const product = productMapBySku.get(`PROD-${String(productId).padStart(7, '0')}`);
-                return product ? {
-                    id: product.id, name: product.name, imageUrl: product.imageUrl, price: product.price, category: product.category?.name
-                } : null;
-            }).filter(Boolean);
-            
-            res.json({
-                userId: user_id,
-                predictedBasket: detailedPredictedBasket,
-                trueFutureBasket: detailedTrueFutureBasket,
-                architecture: "direct_database_access",
-                feature_engineering: "black_box",
-                comparisonMetrics: {
-                    predictedCount: detailedPredictedBasket.length,
-                    actualCount: detailedTrueFutureBasket.length,
-                    commonItems: detailedPredictedBasket.filter(p => detailedTrueFutureBasket.some(t => t!.id === p!.id)).length
-                }
-            });
-
-        } catch (error: any) {
-            logger.error(`Error in live demo prediction for user ${instacartUserIdStr}:`, error);
-            
-            // Handle specific ML service errors gracefully
-            if (error.response?.status === 404) {
-                return res.status(404).json({ 
-                    error: `No data found for Instacart user ID ${instacartUserIdStr}. This user may not exist in the dataset or may not have sufficient purchase history.` 
-                });
-            }
-            
-            next(error);
-        }
-    }
-
-    /**
-     * DEMAND 1: Seed a new user into the database using Instacart history.
-     * FIXED: Now accepts ANY Instacart user ID - no hardcoded restrictions
-     */
-    async seedDemoUser(req: Request, res: Response, next: NextFunction) {
-        const { instacartUserId } = req.params;
-        const email = `demo-user-${instacartUserId}@timely.com`;
   
-        try {
-            let user = await User.findOne({ where: { email } });
-            if (user) {
-                return res.status(409).json({ message: 'This demo user has already been seeded.' });
-            }
+  // ============================================================================
+  // ML PROXY METHODS (Core demo functionality)
+  // ============================================================================
 
-            const hashedPassword = await bcrypt.hash('password123', 10);
-            user = await User.create({
-                email, password: hashedPassword, firstName: 'Demo', lastName: `User ${instacartUserId}`, 
-                role: 'user', isActive: true, emailVerified: true
-            });
-
-            // FIXED: Now calls ML service with ANY user ID (no validation against hardcoded list)
-            const instacartHistory = await mlService.getInstacartUserOrderHistory(instacartUserId);
-            
-            if (!instacartHistory || !instacartHistory.orders || instacartHistory.orders.length === 0) {
-                return res.status(404).json({ 
-                    error: `No order history found for Instacart user ID ${instacartUserId}. This user may not exist in the dataset or may not have purchase history.` 
-                });
-            }
-
-            let ordersCreated = 0;
-            for (const instacartOrder of instacartHistory.orders) {
-                const productSkus = instacartOrder.products.map((id: number) => `PROD-${String(id).padStart(7, '0')}`);
-                const products = await Product.findAll({ where: { sku: productSkus } });
-
-                if (products.length === 0) continue;
-
-                const subtotal = products.reduce((sum, p) => sum + p.price, 0);
-
-                const order = await Order.create({
-                    userId: user.id,
-                    orderNumber: `DEMO-${user.id.substring(0, 4)}-${instacartOrder.order_id}`,
-                    // CRITICAL: Use the exact historical temporal data for ML feature consistency
-                    daysSincePriorOrder: instacartOrder.days_since_prior_order ?? 0,
-                    orderDow: instacartOrder.order_dow,
-                    orderHourOfDay: instacartOrder.order_hour_of_day,
-                    status: 'delivered',
-                    subtotal,
-                    tax: 0,
-                    deliveryFee: 0,
-                    total: subtotal,
-                    metadata: { isDemo: true, instacartUserId, temporalFieldsPreserved: true }
-                });
-
-                const orderItems = products.map(p => ({
-                    orderId: order.id, productId: p.id, quantity: 1, price: p.price, total: p.price
-                }));
-                await OrderItem.bulkCreate(orderItems);
-                ordersCreated++;
-            }
-
-            if (ordersCreated === 0) {
-                return res.status(404).json({ 
-                    error: 'No valid orders could be created from Instacart history. The products may not be available in our catalog.' 
-                });
-            }
-
-            logger.info(`Demo user ${instacartUserId} seeded successfully with ${ordersCreated} orders.`);
-            res.status(201).json({
-                message: `Demo user created and seeded with ${ordersCreated} orders. You can now log in with email: ${email} and password: password123`,
-                user: { id: user.id, email: user.email },
-                ordersCreated,
-                loginCredentials: {
-                    email: email,
-                    password: 'password123'
-                }
-            });
-
-        } catch (error: any) {
-            logger.error(`Error seeding demo user ${instacartUserId}:`, error);
-            
-            // Handle specific ML service errors gracefully
-            if (error.response?.status === 404) {
-                return res.status(404).json({ 
-                    error: `No order history found for Instacart user ID ${instacartUserId}. This user may not exist in the dataset.` 
-                });
-            }
-            
-            next(error);
-        }
+  /**
+   * Proxy model performance metrics request to ML service
+   */
+  async getModelPerformanceMetrics(req: Request, res: Response, next: NextFunction) {
+    try {
+      logger.info('Proxying model performance metrics request to ML service');
+      
+      const metrics = await mlService.getModelMetrics();
+      
+      res.json(metrics);
+    } catch (error) {
+      logger.error('Error fetching model performance metrics:', error);
+      next(error);
     }
+  }
 
-    // ============================================================================
-    // DASHBOARD & ANALYTICS (BLACK BOX)
-    // ============================================================================
-
-    /**
-     * Get admin dashboard statistics - BLACK BOX approach
-     */
-    async getDashboardStats(req: Request, res: Response, next: NextFunction) {
-        try {
-            const [totalUsers, totalProducts, totalOrders] = await Promise.all([
-                User.count({ where: { role: UserRole.USER } }),
-                Product.count({ where: { isActive: true } }),
-                Order.count()
-            ]);
-
-            // Get ML service stats without exposing internals
-            let mlServiceStats = null;
-            try {
-                const mlStatsResponse = await mlApiClient.get('/service-info');
-                mlServiceStats = {
-                    status: mlStatsResponse.data.mode || 'unknown',
-                    architecture: mlStatsResponse.data.architecture || 'unknown',
-                    feature_engineering: "black_box"
-                };
-            } catch (error) {
-                logger.warn('Could not fetch ML service stats:', error);
-            }
-
-            res.json({
-                totalUsers,
-                totalProducts,
-                totalOrders,
-                mlService: mlServiceStats,
-                architecture: "direct_database_access",
-                feature_engineering: "black_box",
-                timestamp: new Date().toISOString()
-            });
-
-        } catch (error) {
-            logger.error('Error fetching dashboard stats:', error);
-            next(error);
-        }
+  /**
+   * DEMAND 2: Trigger model evaluation
+   */
+  async triggerModelEvaluation(req: Request, res: Response, next: NextFunction) {
+    try {
+      logger.info('Triggering model evaluation via ML service');
+      
+      const evaluationResults = await mlService.triggerModelEvaluation();
+      
+      res.json({
+        message: 'Model evaluation completed',
+        results: evaluationResults,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      logger.error('Error triggering model evaluation:', error);
+      next(error);
     }
+  }
 
-    /**
-     * Get system health status - BLACK BOX approach
-     */
-    async getSystemHealth(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Test database connectivity
-            const dbHealth = await User.count().then(() => true).catch(() => false);
-            
-            // Test ML service health
-            let mlHealth = false;
-            try {
-                const mlResponse = await mlApiClient.get('/health');
-                mlHealth = mlResponse.status === 200;
-            } catch (error) {
-                logger.warn('ML service health check failed:', error);
-            }
+  // ============================================================================
+  // DEMO FUNCTIONALITY (Core demands)
+  // ============================================================================
 
-            const overallHealth = dbHealth && mlHealth;
-
-            res.json({
-                status: overallHealth ? 'healthy' : 'degraded',
-                architecture: "direct_database_access",
-                feature_engineering: "black_box",
-                services: {
-                    database: { status: dbHealth ? 'healthy' : 'unhealthy', connection: dbHealth },
-                    mlService: { status: mlHealth ? 'healthy' : 'unhealthy', connection: mlHealth }
-                },
-                timestamp: new Date().toISOString()
-            });
-
-        } catch (error) {
-            logger.error('Error checking system health:', error);
-            next(error);
+  /**
+   * DEMAND 1: Seed a demo user into the database using Instacart data
+   */
+  async seedDemoUser(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { instacartUserId } = req.params;
+      
+      logger.info(`Seeding demo user with Instacart ID: ${instacartUserId}`);
+      
+      // Step 1: Create new user account
+      const newUser = await User.create({
+        email: `demo_user_${instacartUserId}@timely.demo`,
+        password: 'demo_password', // This should be hashed in real implementation
+        name: `Demo User ${instacartUserId}`,
+        isAdmin: false,
+        isActive: true
+      });
+      
+      // Step 2: Fetch order history from ML service
+      const orderHistory = await mlService.getInstacartUserOrderHistory(instacartUserId);
+      
+      // Step 3: Populate database with order history
+      for (const orderData of orderHistory.orders) {
+        const order = await Order.create({
+          userId: newUser.id,
+          status: 'completed',
+          totalAmount: orderData.total_amount || 0,
+          orderDow: orderData.order_dow,
+          orderHourOfDay: orderData.order_hour_of_day,
+          daysSincePriorOrder: orderData.days_since_prior_order,
+          createdAt: new Date(orderData.order_date || Date.now())
+        });
+        
+        // Create order items
+        for (const productId of orderData.products) {
+          await OrderItem.create({
+            orderId: order.id,
+            productId: productId,
+            quantity: 1,
+            price: 0
+          });
         }
+      }
+      
+      logger.info(`Successfully seeded user ${newUser.id} with ${orderHistory.orders.length} orders`);
+      
+      res.json({
+        message: 'Demo user seeded successfully',
+        userId: newUser.id,
+        instacartUserId,
+        ordersCount: orderHistory.orders.length,
+        loginEmail: newUser.email
+      });
+      
+    } catch (error) {
+      logger.error(`Error seeding demo user ${req.params.instacartUserId}:`, error);
+      next(error);
     }
+  }
 
-    // ============================================================================
-    // PRODUCT MANAGEMENT (PLACEHOLDER - Implement as needed)
-    // ============================================================================
-
-    async getProducts(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Implement product management logic
-            res.json({ message: "Product management endpoint - implement as needed" });
-        } catch (error) {
-            next(error);
+  /**
+   * DEMAND 3: Get demo user prediction comparison
+   */
+  async getDemoUserPrediction(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { userId } = req.params;
+      
+      logger.info(`Getting demo prediction comparison for user: ${userId}`);
+      
+      // Fetch prediction from ML service
+      const prediction = await mlService.getPredictionForDemo(userId);
+      
+      // Fetch ground truth from ML service  
+      const groundTruth = await mlService.getGroundTruthBasket(userId);
+      
+      // Enrich both with product details from our database
+      const [enrichedPrediction, enrichedGroundTruth] = await Promise.all([
+        this.enrichProductList(prediction.predicted_products),
+        this.enrichProductList(groundTruth.actual_products)
+      ]);
+      
+      // Calculate comparison metrics
+      const predictedIds = new Set(prediction.predicted_products);
+      const actualIds = new Set(groundTruth.actual_products);
+      const commonItems = [...predictedIds].filter(id => actualIds.has(id)).length;
+      
+      res.json({
+        userId,
+        predictedBasket: enrichedPrediction,
+        trueFutureBasket: enrichedGroundTruth,
+        comparisonMetrics: {
+          predictedCount: prediction.predicted_products.length,
+          actualCount: groundTruth.actual_products.length,
+          commonItems
         }
+      });
+      
+    } catch (error) {
+      logger.error(`Error getting demo prediction for user ${req.params.userId}:`, error);
+      next(error);
     }
+  }
 
-    async createProduct(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Implement product creation logic
-            res.json({ message: "Product creation endpoint - implement as needed" });
-        } catch (error) {
-            next(error);
-        }
+  /**
+   * Helper method to enrich product IDs with details
+   */
+  private async enrichProductList(productIds: string[]): Promise<any[]> {
+    const products = await Product.findAll({
+      where: { id: { [Op.in]: productIds } },
+      include: [{ model: Category, as: 'category' }]
+    });
+    
+    return products.map(product => ({
+      id: product.id,
+      name: product.name,
+      imageUrl: product.imageUrl,
+      price: product.price,
+      category: product.category?.name
+    }));
+  }
+
+  /**
+   * Get demo user IDs metadata
+   */
+  async getDemoUserIds(req: Request, res: Response, next: NextFunction) {
+    try {
+      res.json({
+        message: "Demo system accepts ANY Instacart user ID",
+        note: "Enter any user ID from the Instacart dataset",
+        feature_engineering: "black_box",
+        restriction: "User must exist in Instacart CSV files"
+      });
+    } catch (error) {
+      next(error);
     }
+  }
 
-    async updateProduct(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Implement product update logic
-            res.json({ message: "Product update endpoint - implement as needed" });
-        } catch (error) {
-            next(error);
-        }
+  // ============================================================================
+  // DASHBOARD & MONITORING (Essential admin functionality)
+  // ============================================================================
+
+  /**
+   * Get dashboard statistics
+   */
+  async getDashboardStats(req: Request, res: Response, next: NextFunction) {
+    try {
+      const [totalUsers, totalProducts, totalOrders] = await Promise.all([
+        User.count(),
+        Product.count(),
+        Order.count()
+      ]);
+      
+      res.json({
+        totalUsers,
+        totalProducts, 
+        totalOrders,
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      logger.error('Error fetching dashboard stats:', error);
+      next(error);
     }
+  }
 
-    async deleteProduct(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Implement product deletion logic
-            res.json({ message: "Product deletion endpoint - implement as needed" });
-        } catch (error) {
-            next(error);
-        }
+  /**
+   * Get system health
+   */
+  async getSystemHealth(req: Request, res: Response, next: NextFunction) {
+    try {
+      // Test database connectivity
+      const dbHealth = await User.count().then(() => true).catch(() => false);
+      
+      // Test ML service connectivity
+      let mlHealth = false;
+      try {
+        await mlService.checkMLServiceHealth();
+        mlHealth = true;
+      } catch (error) {
+        logger.warn('ML service health check failed:', error);
+      }
+      
+      res.json({
+        database: dbHealth ? 'healthy' : 'unhealthy',
+        mlService: mlHealth ? 'healthy' : 'unhealthy',
+        overall: dbHealth && mlHealth ? 'healthy' : 'degraded',
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      logger.error('Error checking system health:', error);
+      next(error);
     }
+  }
 
-    // ============================================================================
-    // USER MANAGEMENT (PLACEHOLDER - Implement as needed)
-    // ============================================================================
-
-    async getUsers(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Implement user management logic
-            res.json({ message: "User management endpoint - implement as needed" });
-        } catch (error) {
-            next(error);
-        }
+  /**
+   * Get ML service status
+   */
+  async getMLServiceStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      const serviceInfo = await mlService.getServiceStats();
+      const healthCheck = await mlService.checkMLServiceHealth();
+      
+      res.json({
+        ...serviceInfo,
+        health: healthCheck,
+        architecture: "direct_database_access",
+        feature_engineering: "black_box",
+        timestamp: new Date().toISOString()
+      });
+      
+    } catch (error) {
+      logger.error('Error checking ML service status:', error);
+      next(error);
     }
+  }
 
-    async updateUser(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Implement user update logic
-            res.json({ message: "User update endpoint - implement as needed" });
-        } catch (error) {
-            next(error);
-        }
+  /**
+   * Get architecture status
+   */
+  async getArchitectureStatus(req: Request, res: Response, next: NextFunction) {
+    try {
+      // Test database connectivity
+      const dbHealth = await User.count().then(() => true).catch(() => false);
+      
+      // Get service stats
+      let mlServiceInfo = null;
+      let serviceStats = null;
+      let mlHealth = false;
+      
+      try {
+        mlServiceInfo = await mlService.getServiceStats();
+        const healthResponse = await mlService.checkMLServiceHealth();
+        mlHealth = healthResponse.status === 'healthy';
+        serviceStats = { mlService: mlServiceInfo };
+      } catch (error) {
+        logger.warn('ML service info unavailable:', error);
+        serviceStats = { mlService: { status: 'unavailable' } };
+      }
+
+      const overallHealth = dbHealth && mlHealth;
+
+      res.json({
+        status: overallHealth ? 'healthy' : 'degraded',
+        architecture: "direct_database_access",
+        feature_engineering: "black_box",
+        services: {
+          database: { status: dbHealth ? 'healthy' : 'unhealthy', connection: dbHealth },
+          mlService: { status: mlHealth ? 'healthy' : 'unhealthy', connection: mlHealth }
+        },
+        stats: serviceStats,
+        timestamp: new Date().toISOString()
+      });
+
+    } catch (error) {
+      logger.error('Error checking architecture status:', error);
+      next(error);
     }
+  }
 
-    async deleteUser(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Implement user deletion logic
-            res.json({ message: "User deletion endpoint - implement as needed" });
-        } catch (error) {
-            next(error);
-        }
+  // ============================================================================
+  // READ-ONLY DATA VIEWS (No CRUD operations)
+  // ============================================================================
+
+  /**
+   * Get products (read-only view for admin dashboard)
+   */
+  async getProducts(req: Request, res: Response, next: NextFunction) {
+    try {
+      const products = await Product.findAll({
+        include: [{ model: Category, as: 'category' }],
+        limit: 50,
+        order: [['createdAt', 'DESC']]
+      });
+      res.json({ products, message: 'Read-only view - products managed via database seeding' });
+    } catch (error) {
+      next(error);
     }
+  }
 
-    // ============================================================================
-    // ORDER MANAGEMENT (PLACEHOLDER - Implement as needed)
-    // ============================================================================
-
-    async getOrders(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Implement order management logic
-            res.json({ message: "Order management endpoint - implement as needed" });
-        } catch (error) {
-            next(error);
-        }
+  /**
+   * Get users (read-only view for admin dashboard)
+   */
+  async getUsers(req: Request, res: Response, next: NextFunction) {
+    try {
+      const users = await User.findAll({
+        attributes: { exclude: ['password'] },
+        limit: 50,
+        order: [['createdAt', 'DESC']]
+      });
+      res.json({ users, message: 'Read-only view - includes demo users' });
+    } catch (error) {
+      next(error);
     }
+  }
 
-    async updateOrderStatus(req: Request, res: Response, next: NextFunction) {
-        try {
-            // Implement order status update logic
-            res.json({ message: "Order status update endpoint - implement as needed" });
-        } catch (error) {
-            next(error);
-        }
+  /**
+   * Get orders (read-only view for admin dashboard)
+   */
+  async getOrders(req: Request, res: Response, next: NextFunction) {
+    try {
+      const orders = await Order.findAll({
+        include: [
+          { model: User, as: 'user', attributes: ['id', 'name', 'email'] },
+          { model: OrderItem, as: 'items' }
+        ],
+        limit: 50,
+        order: [['createdAt', 'DESC']]
+      });
+      res.json({ orders, message: 'Read-only view - includes seeded demo orders' });
+    } catch (error) {
+      next(error);
     }
+  }
+
+  // ============================================================================
+  // REMOVED METHODS (Product/Category CRUD):
+  // - createProduct, updateProduct, deleteProduct
+  // - createCategory, updateCategory, deleteCategory  
+  // - updateUser, deleteUser
+  // - updateOrderStatus
+  //
+  // All product/category management is now done via database seeding only.
+  // This eliminates complexity and focuses the admin panel on ML demo features:
+  // 1. Model evaluation and monitoring
+  // 2. Demo user seeding and prediction testing
+  // 3. Read-only dashboard views
+  // ============================================================================
 }

@@ -56,28 +56,25 @@ timely/ (Current Implementation Status)
 │   │   │   ├── user.model.ts, product.model.ts, category.model.ts
 │   │   │   ├── cart.model.ts, cartItem.model.ts
 │   │   │   ├── order.model.ts, orderItem.model.ts
-│   │   │   ├── favorite.model.ts, delivery.model.ts
+│   │   │   ├── favorite.model.ts
 │   │   │   ├── predictedBasket.model.ts, predictedBasketItem.model.ts
 │   │   │   ├── userPreference.model.ts, productView.model.ts
 │   │   │   └── modelMetric.model.ts
 │   │   ├── routes/                     # Express route definitions
 │   │   │   ├── admin.routes.ts, auth.routes.ts, cart.routes.ts
-│   │   │   ├── delivery.routes.ts, order.routes.ts, prediction.routes.ts
+│   │   │   ├── order.routes.ts, prediction.routes.ts
 │   │   │   └── product.routes.ts, user.routes.ts
-│   │   ├── middleware/                 # Auth, admin, error, upload, validation middleware
+│   │   ├── middleware/                 # Auth, error, validation middleware
 │   │   │   ├── auth.middleware.ts, error.middleware.ts
-│   │   │   ├── upload.middleware.ts, validation.middleware.ts
+│   │   │   └── validation.middleware.ts
 │   │   ├── services/                   # Business logic services
-│   │   │   ├── ml.service.ts, email.service.ts, upload.service.ts
+│   │   │   ├── ml.service.ts, email.service.ts
 │   │   ├── config/                     # Configuration files
 │   │   │   └── database.config.ts
-│   │   ├── jobs/                       # Background jobs
-│   │   │   └── cartGeneration.job.ts
 │   │   ├── database/                   # Database migration scripts
 │   │   ├── types/                      # TypeScript type definitions
-│   │   │   └── custom.d.ts
 │   │   └── utils/                      # Utility functions
-│   │       ├── logger.ts, csv.utils.ts
+│   │       └── logger.ts
 │   ├── server.ts                       # Main server entry point
 │   ├── package.json, tsconfig.json    # Dependencies and TypeScript config
 │   └── Dockerfile                      # Multi-stage production build

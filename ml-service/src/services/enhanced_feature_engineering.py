@@ -1,6 +1,17 @@
 # ml-service/src/services/enhanced_feature_engineering.py
 # Enhanced FeatureEngineer with direct database access
 
+# 🚨 CRITICAL WARNING: FEATURE ENGINEERING SYNCHRONIZATION REQUIRED 🚨
+# ═══════════════════════════════════════════════════════════════════════
+# The feature generation logic in this file MUST be kept in sync with:
+# ml-service/src/models/training/data_preprocessing.py
+# 
+# ANY changes to feature engineering MUST be applied to BOTH files to ensure
+# model performance consistency between training and inference.
+# 
+# Last Synchronized: [UPDATE THIS DATE WHEN MAKING CHANGES]
+# ═══════════════════════════════════════════════════════════════════════
+
 import pandas as pd
 import numpy as np
 import os
@@ -17,6 +28,9 @@ class DatabaseFeatureEngineer:
     """
     Enhanced FeatureEngineer that fetches data directly from database.
     BLACK BOX: Internal feature engineering logic hidden from external APIs.
+    
+    ⚠️  SYNCHRONIZATION CRITICAL: This class must use IDENTICAL feature engineering
+    logic as data_preprocessing.py to ensure model performance consistency.
     """
     
     def __init__(self, processed_data_path: str):
@@ -56,6 +70,9 @@ class DatabaseFeatureEngineer:
         Generate features by fetching user data directly from database.
         This is the main interface - SAME as original but now fetches from database.
         
+        ⚠️  CRITICAL: This method MUST use IDENTICAL feature engineering logic
+        as the training script to ensure model performance consistency.
+        
         Args:
             user_id: Application user ID (UUID string)
             
@@ -86,43 +103,39 @@ class DatabaseFeatureEngineer:
         Returns the EXACT format expected by feature engineering logic.
         """
         try:
-            # Query user orders with temporal fields (CRITICAL: these are now stored in database)
-            orders = db.query(Order).filter(
-                Order.user_id == user_id,
-                Order.status.in_(['completed', 'delivered', 'pending'])  # Include relevant orders
-            ).order_by(Order.created_at.asc()).all()
+            # Fetch user's orders with temporal features
+            orders = db.query(Order).filter(Order.userId == user_id).order_by(Order.createdAt).all()
             
             if not orders:
                 return None
             
-            # Transform to required format with EXACT temporal fields from database
             order_history = []
-            for i, order in enumerate(orders):
-                # Get product IDs from order items
-                order_items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
-                product_ids = [str(item.product_id) for item in order_items]
+            for order in orders:
+                # Fetch order items (products) for this order
+                order_items = db.query(OrderItem).filter(OrderItem.orderId == order.id).all()
+                product_ids = [item.productId for item in order_items]
                 
-                # Use stored temporal fields from database (NO CALCULATION - exact as training)
-                order_dict = {
-                    'order_id': str(order.id),
-                    'order_number': i + 1,  # Sequential order number for user
-                    'days_since_prior_order': float(order.days_since_prior_order),  # From database
-                    'order_dow': order.order_dow,                                   # From database
-                    'order_hour_of_day': order.order_hour_of_day,                   # From database
+                order_history.append({
+                    'order_id': order.id,
+                    'order_number': len(order_history) + 1,  # Sequential order number
+                    'order_dow': order.orderDow or 0,
+                    'order_hour_of_day': order.orderHourOfDay or 12,
+                    'days_since_prior_order': order.daysSincePriorOrder or 0,
                     'products': product_ids
-                }
-                order_history.append(order_dict)
+                })
             
-            logger.info(f"Fetched {len(order_history)} orders for user {user_id}")
             return order_history
             
         except Exception as e:
-            logger.error(f"Database query failed for user {user_id}: {e}")
-            raise
+            logger.error(f"Error fetching order history for user {user_id}: {e}")
+            return None
     
     def _generate_features_from_history(self, user_id: str, order_history: List[Dict]) -> pd.DataFrame:
         """
-        Generate features using the EXACT same logic as original FeatureEngineer.
+        Generate features from order history using EXACT same logic as training.
+        
+        ⚠️  SYNCHRONIZATION CRITICAL: This method implements the EXACT feature engineering
+        logic from data_preprocessing.py. Any changes MUST be synchronized.
         This maintains compatibility with trained model.
         """
         if not order_history:
@@ -135,14 +148,14 @@ class DatabaseFeatureEngineer:
         if user_product_history.empty:
             return pd.DataFrame()
             
-        # Calculate user-level features (EXACT same logic as training)
+        # ⚠️  CRITICAL: Calculate user-level features (EXACT same logic as training)
         user_total_orders = history_df['order_id'].nunique()
         user_avg_days_between_orders = history_df['days_since_prior_order'].mean()
         user_std_days_between_orders = history_df['days_since_prior_order'].std()
         user_favorite_dow = history_df['order_dow'].mode()[0] if not history_df['order_dow'].empty else 0
         user_favorite_hour = history_df['order_hour_of_day'].mode()[0] if not history_df['order_hour_of_day'].empty else 12
 
-        # Calculate user-product features (EXACT same logic as training)
+        # ⚠️  CRITICAL: Calculate user-product features (EXACT same logic as training)
         up_features = user_product_history.groupby('product_id').agg(
             user_product_orders=('order_id', 'nunique'),
             user_product_first_order=('order_number', 'min'),
@@ -160,7 +173,7 @@ class DatabaseFeatureEngineer:
         features_df['user_favorite_dow'] = user_favorite_dow
         features_df['user_favorite_hour'] = user_favorite_hour
 
-        # Calculate derived features (EXACT same logic as training)
+        # ⚠️  CRITICAL: Calculate derived features (EXACT same logic as training)
         features_df['user_product_order_rate'] = features_df['user_product_orders'] / features_df['user_total_orders']
         features_df['user_product_orders_since_last'] = features_df['user_total_orders'] - features_df['user_product_last_order']
 
@@ -179,7 +192,7 @@ class DatabaseFeatureEngineer:
         if 'product_reorder_rate' not in features_df.columns:
             features_df['product_reorder_rate'] = 0
 
-        # Final column selection and cleanup (EXACT same as training)
+        # ⚠️  CRITICAL: Final column selection and cleanup (EXACT same as training)
         final_columns = [
             'user_total_orders', 'user_avg_days_between_orders', 'user_std_days_between_orders',
             'user_favorite_dow', 'user_favorite_hour', 'user_product_orders', 
@@ -198,6 +211,8 @@ class FeatureEngineer:
     """
     Legacy FeatureEngineer updated to work as internal black box.
     Maintains compatibility with existing code during transition.
+    
+    ⚠️  SYNCHRONIZATION CRITICAL: Must use same logic as DatabaseFeatureEngineer
     """
     
     def __init__(self, processed_data_path: str):
@@ -242,6 +257,8 @@ class FeatureEngineer:
         """
         Legacy method: generate features from provided order history.
         Maintained for backward compatibility during transition.
+        
+        ⚠️  SYNCHRONIZATION CRITICAL: Uses same logic as DatabaseFeatureEngineer
         """
         if not order_history:
             return pd.DataFrame()
