@@ -1,5 +1,4 @@
 // backend/src/controllers/admin.controller.ts
-// COMPLETE FIXED VERSION: ML-faithful seeding + Missing CRUD methods + All fixes
 
 import { Request, Response, NextFunction } from 'express';
 import { User, UserRole } from '../models/user.model';
@@ -10,7 +9,7 @@ import { OrderItem } from '../models/orderItem.model';
 import { mlApiClient } from '../services/ml.service';
 import * as mlService from '../services/ml.service';
 import logger from '../utils/logger';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 // Demo Instacart user IDs for prediction demonstration
 const DEMO_INSTACART_USER_IDS: string[] = ['1', '7', '13', '25', '31', '42', '55', '60', '78', '92'];
@@ -72,7 +71,6 @@ export class AdminController {
         } catch (error) {
             logger.error('Error checking ML service status:', error);
             
-            // Return degraded status if ML service is unreachable
             res.status(503).json({
                 status: 'unreachable',
                 message: 'ML service is not responding',
@@ -89,11 +87,8 @@ export class AdminController {
     async getArchitectureStatus(req: Request, res: Response, next: NextFunction) {
         try {
             logger.info('Checking system architecture status...');
-            
-            // Test database connectivity
             const dbHealth = await User.count().then(() => true).catch(() => false);
             
-            // Test ML service connectivity
             let mlHealth = false;
             let mlServiceInfo = null;
             try {
@@ -104,7 +99,6 @@ export class AdminController {
                 logger.warn('ML service health check failed:', error);
             }
 
-            // Test service stats
             let serviceStats = null;
             try {
                 serviceStats = await mlService.getServiceStats();
@@ -119,15 +113,8 @@ export class AdminController {
                 architecture: "direct_database_access",
                 feature_engineering: "black_box",
                 services: {
-                    database: {
-                        status: dbHealth ? 'healthy' : 'unhealthy',
-                        connection: dbHealth
-                    },
-                    mlService: {
-                        status: mlHealth ? 'healthy' : 'unhealthy',
-                        connection: mlHealth,
-                        info: mlServiceInfo
-                    }
+                    database: { status: dbHealth ? 'healthy' : 'unhealthy', connection: dbHealth },
+                    mlService: { status: mlHealth ? 'healthy' : 'unhealthy', connection: mlHealth, info: mlServiceInfo }
                 },
                 stats: serviceStats,
                 timestamp: new Date().toISOString()
@@ -161,238 +148,139 @@ export class AdminController {
     }
 
     /**
-     * Get demo prediction comparison (AI vs actual) - MAINTAINED FUNCTIONALITY
-     * EXPLANATION: detailedPredictedBasket = ML predictions enriched with database product info
+     * DEMAND 3: Get live demo prediction comparison (AI vs actual ground truth)
+     * This flow is TEMPORARY and does NOT use the app's database for history.
+     * It calls the ML service, which reads the original CSVs to perform this demo.
      */
     async getDemoUserPrediction(req: Request, res: Response, next: NextFunction) {
         const { userId: instacartUserIdStr } = req.params;
         
         if (!DEMO_INSTACART_USER_IDS.includes(instacartUserIdStr)) {
-            logger.warn(`Invalid demo user ID: ${instacartUserIdStr}`);
-            return res.status(404).json({ 
-                error: `Demo user ID ${instacartUserIdStr} is not configured` 
-            });
+            return res.status(404).json({ error: `Demo user ID ${instacartUserIdStr} is not a valid demo ID.` });
         }
 
-        logger.info(`Fetching demo prediction for Instacart User ID: ${instacartUserIdStr}`);
+        logger.info(`Fetching LIVE demo prediction for Instacart User ID: ${instacartUserIdStr}`);
 
         try {
-            // 1. Call ML service for AI prediction (ACTUAL PREDICTION FLOW):
-            // This triggers: PredictionService.predict_next_basket() 
-            //     ↓ FeatureEngineer.generate_features_for_user()
-            //     ↓ StackedBasketModel.predict(features_df, user_id)
-            //     ↓ Stage 1: CandidateGenerator (LightGBM) + Stage 2: BasketSelector (GBM)
-            //     ↓ Returns: List[int] product IDs
-            const mlPredictionResponse = await mlApiClient.post('/predict/for-user-history', {
-                user_id: instacartUserIdStr,
-            });
-            const predictedItemsFromML = mlPredictionResponse.data.predictions || [];
+            // 1. Call ML service endpoint that performs a temporary prediction from CSVs
+            const mlPredictionResponse = await mlService.getPredictionForDemo(instacartUserIdStr);
+            const { predicted_products, user_id } = mlPredictionResponse;
 
-            // 2. Get ground truth basket from ML service
+            // 2. Get ground truth basket from a separate ML service endpoint
             const trueFutureResponse = await mlService.getGroundTruthBasket(instacartUserIdStr);
             const trueFutureProductIds = trueFutureResponse.products || [];
 
-            // 3. Convert ML product IDs to database SKUs
-            const predictedProductSkus = predictedItemsFromML.map((p: any) => 
-                `PROD-${String(p.productId).padStart(7, '0')}`
-            );
-            const trueFutureProductSkus = trueFutureProductIds.map((id: number) => 
-                `PROD-${String(id).padStart(7, '0')}`
-            );
-            const allUniqueSkus = [...new Set([...predictedProductSkus, ...trueFutureProductSkus])];
-
-            // 4. Fetch product details from database for enrichment
+            // 3. Collect all unique product IDs to fetch details from our DB
+            const allProductIds = [...new Set([...predicted_products, ...trueFutureProductIds])];
+            const allProductSkus = allProductIds.map((id: number) => `PROD-${String(id).padStart(7, '0')}`);
+            
+            // 4. Enrich with product details from our application's database
             const products = await Product.findAll({
-                where: { sku: allUniqueSkus },
+                where: { sku: allProductSkus },
                 include: [{ model: Category, attributes: ['name'] }]
             });
-
             const productMapBySku = new Map(products.map(p => [p.sku, p]));
 
-            // 5. Build detailedPredictedBasket = ML predictions + database enrichment
-            const detailedPredictedBasket = predictedItemsFromML.map((p_ml: any) => {
-                const sku = `PROD-${String(p_ml.productId).padStart(7, '0')}`;
-                const product = productMapBySku.get(sku);
-                
-                if (!product) {
-                    logger.warn(`Product not found for SKU: ${sku}`);
-                    return null;
-                }
-                
-                return {
-                    id: product.id,
-                    sku: product.sku,
-                    name: product.name,
-                    imageUrl: product.imageUrl, // Using proper database images
-                    price: product.isOnSale ? 
-                        (product.price * (1 - product.salePercentage / 100)) : product.price,
-                    category: product.category?.name,
-                    confidenceScore: p_ml.score || 0.8, // ML confidence from prediction
-                    predictedQuantity: 1 // Default for demo
-                };
+            // 5. Build detailed predicted basket for the frontend
+            const detailedPredictedBasket = predicted_products.map((productId: number) => {
+                const product = productMapBySku.get(`PROD-${String(productId).padStart(7, '0')}`);
+                return product ? {
+                    id: product.id, name: product.name, imageUrl: product.imageUrl, price: product.price, category: product.category?.name
+                } : null;
             }).filter(Boolean);
 
-            // 6. Build detailedTrueFutureBasket = ground truth + database enrichment
+            // 6. Build detailed ground truth basket for the frontend
             const detailedTrueFutureBasket = trueFutureProductIds.map((productId: number) => {
-                const sku = `PROD-${String(productId).padStart(7, '0')}`;
-                const product = productMapBySku.get(sku);
-                
-                if (!product) {
-                    logger.warn(`Product not found for SKU: ${sku}`);
-                    return null;
-                }
-                
-                return {
-                    id: product.id,
-                    sku: product.sku,
-                    name: product.name,
-                    imageUrl: product.imageUrl, // Using proper database images
-                    price: product.isOnSale ? 
-                        (product.price * (1 - product.salePercentage / 100)) : product.price,
-                    category: product.category?.name
-                };
+                const product = productMapBySku.get(`PROD-${String(productId).padStart(7, '0')}`);
+                return product ? {
+                    id: product.id, name: product.name, imageUrl: product.imageUrl, price: product.price, category: product.category?.name
+                } : null;
             }).filter(Boolean);
-
-            // Return enriched comparison for frontend display
+            
             res.json({
-                userId: instacartUserIdStr,
-                predictedBasket: detailedPredictedBasket,    // ML predictions + DB enrichment
-                trueFutureBasket: detailedTrueFutureBasket,  // Ground truth + DB enrichment
+                userId: user_id,
+                predictedBasket: detailedPredictedBasket,
+                trueFutureBasket: detailedTrueFutureBasket,
                 architecture: "direct_database_access",
                 feature_engineering: "black_box",
                 comparisonMetrics: {
                     predictedCount: detailedPredictedBasket.length,
                     actualCount: detailedTrueFutureBasket.length,
-                    commonItems: detailedPredictedBasket.filter(pred => 
-                        detailedTrueFutureBasket.some(actual => actual.id === pred.id)
-                    ).length
+                    commonItems: detailedPredictedBasket.filter(p => detailedTrueFutureBasket.some(t => t!.id === p!.id)).length
                 }
             });
 
         } catch (error: any) {
-            logger.error(`Error in demo prediction for user ${instacartUserIdStr}:`, error);
+            logger.error(`Error in live demo prediction for user ${instacartUserIdStr}:`, error);
             next(error);
         }
     }
 
     /**
-     * CORRECTED: Seed demo user with FAITHFUL temporal data for ML accuracy
+     * DEMAND 1: Seed a new user into the database using Instacart history.
+     * This creates a persistent, functional user account.
      */
     async seedDemoUser(req: Request, res: Response, next: NextFunction) {
         const { instacartUserId } = req.params;
-        const email = `demo-${instacartUserId}@timely.com`;
+        const email = `demo-user-${instacartUserId}@timely.com`;
   
         try {
-            // 1. Check if user already exists
             let user = await User.findOne({ where: { email } });
             if (user) {
-                return res.status(409).json({ 
-                    message: 'This demo user has already been seeded.',
-                    feature_engineering: "black_box"
-                });
+                return res.status(409).json({ message: 'This demo user has already been seeded.' });
             }
 
-            // 2. Create the new user
             const hashedPassword = await bcrypt.hash('password123', 10);
             user = await User.create({
-                email,
-                password: hashedPassword,
-                firstName: 'Demo',
-                lastName: `User ${instacartUserId}`,
-                role: 'user',
-                isActive: true,
-                emailVerified: true
+                email, password: hashedPassword, firstName: 'Demo', lastName: `User ${instacartUserId}`, role: 'user', isActive: true, emailVerified: true
             });
 
-            // 3. Get Instacart order history for this user (EXACT temporal data)
-            const instacartHistory = await mlService.getInstacartUserOrderHistory(parseInt(instacartUserId));
+            const instacartHistory = await mlService.getInstacartUserOrderHistory(instacartUserId);
             
-            if (!instacartHistory.orders || instacartHistory.orders.length === 0) {
-                return res.status(404).json({ 
-                    error: 'No order history found for this Instacart user ID',
-                    feature_engineering: "black_box"
-                });
+            if (!instacartHistory || !instacartHistory.orders || instacartHistory.orders.length === 0) {
+                return res.status(404).json({ error: 'No order history found for this Instacart user ID.' });
             }
 
-            // 4. Create orders preserving CRITICAL temporal fields for ML accuracy
             let ordersCreated = 0;
-            
             for (const instacartOrder of instacartHistory.orders) {
-                const productSkus = instacartOrder.products.map((productId: number) => 
-                    `PROD-${String(productId).padStart(7, '0')}`
-                );
+                const productSkus = instacartOrder.products.map((id: number) => `PROD-${String(id).padStart(7, '0')}`);
+                const products = await Product.findAll({ where: { sku: productSkus } });
 
-                const products = await Product.findAll({
-                    where: { sku: productSkus }
-                });
+                if (products.length === 0) continue;
 
-                if (products.length === 0) {
-                    logger.warn(`No products found for Instacart order ${instacartOrder.order_id}`);
-                    continue;
-                }
+                const subtotal = products.reduce((sum, p) => sum + p.price, 0);
 
-                // Calculate order total
-                const orderTotal = products.reduce((sum, product) => sum + product.price, 0);
-
-                // 🎯 CRITICAL: Preserve EXACT temporal fields from Instacart data
                 const order = await Order.create({
                     userId: user.id,
-                    orderNumber: `DEMO-${user.id}-${instacartOrder.order_id}`,
-                    
-                    // 🎯 ESSENTIAL TEMPORAL FIELDS - EXACTLY AS INSTACART TRAINING DATA:
-                    daysSincePriorOrder: instacartOrder.days_since_prior_order || null, // null for first order
-                    orderDow: instacartOrder.order_dow,                                  // 0-6 (critical for user_favorite_dow)
-                    orderHourOfDay: instacartOrder.order_hour_of_day,                   // 0-23 (critical for user_favorite_hour)
-                    
-                    status: 'delivered', // Demo orders are completed
-                    subtotal: orderTotal,
+                    orderNumber: `DEMO-${user.id.substring(0, 4)}-${instacartOrder.order_id}`,
+                    // CRITICAL: Use the exact historical temporal data for ML feature consistency
+                    daysSincePriorOrder: instacartOrder.days_since_prior_order ?? 0,
+                    orderDow: instacartOrder.order_dow,
+                    orderHourOfDay: instacartOrder.order_hour_of_day,
+                    status: 'delivered',
+                    subtotal,
                     tax: 0,
                     deliveryFee: 0,
-                    total: orderTotal,
-                    deliveryAddress: '123 Demo Street, Demo City, DC 12345',
-                    metadata: { 
-                        isDemo: true, 
-                        originalInstacartOrderId: instacartOrder.order_id,
-                        originalInstacartUserId: instacartUserId,
-                        temporalFieldsPreserved: true // Flag for debugging
-                    }
+                    total: subtotal,
+                    metadata: { isDemo: true, instacartUserId, temporalFieldsPreserved: true }
                 });
 
-                // Create order items with proper product references
-                for (const product of products) {
-                    await OrderItem.create({
-                        orderId: order.id,
-                        productId: product.id,
-                        quantity: 1, // Instacart demo: assume 1 quantity per product
-                        price: product.price,
-                        total: product.price
-                    });
-                }
-                
+                const orderItems = products.map(p => ({
+                    orderId: order.id, productId: p.id, quantity: 1, price: p.price, total: p.price
+                }));
+                await OrderItem.bulkCreate(orderItems);
                 ordersCreated++;
             }
 
             if (ordersCreated === 0) {
-                return res.status(404).json({
-                    error: 'No valid orders could be created from Instacart history',
-                    feature_engineering: "black_box"
-                });
+                return res.status(404).json({ error: 'No valid orders could be created from Instacart history.' });
             }
 
-            logger.info(`Demo user ${instacartUserId} seeded successfully with ${ordersCreated} orders preserving temporal fields`);
-
+            logger.info(`Demo user ${instacartUserId} seeded successfully with ${ordersCreated} orders.`);
             res.status(201).json({
-                message: `Demo user created and seeded with ${ordersCreated} orders (temporal fields preserved for ML accuracy)`,
-                user: {
-                    id: user.id,
-                    email: user.email,
-                    firstName: user.firstName,
-                    lastName: user.lastName
-                },
-                ordersCreated,
-                temporalFieldsPreserved: true,
-                architecture: "direct_database_access",
-                feature_engineering: "black_box"
+                message: `Demo user created and seeded with ${ordersCreated} orders. You can now log in with email: ${email} and password: password123`,
+                user: { id: user.id, email: user.email },
+                ordersCreated
             });
 
         } catch (error: any) {
@@ -400,6 +288,7 @@ export class AdminController {
             next(error);
         }
     }
+
 
     // ============================================================================
     // DASHBOARD & ANALYTICS (BLACK BOX)

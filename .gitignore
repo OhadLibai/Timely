@@ -110,6 +110,7 @@ yarn.lock
 *.tmp
 .tmp/
 TODO
+Gemini.md
 CLAUDE.md
 Simple Claude.txt
 Remove Files.txt
