@@ -7,9 +7,9 @@ import { motion } from 'framer-motion';
 import {
   Search, Filter, Package, DollarSign, Eye
 } from 'lucide-react';
-import { adminService } from '../../services/admin.service';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import EmptyState from '../../components/common/EmptyState';
+import { adminService } from '@/services/admin.service';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import EmptyState from '@/components/common/EmptyState';
 
 interface Product {
   id: string;

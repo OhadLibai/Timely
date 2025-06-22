@@ -1,6 +1,6 @@
 // frontend/src/services/cart.service.ts
-import { api } from './api.client';
-import { Product } from './product.service';
+import { api } from '@/services/api.client';
+import { Product } from '@/services/product.service';
 
 export interface CartItem {
   id: string;

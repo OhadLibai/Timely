@@ -4,11 +4,11 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Clock, Brain, TrendingUp, ChevronRight, Sparkles } from 'lucide-react';
 import { useQuery } from 'react-query';
-import { productService } from '../services/product.service';
-import ProductCard from '../components/products/ProductCard';
-import Hero from '../components/home/Hero';
-import FeatureCard from '../components/home/FeatureCard';
-import { useAuthStore } from '../stores/auth.store';
+import { productService } from '@/services/product.service';
+import ProductCard from '@/components/products/ProductCard';
+import Hero from '@/components/home/Hero';
+import FeatureCard from '@/components/home/FeatureCard';
+import { useAuthStore } from '@/stores/auth.store';
 
 const Home: React.FC = () => {
   const { user } = useAuthStore();

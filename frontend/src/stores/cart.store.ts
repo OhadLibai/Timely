@@ -1,8 +1,8 @@
 // frontend/src/stores/cart.store.ts
 import { create } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
-import { cartService, Cart, CartItem } from '../services/cart.service';
-import { Product } from '../services/product.service';
+import { cartService, Cart, CartItem } from '@/services/cart.service';
+import { Product } from '@/services/product.service';
 import toast from 'react-hot-toast';
 
 interface CartState {

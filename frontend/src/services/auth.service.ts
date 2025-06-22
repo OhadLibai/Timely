@@ -1,5 +1,5 @@
 // frontend/src/services/auth.service.ts
-import { api } from './api.client';
+import { api } from '@/services/api.client';
 
 interface LoginCredentials {
   email: string;

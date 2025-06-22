@@ -7,11 +7,11 @@ import {
   ShoppingCart, Heart, Star, Plus, Minus, ArrowLeft,
   Package, Truck, Shield, Info
 } from 'lucide-react';
-import { productService } from '../services/product.service';
-import { useCartStore } from '../stores/cart.store';
-import { useAuthStore } from '../stores/auth.store';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import ProductImage from '../components/products/ProductImage';
+import { productService } from '@/services/product.service';
+import { useCartStore } from '@/stores/cart.store';
+import { useAuthStore } from '@/stores/auth.store';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ProductImage from '@/components/products/ProductImage';
 import toast from 'react-hot-toast';
 
 const ProductDetail: React.FC = () => {

@@ -1,5 +1,5 @@
 // frontend/src/services/product.service.ts
-import { api } from './api.client';
+import { api } from '@/services/api.client';
 
 export interface Product {
   id: string;

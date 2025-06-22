@@ -3,11 +3,11 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Heart, Star, Package, Zap, Eye } from 'lucide-react';
-import { Product } from '../../services/product.service';
-import { useCartStore } from '../../stores/cart.store';
-import { useAuthStore } from '../../stores/auth.store';
-import { favoriteService } from '../../services/favorite.service';
-import ProductImage from './ProductImage';
+import { Product } from '@/services/product.service';
+import { useCartStore } from '@/stores/cart.store';
+import { useAuthStore } from '@/stores/auth.store';
+import { favoriteService } from '@/services/favorite.service';
+import ProductImage from '@/components/products/ProductImage';
 import toast from 'react-hot-toast';
 import { useMutation, useQueryClient } from 'react-query';
 

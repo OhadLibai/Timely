@@ -6,14 +6,14 @@ import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, X, Grid, List } from 'lucide-react';
 import { useQuery } from 'react-query';
-import { productService } from '../services/product.service';
-import ProductCard from '../components/products/ProductCard';
-import ProductListItem from '../components/products/ProductListItem';
-import CategoryFilter from '../components/products/CategoryFilter';
-import PriceRangeFilter from '../components/products/PriceRangeFilter';
-import SortDropdown, { SortOption, parseSortOption } from '../components/products/SortDropdown';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import Pagination from '../components/common/Pagination';
+import { productService } from '@/services/product.service';
+import ProductCard from '@/components/products/ProductCard';
+import ProductListItem from '@/components/products/ProductListItem';
+import CategoryFilter from '@/components/products/CategoryFilter';
+import PriceRangeFilter from '@/components/products/PriceRangeFilter';
+import SortDropdown, { SortOption, parseSortOption } from '@/components/products/SortDropdown';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import Pagination from '@/components/common/Pagination';
 
 interface FilterState {
   categories: string[];

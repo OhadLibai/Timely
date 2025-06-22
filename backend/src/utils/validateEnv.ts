@@ -1,7 +1,7 @@
 // backend/src/utils/validateEnv.ts
 // Environment variable validation to ensure proper configuration
 
-import logger from './logger';
+import logger from '@/utils/logger';
 
 interface EnvConfig {
   // Database

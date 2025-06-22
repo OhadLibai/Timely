@@ -4,11 +4,11 @@
   "description": "Timely ML Demo Backend API - Sanitized",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "nodemon --exec ts-node src/server.ts",
-    "build": "tsc",
-    "start": "node dist/server.js",
-    "seed": "node dist/database/database.seed.js",
-    "seed:dev": "ts-node src/database/database.seed.ts",
+    "dev": "nodemon --exec ts-node -r ./src/alias.ts src/server.ts",
+    "build": "tsc && tsc-alias",
+    "start": "node -r ./dist/alias.js dist/server.js",
+    "seed": "node -r ./dist/alias.js dist/database/database.seed.js",
+    "seed:dev": "ts-node -r ./src/alias.ts src/database/database.seed.ts",
     "test": "jest",
     "lint": "eslint src/**/*.ts"
   },
@@ -30,7 +30,8 @@
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.33.0",
     "sequelize-typescript": "^2.1.5",
-    "winston": "^3.10.0"
+    "winston": "^3.10.0",
+    "module-alias": "^2.2.3"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.2",
@@ -48,7 +49,8 @@
     "nodemon": "^3.0.1",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "tsc-alias": "^1.8.8"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -60,5 +62,18 @@
     "prediction",
     "express",
     "typescript"
-  ]
+  ],
+  "_moduleAliases": {
+    "@": "dist",
+    "@/controllers": "dist/controllers",
+    "@/models": "dist/models",
+    "@/routes": "dist/routes",
+    "@/services": "dist/services",
+    "@/middleware": "dist/middleware",
+    "@/utils": "dist/utils",
+    "@/types": "dist/types",
+    "@/config": "dist/config",
+    "@/database": "dist/database",
+    "@/validators": "dist/validators"
+  }
 }

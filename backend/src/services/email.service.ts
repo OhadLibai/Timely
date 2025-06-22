@@ -1,5 +1,5 @@
 // timely/backend/src/services/email.service.ts
-import logger from '../utils/logger';
+import logger from '@/utils/logger';
 
 interface EmailOptions {
   to: string;

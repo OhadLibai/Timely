@@ -1,8 +1,8 @@
 // frontend/src/components/auth/ProtectedRoute.tsx
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuthStore } from '../../stores/auth.store';
-import LoadingSpinner from '../common/LoadingSpinner';
+import { useAuthStore } from '@/stores/auth.store';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 const ProtectedRoute: React.FC = () => {
   const { isAuthenticated, isLoading, user } = useAuthStore();

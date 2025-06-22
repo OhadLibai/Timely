@@ -7,41 +7,41 @@ import { Toaster } from 'react-hot-toast';
 import { AnimatePresence } from 'framer-motion';
 
 // Layout components
-import MainLayout from './layouts/MainLayout';
-import AuthLayout from './layouts/AuthLayout';
-import AdminLayout from './layouts/AdminLayout';
+import MainLayout from '@/layouts/MainLayout';
+import AuthLayout from '@/layouts/AuthLayout';
+import AdminLayout from '@/layouts/AdminLayout';
 
 // Auth components
-import ProtectedRoute from './components/auth/ProtectedRoute';
-import AdminRoute from './components/auth/AdminRoute';
+import ProtectedRoute from '@/components/auth/ProtectedRoute';
+import AdminRoute from '@/components/auth/AdminRoute';
 
 // Loading component
-import LoadingSpinner from './components/common/LoadingSpinner';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 // Lazy load pages
-const Home = lazy(() => import('./pages/Home'));
-const Products = lazy(() => import('./pages/Products'));
-const ProductDetail = lazy(() => import('./pages/ProductDetail'));
-const Cart = lazy(() => import('./pages/Cart'));
-const Checkout = lazy(() => import('./pages/Checkout'));
-const Orders = lazy(() => import('./pages/Orders'));
-const OrderDetail = lazy(() => import('./pages/OrderDetail'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Favorites = lazy(() => import('./pages/Favorites'));
-const PredictedBasket = lazy(() => import('./pages/PredictedBasket'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Home = lazy(() => import('@/pages/Home'));
+const Products = lazy(() => import('@/pages/Products'));
+const ProductDetail = lazy(() => import('@/pages/ProductDetail'));
+const Cart = lazy(() => import('@/pages/Cart'));
+const Checkout = lazy(() => import('@/pages/Checkout'));
+const Orders = lazy(() => import('@/pages/Orders'));
+const OrderDetail = lazy(() => import('@/pages/OrderDetail'));
+const Profile = lazy(() => import('@/pages/Profile'));
+const Favorites = lazy(() => import('@/pages/Favorites'));
+const PredictedBasket = lazy(() => import('@/pages/PredictedBasket'));
+const Login = lazy(() => import('@/pages/Login'));
+const Register = lazy(() => import('@/pages/Register'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 
 // Admin pages
-const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
-const AdminProducts = lazy(() => import('./pages/admin/Products'));
-const AdminOrders = lazy(() => import('./pages/admin/Orders'));
-const AdminUsers = lazy(() => import('./pages/admin/Users'));
-const AdminMetrics = lazy(() => import('./pages/admin/Metrics'));
-const AdminSettings = lazy(() => import('./pages/admin/Settings'));
-const AdminDemoPredictionPage = lazy(() => import('./pages/admin/DemoPredictionPage'));
+const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
+const AdminProducts = lazy(() => import('@/pages/admin/Products'));
+const AdminOrders = lazy(() => import('@/pages/admin/Orders'));
+const AdminUsers = lazy(() => import('@/pages/admin/Users'));
+const AdminMetrics = lazy(() => import('@/pages/admin/Metrics'));
+const AdminSettings = lazy(() => import('@/pages/admin/Settings'));
+const AdminDemoPredictionPage = lazy(() => import('@/pages/admin/DemoPredictionPage'));
 
 // Create a query client
 const queryClient = new QueryClient({

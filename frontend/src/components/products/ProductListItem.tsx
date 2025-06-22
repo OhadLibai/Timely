@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Heart } from 'lucide-react';
-import { Product } from '../../services/product.service';
-import { useCartStore } from '../../stores/cart.store';
+import { Product } from '@/services/product.service';
+import { useCartStore } from '@/stores/cart.store';
 import { useMutation, useQueryClient } from 'react-query';
-import { favoriteService } from '../../services/favorite.service';
+import { favoriteService } from '@/services/favorite.service';
 import { toast } from 'react-hot-toast';
 
 interface ProductListItemProps {

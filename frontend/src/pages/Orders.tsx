@@ -7,9 +7,9 @@ import {
   Package, Clock, CheckCircle, XCircle, Truck,
   Eye, RefreshCcw, Calendar, DollarSign
 } from 'lucide-react';
-import { orderService } from '../services/order.service';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import EmptyState from '../components/common/EmptyState';
+import { orderService } from '@/services/order.service';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import EmptyState from '@/components/common/EmptyState';
 
 interface Order {
   id: string;

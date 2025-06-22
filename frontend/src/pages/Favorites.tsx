@@ -3,11 +3,11 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, Trash2, Search, Filter } from 'lucide-react';
-import { favoriteService } from '../services/favorite.service';
-import { useCartStore } from '../stores/cart.store';
-import ProductCard from '../components/products/ProductCard';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import EmptyState from '../components/common/EmptyState';
+import { favoriteService } from '@/services/favorite.service';
+import { useCartStore } from '@/stores/cart.store';
+import ProductCard from '@/components/products/ProductCard';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import EmptyState from '@/components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 interface FavoriteProduct {

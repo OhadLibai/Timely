@@ -1,8 +1,8 @@
 // frontend/src/services/favorite.service.ts
 // SIMPLIFIED: Basic favorite management only - removed complex features
 
-import { api } from './api.client';
-import { Product } from './product.service';
+import { api } from '@/services/api.client';
+import { Product } from '@/services/product.service';
 
 export interface Favorite {
   id: string;

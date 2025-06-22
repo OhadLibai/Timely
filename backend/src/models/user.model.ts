@@ -1,12 +1,12 @@
 // backend/src/models/user.model.ts
 import { Table, Column, Model, DataType, HasOne, HasMany, BeforeCreate, BeforeUpdate } from 'sequelize-typescript';
 import bcrypt from 'bcryptjs';
-import { Cart } from './cart.model';
-import { Order } from './order.model';
-import { Favorite } from './favorite.model';
-import { PredictedBasket } from './predictedBasket.model';
-import { UserPreference } from './userPreference.model';
-import { ProductView } from './productView.model';
+import { Cart } from '@/models/cart.model';
+import { Order } from '@/models/order.model';
+import { Favorite } from '@/models/favorite.model';
+import { PredictedBasket } from '@/models/predictedBasket.model';
+import { UserPreference } from '@/models/userPreference.model';
+import { ProductView } from '@/models/productView.model';
 
 export enum UserRole {
   USER = 'user',

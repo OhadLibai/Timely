@@ -7,8 +7,8 @@ import {
   Shield, Bell, Eye, EyeOff, Calendar, Package,
   Heart, CreditCard, Settings
 } from 'lucide-react';
-import { useAuthStore } from '../stores/auth.store';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import { useAuthStore } from '@/stores/auth.store';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 interface UserProfile {

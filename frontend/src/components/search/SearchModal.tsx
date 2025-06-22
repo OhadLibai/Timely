@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Clock, TrendingUp, Package, ArrowRight } from 'lucide-react';
 import { useQuery } from 'react-query';
-import { productService } from '../../services/product.service';
+import { productService } from '@/services/product.service';
 import { Link } from 'react-router-dom';
 
 interface SearchModalProps {

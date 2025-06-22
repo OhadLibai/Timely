@@ -3,9 +3,9 @@
 
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'react-query';
-import { adminService, DemoUserPrediction } from '../../services/admin.service';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import ProductImage from '../../components/products/ProductImage';
+import { adminService, DemoUserPrediction } from '@/services/admin.service';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ProductImage from '@/components/products/ProductImage';
 import { Brain, UserPlus, CheckCircle, AlertCircle, RefreshCw, Search, Info } from 'lucide-react';
 import toast from 'react-hot-toast';
 

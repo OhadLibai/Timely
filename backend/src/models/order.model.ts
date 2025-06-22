@@ -2,9 +2,9 @@
 // VERIFIED: Matches Instacart training data format EXACTLY
 
 import { DataType, Column, Model, Table, HasMany, ForeignKey, BelongsTo, HasOne } from 'sequelize-typescript';
-import { User } from './user.model';
-import { OrderItem } from './orderItem.model';
-import { Delivery } from './delivery.model';
+import { User } from '@/models/user.model';
+import { OrderItem } from '@/models/orderItem.model';
+import { Delivery } from '@/models/delivery.model';
 
 // [Previous Order model code remains the same...]
 

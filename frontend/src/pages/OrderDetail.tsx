@@ -8,8 +8,8 @@ import {
   MapPin, Calendar, DollarSign, Phone, Mail,
   Download, RefreshCcw, Star
 } from 'lucide-react';
-import { orderService } from '../services/order.service';
-import LoadingSpinner from '../components/common/LoadingSpinner';
+import { orderService } from '@/services/order.service';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 
 interface OrderDetail {

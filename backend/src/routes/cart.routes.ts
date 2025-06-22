@@ -1,8 +1,8 @@
 // backend/src/routes/cart.routes.ts
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
-import { CartController } from '../controllers/cart.controller';
-import { validateRequest } from '../middleware/validation.middleware';
+import { CartController } from '@/controllers/cart.controller';
+import { validateRequest } from '@/middleware/validation.middleware';
 
 const router = Router();
 const cartController = new CartController();

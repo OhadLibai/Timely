@@ -3,7 +3,7 @@
 
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import toast from 'react-hot-toast';
-import { authService } from './auth.service';
+import { authService } from '@/services/auth.service';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 

@@ -1,8 +1,8 @@
 // frontend/src/services/prediction.service.ts
 // FIXED: Use backend proxy only - removed direct ML service communication
 
-import { api } from './api.client'; // REMOVED: mlApi import - use backend gateway only
-import { Product } from './product.service';
+import { api } from '@/services/api.client'; // REMOVED: mlApi import - use backend gateway only
+import { Product } from '@/services/product.service';
 
 export interface PredictedBasketItem {
   id: string;

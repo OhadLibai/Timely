@@ -3,9 +3,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
-import { Product, Category, User, PredictedBasket, PredictedBasketItem } from '../models';
-import logger from '../utils/logger';
-import * as mlService from '../services/ml.service';
+import { Product, Category, User, PredictedBasket, PredictedBasketItem } from '@/models';
+import logger from '@/utils/logger';
+import * as mlService from '@/services/ml.service';
 
 export class PredictionController {
 

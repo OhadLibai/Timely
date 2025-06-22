@@ -3,7 +3,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LucideIcon, User, Package, Heart, ShoppingCart, Settings, LogOut } from 'lucide-react';
-import { useAuthStore } from '../../stores/auth.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 interface NavLink {
   path: string;

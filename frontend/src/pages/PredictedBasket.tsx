@@ -7,13 +7,13 @@ import {
   RefreshCw, Calendar, Clock, Sparkles, AlertCircle,
   ChevronRight, Plus, Minus, Trash2
 } from 'lucide-react';
-import { predictionService } from '../services/prediction.service';
-import { cartService } from '../services/cart.service';
-import { useCartStore } from '../stores/cart.store';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import ProductImage from '../components/products/ProductImage';
-import ConfidenceIndicator from '../components/predictions/ConfidenceIndicator';
-import PredictionExplanation from '../components/predictions/PredictionExplanation';
+import { predictionService } from '@/services/prediction.service';
+import { cartService } from '@/services/cart.service';
+import { useCartStore } from '@/stores/cart.store';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ProductImage from '@/components/products/ProductImage';
+import ConfidenceIndicator from '@/components/predictions/ConfidenceIndicator';
+import PredictionExplanation from '@/components/predictions/PredictionExplanation';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 

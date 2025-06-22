@@ -2,8 +2,8 @@
 // SIMPLIFIED: Admin routes for ML demo functionality only - NO CRUD operations
 
 import { Router } from 'express';
-import { AdminController } from '../controllers/admin.controller';
-import { authMiddleware, adminMiddleware } from '../middleware/auth.middleware';
+import { AdminController } from '@/controllers/admin.controller';
+import { authMiddleware, adminMiddleware } from '@/middleware/auth.middleware';
 
 const router = Router();
 const adminController = new AdminController();

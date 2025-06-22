@@ -1,7 +1,7 @@
 // backend/src/models/cart.model.ts
 import { Table, Column, Model, DataType, BelongsTo, HasMany, ForeignKey } from 'sequelize-typescript';
-import { User } from './user.model';
-import { CartItem } from './cartItem.model';
+import { User } from '@/models/user.model';
+import { CartItem } from '@/models/cartItem.model';
 
 @Table({
   tableName: 'carts',

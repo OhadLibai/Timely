@@ -6,7 +6,7 @@ import {
   ShoppingCart, Menu, X, BarChart3, Package, Users, Settings,
   LogOut, Home, Brain, TrendingUp, Shield
 } from 'lucide-react';
-import { useAuthStore } from '../stores/auth.store';
+import { useAuthStore } from '@/stores/auth.store';
 
 const AdminLayout: React.FC = () => {
   const location = useLocation();

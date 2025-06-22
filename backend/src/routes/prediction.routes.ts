@@ -1,8 +1,8 @@
 // backend/src/routes/prediction.routes.ts
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
-import { PredictionController } from '../controllers/prediction.controller';
-import { validateRequest } from '../middleware/validation.middleware';
+import { PredictionController } from '@/controllers/prediction.controller';
+import { validateRequest } from '@/middleware/validation.middleware';
 
 const router = Router();
 const predictionController = new PredictionController();

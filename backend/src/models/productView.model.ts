@@ -1,7 +1,7 @@
 // backend/src/models/productView.model.ts
 import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import { User } from './user.model';
-import { Product } from './product.model';
+import { User } from '@/models/user.model';
+import { Product } from '@/models/product.model';
 
 @Table({
   tableName: 'product_views',

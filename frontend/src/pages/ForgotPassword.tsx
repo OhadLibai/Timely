@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
-import { authService } from '../services/auth.service';
+import { authService } from '@/services/auth.service';
 import toast from 'react-hot-toast';
 
 const ForgotPassword: React.FC = () => {

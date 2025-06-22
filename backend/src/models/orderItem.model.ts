@@ -1,7 +1,7 @@
 // backend/src/models/orderItem.model.ts
 import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import { Order } from './order.model';
-import { Product } from './product.model';
+import { Order } from '@/models/order.model';
+import { Product } from '@/models/product.model';
 
 @Table({
   tableName: 'order_items',

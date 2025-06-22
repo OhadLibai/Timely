@@ -3,8 +3,8 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import logger from '../utils/logger';
-import { User, UserRole } from '../models/user.model';
+import logger from '@/utils/logger';
+import { User, UserRole } from '@/models/user.model';
 
 export interface AuthenticatedRequest extends Request {
   user?: {

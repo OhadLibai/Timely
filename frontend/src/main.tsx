@@ -1,13 +1,13 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
-import './index.css';
+import App from '@/App';
+import '@/index.css';
 
 // Import performance monitoring
 import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
 
 // Import error boundary
-import ErrorBoundary from './components/common/ErrorBoundary';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 
 // Performance monitoring setup
 const sendToAnalytics = (metric: any) => {

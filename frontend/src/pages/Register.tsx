@@ -7,7 +7,7 @@ import {
   Mail, Lock, Eye, EyeOff, User, Phone, 
   ShoppingCart, Check, Loader2, Sparkles 
 } from 'lucide-react';
-import { useAuthStore } from '../stores/auth.store';
+import { useAuthStore } from '@/stores/auth.store';
 import toast from 'react-hot-toast';
 
 interface RegisterFormData {

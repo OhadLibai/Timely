@@ -1,11 +1,11 @@
 // backend/src/models/product.model.ts
 import { Table, Column, Model, DataType, BelongsTo, HasMany, ForeignKey } from 'sequelize-typescript';
-import { Category } from './category.model';
-import { CartItem } from './cartItem.model';
-import { OrderItem } from './orderItem.model';
-import { Favorite } from './favorite.model';
-import { PredictedBasketItem } from './predictedBasketItem.model';
-import { ProductView } from './productView.model';
+import { Category } from '@/models/category.model';
+import { CartItem } from '@/models/cartItem.model';
+import { OrderItem } from '@/models/orderItem.model';
+import { Favorite } from '@/models/favorite.model';
+import { PredictedBasketItem } from '@/models/predictedBasketItem.model';
+import { ProductView } from '@/models/productView.model';
 
 @Table({
   tableName: 'products',

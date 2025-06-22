@@ -1,23 +1,48 @@
 {
   "compilerOptions": {
-    "target": "ES2020",                       // Or a newer ECMAScript target like ES2021, ES2022
-    "module": "commonjs",                     // Standard for Node.js
-    "rootDir": "./src",                       // Where your source .ts files are
-    "outDir": "./dist",                       // Where compiled .js files will go
-    "esModuleInterop": true,                  // Enables compatibility with CommonJS modules
-    "forceConsistentCasingInFileNames": true, // Ensures case-sensitive import correctness
-    "strict": true,                           // Enables all strict type-checking options
+    "target": "ES2020",
+    "module": "commonjs",
+    "lib": ["ES2020"],
+    "allowJs": true,
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "removeComments": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+
+    /* Experimental Decorators for Sequelize */
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
-    "skipLibCheck": true,                     // Skips type checking of declaration files
-    "resolveJsonModule": true,                // Allows importing JSON files
-    "moduleResolution": "node",               // How modules are resolved
-    "sourceMap": true,                        // Generates source maps for debugging
-    "baseUrl": ".",                           // Base directory for module resolution
+
+    /* Path Aliases - Clean Absolute Imports */
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]                        // Optional: Path aliases
+      "@/*": ["./src/*"],
+      "@/controllers/*": ["./src/controllers/*"],
+      "@/models/*": ["./src/models/*"],
+      "@/routes/*": ["./src/routes/*"],
+      "@/services/*": ["./src/services/*"],
+      "@/middleware/*": ["./src/middleware/*"],
+      "@/utils/*": ["./src/utils/*"],
+      "@/types/*": ["./src/types/*"],
+      "@/config/*": ["./src/config/*"],
+      "@/database/*": ["./src/database/*"],
+      "@/validators/*": ["./src/validators/*"]
     }
   },
-  "include": ["src/**/*.ts"],                 // Which files to include in compilation
-  "exclude": ["node_modules", "dist", "src/tests"] // Which files/folders to exclude
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ]
 }

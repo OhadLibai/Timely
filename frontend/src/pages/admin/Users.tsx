@@ -6,8 +6,8 @@ import {
   Users, Search, Filter, Eye, Edit, Ban, UserCheck,
   Mail, Calendar, DollarSign, Package
 } from 'lucide-react';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import EmptyState from '../../components/common/EmptyState';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import EmptyState from '@/components/common/EmptyState';
 
 interface User {
   id: string;

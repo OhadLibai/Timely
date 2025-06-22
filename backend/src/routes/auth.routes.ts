@@ -1,9 +1,9 @@
 // backend/src/routes/auth.routes.ts
 import { Router } from 'express';
 import { body } from 'express-validator';
-import { AuthController } from '../controllers/auth.controller';
-import { validateRequest } from '../middleware/validation.middleware';
-import { authMiddleware } from '../middleware/auth.middleware';
+import { AuthController } from '@/controllers/auth.controller';
+import { validateRequest } from '@/middleware/validation.middleware';
+import { authMiddleware } from '@/middleware/auth.middleware';
 
 const router = Router();
 const authController = new AuthController();

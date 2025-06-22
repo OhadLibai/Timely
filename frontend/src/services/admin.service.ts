@@ -1,7 +1,7 @@
 // frontend/src/services/admin.service.ts
 // FIXED: Updated to support ANY Instacart user ID instead of hardcoded list
 
-import { api } from './api.client';
+import { api } from '@/services/api.client';
 
 export interface ModelMetrics {
   precision_at_k: Record<string, number>;

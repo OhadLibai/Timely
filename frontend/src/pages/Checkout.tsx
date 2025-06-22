@@ -8,11 +8,11 @@ import {
   Check, ChevronRight, Shield, Info, Truck,
   Home, Building, AlertCircle
 } from 'lucide-react';
-import { useCartStore } from '../stores/cart.store';
-import { useAuthStore } from '../stores/auth.store';
-import { orderService } from '../services/order.service';
-import LoadingSpinner from '../components/common/LoadingSpinner';
-import EmptyState from '../components/common/EmptyState';
+import { useCartStore } from '@/stores/cart.store';
+import { useAuthStore } from '@/stores/auth.store';
+import { orderService } from '@/services/order.service';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import EmptyState from '@/components/common/EmptyState';
 import toast from 'react-hot-toast';
 
 interface CheckoutFormData {

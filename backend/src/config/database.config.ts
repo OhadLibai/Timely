@@ -1,22 +1,22 @@
 // backend/src/config/database.config.ts
 import { Sequelize } from 'sequelize-typescript';
 import path from 'path';
-import logger from '../utils/logger';
+import logger from '@/utils/logger';
 
 // Import all models
-import { User } from '../models/user.model';
-import { Product } from '../models/product.model';
-import { Category } from '../models/category.model';
-import { Cart } from '../models/cart.model';
-import { CartItem } from '../models/cartItem.model';
-import { Order } from '../models/order.model';
-import { OrderItem } from '../models/orderItem.model';
-import { Favorite } from '../models/favorite.model';
-import { PredictedBasket } from '../models/predictedBasket.model';
-import { PredictedBasketItem } from '../models/predictedBasketItem.model';
-import { UserPreference } from '../models/userPreference.model';
-import { Delivery } from '../models/delivery.model';
-import { ProductView } from '../models/productView.model';
+import { User } from '@/models/user.model';
+import { Product } from '@/models/product.model';
+import { Category } from '@/models/category.model';
+import { Cart } from '@/models/cart.model';
+import { CartItem } from '@/models/cartItem.model';
+import { Order } from '@/models/order.model';
+import { OrderItem } from '@/models/orderItem.model';
+import { Favorite } from '@/models/favorite.model';
+import { PredictedBasket } from '@/models/predictedBasket.model';
+import { PredictedBasketItem } from '@/models/predictedBasketItem.model';
+import { UserPreference } from '@/models/userPreference.model';
+import { Delivery } from '@/models/delivery.model';
+import { ProductView } from '@/models/productView.model';
 
 const DATABASE_URL = process.env.DATABASE_URL || 'postgresql://timely_user:timely_password@localhost:5432/timely_db';
 

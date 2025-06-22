@@ -1,7 +1,7 @@
 // frontend/src/stores/auth.store.ts
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { authService, User } from '../services/auth.service';
+import { authService, User } from '@/services/auth.service';
 import toast from 'react-hot-toast';
 
 interface AuthState {

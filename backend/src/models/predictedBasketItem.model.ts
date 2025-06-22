@@ -1,7 +1,7 @@
 // backend/src/models/predictedBasketItem.model.ts
 import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import { PredictedBasket } from './predictedBasket.model';
-import { Product } from './product.model';
+import { PredictedBasket } from '@/models/predictedBasket.model';
+import { Product } from '@/models/product.model';
 
 @Table({
   tableName: 'predicted_basket_items',

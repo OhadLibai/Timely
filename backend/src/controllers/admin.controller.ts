@@ -3,9 +3,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
-import logger from '../utils/logger';
-import { User, Product, Order, Category, OrderItem } from '../models';
-import * as mlService from '../services/ml.service';
+import logger from '@/utils/logger';
+import { User, Product, Order, Category, OrderItem } from '@/models';
+import * as mlService from '@/services/ml.service';
 
 export class AdminController {
   

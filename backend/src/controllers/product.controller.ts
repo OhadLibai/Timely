@@ -3,8 +3,8 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
-import { Product, Category, User, ProductView } from '../models';
-import logger from '../utils/logger';
+import { Product, Category, User, ProductView } from '@/models';
+import logger from '@/utils/logger';
 
 export class ProductController {
 

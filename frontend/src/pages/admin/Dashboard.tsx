@@ -12,11 +12,11 @@ import {
   PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, 
   Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
-import { adminService } from '../../services/admin.service';
-import { predictionService } from '../../services/prediction.service';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import MetricCard from '../../components/admin/MetricCard';
-import DateRangePicker from '../../components/admin/DateRangePicker';
+import { adminService } from '@/services/admin.service';
+import { predictionService } from '@/services/prediction.service';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import MetricCard from '@/components/admin/MetricCard';
+import DateRangePicker from '@/components/admin/DateRangePicker';
 
 const AdminDashboard: React.FC = () => {
   const [dateRange, setDateRange] = useState({ start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), end: new Date() });

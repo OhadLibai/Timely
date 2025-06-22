@@ -2,7 +2,7 @@
 // SIMPLIFIED: Removed unused fields, kept only ML prediction-related preferences
 
 import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import { User } from './user.model';
+import { User } from '@/models/user.model';
 
 @Table({
   tableName: 'user_preferences',

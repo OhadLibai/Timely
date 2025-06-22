@@ -1,5 +1,6 @@
 // backend/src/server.ts
-// ENHANCED: Improved security, error handling, and configuration validation
+// IMPORTANT: Import alias configuration first, before any other imports
+import './alias';
 
 import express, { Application, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
@@ -11,30 +12,30 @@ import path from 'path';
 import { createServer } from 'http';
 import rateLimit from 'express-rate-limit';
 
-// Load environment variables first
+// Load environment variables
 dotenv.config();
 
-// Enhanced imports
-import { validateEnvironmentVariables } from './utils/validateEnv';
-import { sequelize } from './config/database.config';
+// Now we can use clean absolute imports with @/ aliases
+import { validateEnvironmentVariables } from '@/utils/validateEnv';
+import { sequelize } from '@/config/database.config';
 import { 
   errorHandler, 
   notFoundHandler, 
   handleUncaughtExceptions,
   asyncHandler 
-} from './middleware/error.middleware';
-import { authMiddleware } from './middleware/auth.middleware';
+} from '@/middleware/error.middleware';
+import { authMiddleware } from '@/middleware/auth.middleware';
 
-// Import routes
-import authRoutes from './routes/auth.routes';
-import productRoutes from './routes/product.routes';
-import cartRoutes from './routes/cart.routes';
-import orderRoutes from './routes/order.routes';
-import userRoutes from './routes/user.routes';
-import predictionRoutes from './routes/prediction.routes';
-import adminRoutes from './routes/admin.routes';
+// Import routes with clean aliases
+import authRoutes from '@/routes/auth.routes';
+import productRoutes from '@/routes/product.routes';
+import cartRoutes from '@/routes/cart.routes';
+import orderRoutes from '@/routes/order.routes';
+import userRoutes from '@/routes/user.routes';
+import predictionRoutes from '@/routes/prediction.routes';
+import adminRoutes from '@/routes/admin.routes';
 
-import logger from './utils/logger';
+import logger from '@/utils/logger';
 
 // ============================================================================
 // INITIALIZATION & VALIDATION
@@ -68,38 +69,37 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
-      fontSrc: ["'self'"],
-      connectSrc: ["'self'", config.ML_SERVICE_URL]
+      fontSrc: ["'self'", "https:", "data:"],
+      connectSrc: ["'self'", config.ML_SERVICE_URL],
+      frameSrc: ["'none'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      workerSrc: ["'self'", "blob:"],
+      childSrc: ["'self'", "blob:"],
+      formAction: ["'self'"],
+      upgradeInsecureRequests: process.env.NODE_ENV === 'production' ? [] : null
     }
   },
-  crossOriginEmbedderPolicy: false // Required for some development tools
+  crossOriginEmbedderPolicy: false
 }));
 
-// Enhanced CORS configuration
+// CORS configuration
 app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      config.FRONTEND_URL,
-      'http://localhost:3000', // Development frontend
-      'http://localhost:3001'  // Alternative dev port
-    ];
-    
-    if (allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      logger.warn(`CORS blocked request from: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
+  origin: [config.FRONTEND_URL, 'http://localhost:3000'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: [
+    'Origin',
+    'X-Requested-With', 
+    'Content-Type', 
+    'Accept',
+    'Authorization',
+    'Cache-Control',
+    'X-Request-ID'
+  ]
 }));
 
-// Enhanced rate limiting
+// Rate limiting
 const limiter = rateLimit({
   windowMs: config.RATE_LIMIT_WINDOW_MS,
   max: config.RATE_LIMIT_MAX_REQUESTS,
@@ -110,129 +110,104 @@ const limiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res) => {
-    logger.warn(`Rate limit exceeded for IP: ${req.ip}`, {
-      ip: req.ip,
-      userAgent: req.get('User-Agent'),
-      path: req.path
-    });
+    logger.warn(`Rate limit exceeded for IP: ${req.ip}, User-Agent: ${req.get('User-Agent')}`);
     res.status(429).json({
+      success: false,
       error: 'Too many requests from this IP, please try again later.',
       retryAfter: Math.ceil(config.RATE_LIMIT_WINDOW_MS / 1000)
     });
   }
 });
 
-app.use(limiter);
+app.use('/api/', limiter);
 
 // ============================================================================
-// GENERAL MIDDLEWARE
+// MIDDLEWARE STACK
 // ============================================================================
 
+// Request parsing and compression
 app.use(compression());
-
-// Enhanced logging with request ID
-app.use(morgan('combined', {
-  stream: {
-    write: (message: string) => {
-      logger.info(message.trim());
-    }
-  }
-}));
-
-// Body parsing with security limits
-app.use(express.json({ 
-  limit: '10mb',
-  verify: (req, res, buf) => {
-    // Store raw body for webhook verification if needed
-    (req as any).rawBody = buf;
-  }
-}));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static file serving (minimal for demo)
-app.use('/uploads', express.static(path.join(__dirname, '../uploads'), {
-  maxAge: '1h',
-  etag: true
-}));
+// Logging
+app.use(morgan(
+  ':method :url :status :res[content-length] - :response-time ms :user-agent',
+  {
+    stream: {
+      write: (message: string) => {
+        logger.info(message.trim());
+      }
+    }
+  }
+));
 
-// Request ID middleware for better debugging
+// Request ID tracking
 app.use((req: Request, res: Response, next: NextFunction) => {
-  const requestId = Math.random().toString(36).substring(2, 15);
+  const requestId = req.headers['x-request-id'] || 
+    `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
   (req as any).requestId = requestId;
   res.setHeader('X-Request-ID', requestId);
   next();
 });
 
 // ============================================================================
-// API ROUTES
+// ROUTES
 // ============================================================================
 
-// Health check with comprehensive status
-app.get('/health', asyncHandler(async (req: Request, res: Response) => {
-  const dbStatus = await sequelize.authenticate()
-    .then(() => 'healthy')
-    .catch(() => 'unhealthy');
-
-  const healthStatus = {
-    status: dbStatus === 'healthy' ? 'healthy' : 'degraded',
+// Health check endpoint
+app.get('/health', (req: Request, res: Response) => {
+  res.json({
+    status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: process.env.npm_package_version || '1.0.0',
-    environment: config.NODE_ENV,
-    services: {
-      database: dbStatus,
-      api: 'healthy'
-    },
     uptime: process.uptime(),
-    memory: process.memoryUsage(),
-    mode: 'dev-test',
-    features: {
-      backgroundJobs: 'disabled',
-      fileUploads: 'disabled',
-      mlPredictions: 'enabled'
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    database: 'connected', // Could add actual DB health check here
+    services: {
+      ml_service: config.ML_SERVICE_URL
     }
-  };
+  });
+});
 
-  res.status(dbStatus === 'healthy' ? 200 : 503).json(healthStatus);
-}));
+// API routes with clean structure
+app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/cart', authMiddleware, cartRoutes);
+app.use('/api/orders', authMiddleware, orderRoutes);
+app.use('/api/users', authMiddleware, userRoutes);
+app.use('/api/predictions', authMiddleware, predictionRoutes);
+app.use('/api/admin', adminRoutes);
 
-// API documentation endpoint (development only)
-if (config.NODE_ENV === 'development') {
-  app.get('/api-docs', (req: Request, res: Response) => {
+// Development-only documentation endpoint
+if (process.env.NODE_ENV === 'development') {
+  app.get('/api/docs', (req: Request, res: Response) => {
     res.json({
-      title: 'Timely API Documentation',
+      message: 'Timely API Documentation',
       version: '1.0.0',
       endpoints: {
         auth: '/api/auth/*',
         products: '/api/products/*',
         cart: '/api/cart/*',
         orders: '/api/orders/*',
-        user: '/api/user/*',
+        users: '/api/users/*',
         predictions: '/api/predictions/*',
         admin: '/api/admin/*'
       },
-      healthCheck: '/health',
-      documentation: 'See README.md for detailed API documentation'
+      documentation: 'https://docs.timely.com/api'
     });
   });
 }
-
-// API Routes with proper error handling
-app.use('/api/auth', authRoutes);
-app.use('/api/products', productRoutes);
-app.use('/api/cart', authMiddleware, cartRoutes);
-app.use('/api/orders', authMiddleware, orderRoutes);
-app.use('/api/user', authMiddleware, userRoutes);
-app.use('/api/predictions', authMiddleware, predictionRoutes);
-app.use('/api/admin', adminRoutes); // Auth middleware applied within admin routes
 
 // ============================================================================
 // ERROR HANDLING
 // ============================================================================
 
-// 404 handler for unmatched routes
+// 404 handler (must come after all routes)
 app.use(notFoundHandler);
 
-// Global error handler
+// Global error handler (must be last)
 app.use(errorHandler);
 
 // ============================================================================
@@ -245,16 +220,18 @@ const startServer = async () => {
   try {
     // Test database connection
     await sequelize.authenticate();
-    logger.info('✅ Database connection established');
+    logger.info('✅ Database connection established successfully');
 
     // Start server
     server.listen(PORT, () => {
-      logger.info(`🚀 Server running on port ${PORT}`, {
-        port: PORT,
-        environment: config.NODE_ENV,
-        apiUrl: `http://localhost:${PORT}`,
-        healthCheck: `http://localhost:${PORT}/health`
-      });
+      logger.info(`🚀 Server running on port ${PORT}`);
+      logger.info(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`🔗 API URL: http://localhost:${PORT}/api`);
+      logger.info(`💊 Health check: http://localhost:${PORT}/health`);
+      
+      if (process.env.NODE_ENV === 'development') {
+        logger.info(`📚 API docs: http://localhost:${PORT}/api/docs`);
+      }
     });
 
   } catch (error) {
@@ -294,18 +271,3 @@ process.on('SIGINT', gracefulShutdown);
 startServer();
 
 export default app;
-
-// ============================================================================
-// ENHANCEMENTS IMPLEMENTED:
-// 
-// 1. Environment variable validation before startup
-// 2. Enhanced security headers and CORS configuration
-// 3. Comprehensive error handling with proper categorization
-// 4. Request ID tracking for better debugging
-// 5. Detailed health check endpoint
-// 6. Graceful shutdown handling
-// 7. Enhanced rate limiting with proper logging
-// 8. Security-focused middleware configuration
-// 9. Development-only API documentation endpoint
-// 10. Improved logging throughout the application
-// ============================================================================

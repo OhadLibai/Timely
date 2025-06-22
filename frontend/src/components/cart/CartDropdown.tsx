@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Trash2, Plus, Minus, X } from 'lucide-react';
-import { useCartStore } from '../../stores/cart.store';
+import { useCartStore } from '@/stores/cart.store';
 
 interface CartDropdownProps {
   onClose: () => void;

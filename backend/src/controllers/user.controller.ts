@@ -2,11 +2,11 @@
 // UPDATED: Simplified preferences handling to match new model
 
 import { Request, Response, NextFunction } from 'express';
-import { User } from '../models/user.model';
-import { UserPreference } from '../models/userPreference.model';
-import { Favorite } from '../models/favorite.model';
-import { Product } from '../models/product.model';
-import logger from '../utils/logger';
+import { User } from '@/models/user.model';
+import { UserPreference } from '@/models/userPreference.model';
+import { Favorite } from '@/models/favorite.model';
+import { Product } from '@/models/product.model';
+import logger from '@/utils/logger';
 
 export class UserController {
   // ... (existing methods like getProfile, updateProfile, favorites remain the same) ...

@@ -3,14 +3,14 @@
 
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
-import { Order, OrderStatus, PaymentStatus, OrderTemporalCalculator } from '../models/order.model';
-import { OrderItem } from '../models/orderItem.model';
-import { Product } from '../models/product.model';
-import { User } from '../models/user.model';
-import { Cart } from '../models/cart.model';
-import { CartItem } from '../models/cartItem.model';
-import { Delivery } from '../models/delivery.model';
-import logger from '../utils/logger';
+import { Order, OrderStatus, PaymentStatus, OrderTemporalCalculator } from '@/models/order.model';
+import { OrderItem } from '@/models/orderItem.model';
+import { Product } from '@/models/product.model';
+import { User } from '@/models/user.model';
+import { Cart } from '@/models/cart.model';
+import { CartItem } from '@/models/cartItem.model';
+import { Delivery } from '@/models/delivery.model';
+import logger from '@/utils/logger';
 
 export class OrderController {
   

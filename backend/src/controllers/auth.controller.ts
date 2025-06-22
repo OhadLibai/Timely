@@ -2,11 +2,11 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
-import { User, UserRole } from '../models/user.model';
-import { Cart } from '../models/cart.model';
-import { UserPreference } from '../models/userPreference.model';
-import logger from '../utils/logger';
-import { sendEmail } from '../services/email.service';
+import { User, UserRole } from '@/models/user.model';
+import { Cart } from '@/models/cart.model';
+import { UserPreference } from '@/models/userPreference.model';
+import logger from '@/utils/logger';
+import { sendEmail } from '@/services/email.service';
 
 export class AuthController {
   // Register new user

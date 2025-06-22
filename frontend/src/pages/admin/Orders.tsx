@@ -6,8 +6,8 @@ import {
   Package, DollarSign, Calendar, Search, Filter,
   Eye, CheckCircle, Clock, Truck, XCircle
 } from 'lucide-react';
-import LoadingSpinner from '../../components/common/LoadingSpinner';
-import EmptyState from '../../components/common/EmptyState';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import EmptyState from '@/components/common/EmptyState';
 
 interface Order {
   id: string;

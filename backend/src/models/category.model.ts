@@ -1,6 +1,6 @@
 // backend/src/models/category.model.ts
 import { Table, Column, Model, DataType, HasMany, ForeignKey, BelongsTo } from 'sequelize-typescript';
-import { Product } from './product.model';
+import { Product } from '@/models/product.model';
 
 @Table({
   tableName: 'categories',

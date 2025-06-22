@@ -1,7 +1,7 @@
 // backend/src/models/predictedBasket.model.ts
 import { Table, Column, Model, DataType, ForeignKey, BelongsTo, HasMany } from 'sequelize-typescript';
-import { User } from './user.model';
-import { PredictedBasketItem } from './predictedBasketItem.model';
+import { User } from '@/models/user.model';
+import { PredictedBasketItem } from '@/models/predictedBasketItem.model';
 
 export enum PredictedBasketStatus {
   GENERATED = 'generated',

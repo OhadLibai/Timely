@@ -4,8 +4,8 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Mail, Lock, Eye, EyeOff, ShoppingCart, Brain, Loader2 } from 'lucide-react';
-import { useAuthStore } from '../stores/auth.store';
-import { useCartStore } from '../stores/cart.store';
+import { useAuthStore } from '@/stores/auth.store';
+import { useCartStore } from '@/stores/cart.store';
 import toast from 'react-hot-toast';
 
 interface LoginFormData {

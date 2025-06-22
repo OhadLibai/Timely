@@ -7,12 +7,12 @@ import {
   LogOut, Settings, ChevronDown, Brain, Sun, Moon,
   Bell, Home
 } from 'lucide-react';
-import { useAuthStore } from '../stores/auth.store';
-import { useCartStore } from '../stores/cart.store';
-import CartDropdown from '../components/cart/CartDropdown';
-import NotificationDropdown from '../components/notifications/NotificationDropdown';
-import MobileMenu from '../components/navigation/MobileMenu';
-import SearchModal from '../components/search/SearchModal';
+import { useAuthStore } from '@/stores/auth.store';
+import { useCartStore } from '@/stores/cart.store';
+import CartDropdown from '@/components/cart/CartDropdown';
+import NotificationDropdown from '@/components/notifications/NotificationDropdown';
+import MobileMenu from '@/components/navigation/MobileMenu';
+import SearchModal from '@/components/search/SearchModal';
 
 const MainLayout: React.FC = () => {
   const location = useLocation();

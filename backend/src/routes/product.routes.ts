@@ -3,8 +3,8 @@
 
 import { Router } from 'express';
 import { query, param } from 'express-validator';
-import { ProductController } from '../controllers/product.controller';
-import { validateRequest } from '../middleware/validation.middleware';
+import { ProductController } from '@/controllers/product.controller';
+import { validateRequest } from '@/middleware/validation.middleware';
 
 const router = Router();
 const productController = new ProductController();

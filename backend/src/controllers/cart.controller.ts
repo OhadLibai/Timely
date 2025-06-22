@@ -1,12 +1,9 @@
 // backend/src/controllers/cart.controller.ts
+
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
-import { Cart } from '../models/cart.model';
-import { CartItem } from '../models/cartItem.model';
-import { Product } from '../models/product.model';
-import { Category } from '../models/category.model';
-import { User } from '../models/user.model';
-import logger from '../utils/logger';
+import { Cart, CartItem, Product, Category, User } from '@/models';
+import logger from '@/utils/logger';
 
 // Define a more specific type for populated cart items for better type safety
 interface CartItemWithProduct extends CartItem {
@@ -658,7 +655,7 @@ export class CartController {
     }
   }
 
-  // Get cart recommendations
+  // Get cart recommendations - FIXED: Removed ML call, using fallback logic as primary
   async getCartRecommendations(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
@@ -677,7 +674,7 @@ export class CartController {
       });
 
       if (!cart || cart.items.length === 0) {
-        // Return popular products
+        // Return popular products when cart is empty
         const popularProducts = await Product.findAll({
           where: { isActive: true },
           order: [['purchaseCount', 'DESC']],
@@ -694,56 +691,35 @@ export class CartController {
         return res.json(popularProducts);
       }
 
-      // Get recommendations from ML service
-      try {
-        const productIds = cart.items.map((item: CartItem) => item.productId);
-        const response = await mlApiClient.post('/recommendations/cart', {
-          userId,
-          cartProductIds: productIds,
-          limit: parseInt(limit as string)
-        });
+      // Get categories of items currently in cart
+      const categoriesInCart = await CartItem.findAll({
+        where: { cartId: cart.id },
+        include: [
+          {
+            model: Product,
+            as: 'product',
+            include: [
+              {
+                model: Category,
+                as: 'category',
+                attributes: ['id']
+              }
+            ]
+          }
+        ],
+        attributes: []
+      });
 
-        const recommendedIds = response.data.recommendations.map((r: any) => r.productId);
-        
-        const products = await Product.findAll({
-          where: { 
-            id: recommendedIds,
-            isActive: true
-          },
-          include: [
-            {
-              model: Category,
-              as: 'category',
-              attributes: ['id', 'name']
-            }
-          ]
-        });
+      const categoryIds = categoriesInCart
+        .map((item: any) => item.product?.category?.id)
+        .filter(Boolean);
 
-        res.json(products);
-      } catch (mlError) {
-        // Fallback to category-based recommendations
-        const categoriesInCart = await CartItem.findAll({
-          where: { cartId: cart.id },
-          include: [
-            {
-              model: Product,
-              as: 'product',
-              attributes: ['categoryId']
-            }
-          ],
-          attributes: ['product.categoryId'],
-          group: ['product.categoryId'],
-          raw: true
-        });
+      const uniqueCategoryIds = [...new Set(categoryIds)];
 
-        const categoryIds = categoriesInCart.map((c: any) => c.categoryId);
-
-        const recommendations = await Product.findAll({
-          where: {
-            categoryId: categoryIds,
-            id: { [Op.notIn]: cart.items.map((i: CartItem) => i.productId) },
-            isActive: true
-          },
+      if (uniqueCategoryIds.length === 0) {
+        // Fallback to popular products
+        const popularProducts = await Product.findAll({
+          where: { isActive: true },
           order: [['purchaseCount', 'DESC']],
           limit: parseInt(limit as string),
           include: [
@@ -755,9 +731,34 @@ export class CartController {
           ]
         });
 
-        res.json(recommendations);
+        return res.json(popularProducts);
       }
+
+      // Get products from the same categories, excluding items already in cart
+      const cartProductIds = cart.items.map((item: CartItem) => item.productId);
+      
+      const recommendations = await Product.findAll({
+        where: {
+          categoryId: { [Op.in]: uniqueCategoryIds },
+          id: { [Op.notIn]: cartProductIds },
+          isActive: true
+        },
+        order: [['purchaseCount', 'DESC']],
+        limit: parseInt(limit as string),
+        include: [
+          {
+            model: Category,
+            as: 'category',
+            attributes: ['id', 'name']
+          }
+        ]
+      });
+
+      logger.info(`Generated ${recommendations.length} cart recommendations for user ${userId}`);
+      res.json(recommendations);
+
     } catch (error) {
+      logger.error('Error getting cart recommendations:', error);
       next(error);
     }
   }
