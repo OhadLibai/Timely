@@ -349,11 +349,6 @@ cd ml-service && pytest
    cd ml-service && pip install -r requirements.txt --upgrade
    ```
 
-3. **Retrain ML Model**:
-   ```bash
-   docker-compose exec ml-service python -m src.training.train_model
-   ```
-
 ### Troubleshooting
 
 1. **Database Connection Issues**:
@@ -394,7 +389,7 @@ POST /api/auth/refresh
 
 ### Products
 ```http
-GET /api/products
+GET /api/products?search=...
 GET /api/products/:id
 GET /api/products/search
 GET /api/products/categories
@@ -404,25 +399,25 @@ GET /api/products/categories
 ```http
 GET /api/cart
 POST /api/cart/add
-PUT /api/cart/update
-DELETE /api/cart/remove
+PUT /api/cart/items/:itemId
+DELETE /api/cart/items/:itemId
 POST /api/orders/create
-GET /api/orders/history
+GET /api/orders
 ```
 
 ### Predictions
 ```http
-GET /api/predictions/next-basket
+GET /api/predictions/current-basket
 POST /api/predictions/feedback
-GET /api/predictions/metrics
+GET /api/predictions/metrics/online
 ```
 
 ### User Profile
 ```http
-GET /api/user/profile
-PUT /api/user/preferences
-GET /api/user/favorites
-POST /api/user/favorites/add
+GET /api/users/profile
+PUT /api/users/preferences
+GET /api/users/favorites
+POST /api/users/favorites/add
 ```
 
 ## 📊 Data & ML Pipeline
@@ -478,12 +473,11 @@ POST /api/user/favorites/add
 - **Model Evaluation**: On-demand performance assessment  
 - **ML Model Monitoring**: Track prediction accuracy and performance metrics
 - **Demo Simulation**: Interactive prediction demonstrations
-- **Product Management**: Add, edit, and categorize products
 - **User Management**: Monitor user activity and preferences
 
 ### ML Features
 - **Real-time Predictions**: Dynamic basket recommendations
-- **Adaptive Learning**: Continuously improves with user feedback
+- **Adaptive Learning**: Continuously improves with user feedback - To be tailored in the future
 - **Performance Metrics**: Precision@K, Recall@K, Hit Rate, NDCG, F1
 
 ## 🛠️ Technology Stack
@@ -495,7 +489,6 @@ POST /api/user/favorites/add
 - **State Management**: Zustand for global state
 - **Data Fetching**: React Query for API management
 - **Charts**: Recharts for analytics visualization
-- **Testing**: Vitest + React Testing Library
 
 ### Backend Stack
 - **Runtime**: Node.js 18+ with TypeScript
@@ -503,7 +496,6 @@ POST /api/user/favorites/add
 - **ORM**: Sequelize for PostgreSQL interaction
 - **Authentication**: JWT with refresh token rotation
 - **Validation**: Express-validator for input sanitization
-- **File Upload**: Multer with size/type restrictions
 - **Logging**: Winston with structured logging
 - **Testing**: Jest with Supertest for API testing
 
@@ -520,11 +512,5 @@ POST /api/user/favorites/add
 - **Database**: PostgreSQL 13+ with optimized indexes
 - **Containerization**: Docker with multi-stage builds
 - **Orchestration**: Docker Compose for development
-- **Reverse Proxy**: Nginx (production)
+- **Reverse Proxy**: Nginx (development)
 - **Monitoring**: Health checks and metrics endpoints
-
-## Monitoring
-- **Application Metrics**: Prometheus + Grafana
-- **ML Metrics**: MLflow tracking
-- **Logs**: ELK Stack integration
-- **Error Tracking**: Sentry
