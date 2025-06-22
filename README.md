@@ -6,118 +6,197 @@ Timely is a full-stack e-commerce application that automates weekly grocery shop
 ## 🏗️ Project Architecture
 
 ```
-timely/ (Current Implementation Status)
-├── frontend/                              # React TypeScript Frontend
-│   ├── src/
-│   │   ├── components/                    # UI Components
-│   │   │   ├── common/                    # LoadingSpinner, EmptyState, ErrorBoundary, Pagination
-│   │   │   ├── products/                  # ProductCard, ProductImage, ProductListItem, CategoryFilter, PriceRangeFilter, SortDropdown
-│   │   │   ├── predictions/               # ConfidenceIndicator, PredictionExplanation
-│   │   │   ├── auth/                      # ProtectedRoute, AdminRoute
-│   │   │   ├── admin/                     # DateRangePicker, MetricCard, MetricExplanation
-│   │   │   ├── cart/                      # CartDropdown
-│   │   │   ├── home/                      # FeatureCard, Hero
-│   │   │   ├── navigation/                # MobileMenu
-│   │   │   ├── notifications/             # NotificationDropdown
-│   │   │   └── search/                    # SearchModal
-│   │   ├── pages/                         
-│   │   │   ├── Home.tsx, Products.tsx, Cart.tsx, Checkout.tsx
-│   │   │   ├── Login.tsx, Register.tsx, PredictedBasket.tsx
-│   │   │   ├── ProductDetail.tsx, Orders.tsx, OrderDetail.tsx
-│   │   │   ├── Profile.tsx, Favorites.tsx, ForgotPassword.tsx, ResetPassword.tsx
-│   │   │   └── admin/                     
-│   │   │       ├── Dashboard.tsx, Metrics.tsx, DemoPredictionPage.tsx
-│   │   │       └── Products.tsx, Orders.tsx, Users.tsx, Settings.tsx
-│   │   ├── layouts/                       
-│   │   │   ├── MainLayout.tsx, AuthLayout.tsx, AdminLayout.tsx
-│   │   ├── services/                      # API client services
-│   │   │   ├── admin.service.ts, api.client.ts, auth.service.ts
-│   │   │   ├── cart.service.ts, favorite.service.ts, order.service.ts
-│   │   │   └── prediction.service.ts, product.service.ts
-│   │   └── stores/                        # Zustand state management
-│   │       ├── auth.store.ts, cart.store.ts
-│   ├── public/                            # Static assets (images stored externally via URLs)
-│   ├── index.html, vite.config.ts, tailwind.config.js, tsconfig.json
-│   ├── package.json                    # Complete dependencies
-│   ├── nginx.conf                      # Nginx configuration
-│   └── Dockerfile                      # Production-ready
-│
-├── backend/                               # Node.js/Express Backend with Sequelize ORM
-│   ├── src/
-│   │   ├── controllers/                   
-│   │   │   ├── auth.controller.ts      # Login, register, logout
-│   │   │   ├── user.controller.ts      # Profile, preferences
-│   │   │   ├── product.controller.ts   # CRUD, search, categories
-│   │   │   ├── cart.controller.ts      # Cart management
-│   │   │   ├── order.controller.ts     # Order management
-│   │   │   ├── prediction.controller.ts # Prediction/ML endpoints
-│   │   │   └── admin.controller.ts     # Admin dashboard, demo endpoints
-│   │   ├── models/                     # Sequelize-TypeScript models
-│   │   │   ├── user.model.ts, product.model.ts, category.model.ts
-│   │   │   ├── cart.model.ts, cartItem.model.ts
-│   │   │   ├── order.model.ts, orderItem.model.ts
-│   │   │   ├── favorite.model.ts
-│   │   │   ├── predictedBasket.model.ts, predictedBasketItem.model.ts
-│   │   │   ├── userPreference.model.ts, productView.model.ts
-│   │   │   └── modelMetric.model.ts
-│   │   ├── routes/                     # Express route definitions
-│   │   │   ├── admin.routes.ts, auth.routes.ts, cart.routes.ts
-│   │   │   ├── order.routes.ts, prediction.routes.ts
-│   │   │   └── product.routes.ts, user.routes.ts
-│   │   ├── middleware/                 # Auth, error, validation middleware
-│   │   │   ├── auth.middleware.ts, error.middleware.ts
-│   │   │   └── validation.middleware.ts
-│   │   ├── services/                   # Business logic services
-│   │   │   ├── ml.service.ts, email.service.ts
-│   │   ├── config/                     # Configuration files
-│   │   │   └── database.config.ts
-│   │   ├── database/                   # Database migration scripts
-│   │   ├── types/                      # TypeScript type definitions
-│   │   └── utils/                      # Utility functions
-│   │       └── logger.ts
-│   ├── server.ts                       # Main server entry point
-│   ├── package.json, tsconfig.json    # Dependencies and TypeScript config
-│   └── Dockerfile                      # Multi-stage production build
-│
-├── ml-service/                            # Python FastAPI ML Service
-│   ├── src/
-│   │   ├── api/
-│   │   │   └── main.py                 # FastAPI with demo/prediction endpoints
-│   │   ├── database/                   # Database connection and models
-│   │   │   ├── connection.py, models.py
-│   │   ├── models/                        
-│   │   │   ├── stacked_basket_model.py # Two-stage basket prediction
-│   │   │   ├── stage1_candidate_generator.py, stage2_basket_selector.py
-│   │   │   └── training/               # Training scripts and data preprocessing
-│   │   │       ├── data_loader.py, data_preprocessing.py
-│   │   │       └── model_training_script.ipynb
-│   │   ├── evaluation/                 # Model evaluation
-│   │   │   └── evaluator.py
-│   │   ├── services/                   # Feature engineering and prediction services
-│   │   │   ├── feature_engineering.py, enhanced_feature_engineering.py
-│   │   │   └── prediction_service.py
-│   │   └── utils/                      # Logger utilities
-│   │       └── logger.py
-│   ├── training-data/                  # Instacart dataset (6 CSV files)
-│   │   ├── orders.csv, products.csv, departments.csv, aisles.csv
-│   │   └── order_products__prior.csv, order_products__train.csv
-│   ├── models/                         # Trained model storage (.pkl files)
-│   ├── requirements.txt                # Python dependencies
-│   └── Dockerfile                      # Production-ready
-│
-├── database/                              # Database Initialization Service
-│   ├── init-database.ts               # Database seeding script
-│   ├── category_details.csv           # Category images and descriptions
-│   ├── init.sql                        # SQL schema (if needed)
-│   ├── package.json, tsconfig.json    # Node.js dependencies
-│   └── Dockerfile                      # Database initialization container
-│
-├── docker-compose.yml                  # Complete orchestration (5 services)
-│   ├── db                              # PostgreSQL database
-│   ├── init-db                         # Database seeding service
-│   ├── backend, frontend, ml-service   # Application services
-└── README.md, package.json             # Project documentation and root dependencies
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                                TIMELY PLATFORM                                 │
+│                         AI-Powered Grocery Shopping                            │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              FRONTEND LAYER                                    │
+│                        React TypeScript + Vite                                │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Pages Architecture:                                                             │
+│ ├── Public Pages: Home, Products, Login, Register, Cart, Checkout             │
+│ ├── User Pages: Orders, Profile, Favorites, PredictedBasket                   │
+│ └── Admin Pages: Dashboard, Metrics, DemoPredictionPage, Management           │
+│                                                                                │
+│ Component Organization:                                                         │
+│ ├── /common: LoadingSpinner, ErrorBoundary, Pagination, EmptyState           │
+│ ├── /products: ProductCard, CategoryFilter, PriceRangeFilter, SortDropdown    │
+│ ├── /predictions: ConfidenceIndicator, PredictionExplanation                  │
+│ ├── /admin: MetricCard, DateRangePicker, MetricExplanation                    │
+│ ├── /auth: ProtectedRoute, AdminRoute                                         │
+│ └── /navigation: MobileMenu, CartDropdown, NotificationDropdown              │
+│                                                                                │
+│ State Management:                                                              │
+│ ├── Zustand Stores: auth.store.ts, cart.store.ts                            │
+│ ├── React Query: API caching and synchronization                             │
+│ └── Service Layer: 7 dedicated API services                                   │
+│                                                                                │
+│ Key Features:                                                                  │
+│ ├── Lazy loading with React.lazy                                             │
+│ ├── Layout system: MainLayout, AuthLayout, AdminLayout                       │
+│ ├── Tailwind CSS + Framer Motion animations                                  │
+│ └── Mobile-responsive design                                                   │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                       │ HTTP/REST API
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              BACKEND LAYER                                     │
+│                         Node.js + Express + TypeScript                        │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Controllers (RESTful APIs):                                                     │
+│ ├── auth.controller.ts: Authentication, JWT tokens                           │
+│ ├── user.controller.ts: Profile management, preferences                      │
+│ ├── product.controller.ts: CRUD, search, categories                         │
+│ ├── cart.controller.ts: Shopping cart operations                             │
+│ ├── order.controller.ts: Order management, history                           │
+│ ├── prediction.controller.ts: ML prediction endpoints                        │
+│ └── admin.controller.ts: Dashboard, metrics, demo operations                 │
+│                                                                                │
+│ Database Models (Sequelize ORM):                                              │
+│ ├── Core: User, Product, Category, Cart, Order                               │
+│ ├── Relations: CartItem, OrderItem, Favorite                                 │
+│ ├── ML: PredictedBasket, PredictedBasketItem, ModelMetric                   │
+│ └── Analytics: UserPreference, ProductView                                    │
+│                                                                                │
+│ Middleware Stack:                                                              │
+│ ├── Security: Helmet, CORS, Rate limiting                                    │
+│ ├── Auth: JWT validation, role-based access                                  │
+│ ├── Validation: Express-validator                                            │
+│ ├── Logging: Winston structured logging                                       │
+│ └── Error: Global error handling, async wrapper                              │
+│                                                                                │
+│ Services Integration:                                                          │
+│ ├── ml.service.ts: ML API client (axios-based)                              │
+│ └── email.service.ts: Transactional emails                                   │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                       │ HTTP API Calls
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            ML SERVICE LAYER                                    │
+│                           Python FastAPI + ML Stack                           │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ API Endpoints:                                                                 │
+│ ├── /predict/from-database: Live predictions using user's DB history         │
+│ ├── /predict/for-demo: Demo predictions from Instacart CSV data              │
+│ ├── /evaluate/model: On-demand model performance evaluation                   │
+│ ├── /model/feature-importance: Model interpretability                        │
+│ └── /demo-data/*: CSV-based demo utilities for admin functions               │
+│                                                                                │
+│ Two-Stage ML Architecture:                                                     │
+│ ├── Stage 1: CandidateGenerator (LightGBM)                                   │
+│ │   └── Generates 3 candidate baskets + meta-features                        │
+│ └── Stage 2: BasketSelector (GradientBoostingClassifier)                     │
+│     └── Selects optimal basket from candidates                               │
+│                                                                                │
+│ Feature Engineering:                                                           │
+│ ├── DatabaseFeatureEngineer: Live database features                          │
+│ ├── EnhancedFeatureEngineer: Historical pattern analysis                     │
+│ └── 50+ engineered features: temporal, behavioral, product-based             │
+│                                                                                │
+│ Model Components:                                                              │
+│ ├── StackedBasketModel: Orchestrates 2-stage prediction                      │
+│ ├── PredictionService: Business logic wrapper                                │
+│ ├── BasketPredictionEvaluator: Performance metrics                           │
+│ └── Trained models: stage1_lgbm.pkl, stage2_gbm.pkl                         │
+│                                                                                │
+│ Data Sources:                                                                  │
+│ ├── Live Database: Real user interactions                                     │
+│ └── Instacart Dataset: 200K+ users, 3.4M+ orders, 50K+ products            │
+└─────────────────────────────────────────────────────────────────────────────────┘
+                                       │ SQL Connections
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            DATABASE LAYER                                      │
+│                              PostgreSQL 13+                                   │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Core Tables:                                                                   │
+│ ├── users: Authentication, profile, preferences                              │
+│ ├── products: Catalog, pricing, categories, metadata                         │
+│ ├── orders: Transaction history, order management                             │
+│ ├── carts: Active shopping sessions                                          │
+│ └── categories: Product organization, hierarchy                               │
+│                                                                                │
+│ ML-Specific Tables:                                                            │
+│ ├── predicted_baskets: AI recommendations storage                            │
+│ ├── model_metrics: Performance tracking                                       │
+│ ├── user_preferences: Personalization data                                   │
+│ └── product_views: Behavioral analytics                                       │
+│                                                                                │
+│ Features:                                                                      │
+│ ├── Optimized indexes for performance                                        │
+│ ├── Foreign key constraints for data integrity                               │
+│ ├── Health checks and connection pooling                                     │
+│ └── Automated migrations and seeding                                         │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          INFRASTRUCTURE LAYER                                  │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Docker Compose Orchestration:                                                 │
+│ ├── db: PostgreSQL database container                                        │
+│ ├── init-db: Database seeding service                                        │
+│ ├── backend: Node.js API server                                              │
+│ ├── frontend: React production build                                         │
+│ └── ml-service: Python FastAPI ML server                                     │
+│                                                                                │
+│ Network Architecture:                                                          │
+│ ├── timely-network: Internal Docker network                                  │
+│ ├── Port mapping: Frontend:3000, Backend:5000, ML:8000, DB:5432             │
+│ └── Health checks and restart policies                                       │
+│                                                                                │
+│ Development Tools:                                                             │
+│ ├── Testing scripts: deploy.sh, system_validation_script.sh                 │
+│ ├── Environment management: .env configuration                               │
+│ └── Multi-stage Dockerfiles for optimization                                 │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           ADMIN CAPABILITIES                                   │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ Dashboard Analytics:                                                           │
+│ ├── Real-time metrics: Users, orders, revenue                               │
+│ ├── Performance charts with Recharts                                         │
+│ └── Date range filtering and trend analysis                                   │
+│                                                                                │
+│ ML Model Management:                                                           │
+│ ├── On-demand model evaluation (Precision@K, Recall@K, F1, NDCG)           │
+│ ├── Feature importance visualization                                         │
+│ └── Live prediction demonstrations                                            │
+│                                                                                │
+│ Demo System:                                                                   │
+│ ├── Configurable user seeding from Instacart data                           │
+│ ├── Live prediction vs ground truth comparison                               │
+│ └── Interactive ML performance validation                                     │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              DATA FLOW                                         │
+├─────────────────────────────────────────────────────────────────────────────────┤
+│ User Prediction Flow:                                                          │
+│ Frontend → Backend → ML Service → Database → Feature Engineering → Model      │
+│ ←─────── ←─────── ←─────────── ←──────── ←────────────────── ←─────           │
+│                                                                                │
+│ Admin Demo Flow:                                                               │
+│ Admin Input → CSV Processing → Feature Generation → ML Prediction             │
+│ ←────────── ←─────────────── ←─────────────────── ←─────────────             │
+│                                                                                │
+│ Model Evaluation Flow:                                                         │
+│ Admin Request → ML Evaluator → Instacart Dataset → Performance Metrics        │
+│ ←──────────── ←───────────── ←─────────────────── ←──────────────           │
+└─────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### **Key Architectural Features**
+
+- **Live ML Integration**: Two-stage prediction model with real database integration
+- **Admin Demo System**: Configurable Instacart user seeding and prediction validation  
+- **Enhanced Service Layer**: Dedicated ML service abstraction in backend
+- **Comprehensive Frontend**: Complete admin dashboard with metrics and demo capabilities
+- **Database-Driven Features**: ML predictions stored and tracked in PostgreSQL
+- **Performance Monitoring**: Real-time model evaluation and feature importance
+- **Flexible Demo Architecture**: Supports both live database and CSV-based demonstrations
 
 ## 🚀 Deployment Instructions
 
