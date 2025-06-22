@@ -1,7 +1,7 @@
 // frontend/src/services/prediction.service.ts
-// FIXED: Use backend proxy for model metrics instead of direct ML service calls
+// FIXED: Use backend proxy only - removed direct ML service communication
 
-import { api } from './api.client'; // REMOVED: mlApi import
+import { api } from './api.client'; // REMOVED: mlApi import - use backend gateway only
 import { Product } from './product.service';
 
 export interface PredictedBasketItem {
@@ -61,7 +61,13 @@ export interface PredictionFeedback {
 }
 
 class PredictionService {
-  // Get current predicted basket
+  // ============================================================================
+  // CORE PREDICTION METHODS - Via Backend Gateway Only
+  // ============================================================================
+
+  /**
+   * Get current predicted basket for user
+   */
   async getCurrentPredictedBasket(): Promise<PredictedBasket | null> {
     try {
       return await api.get<PredictedBasket>('/predictions/current-basket');
@@ -73,12 +79,16 @@ class PredictionService {
     }
   }
 
-  // Get predicted basket by ID
+  /**
+   * Get predicted basket by ID
+   */
   async getPredictedBasket(id: string): Promise<PredictedBasket> {
     return api.get<PredictedBasket>(`/predictions/baskets/${id}`);
   }
 
-  // Get all predicted baskets for user
+  /**
+   * Get all predicted baskets for user
+   */
   async getUserPredictedBaskets(filters?: {
     page?: number;
     limit?: number;
@@ -97,7 +107,9 @@ class PredictionService {
     return api.get(`/predictions/baskets?${params.toString()}`);
   }
 
-  // Generate new prediction
+  /**
+   * Generate new prediction via backend
+   */
   async generatePrediction(options?: {
     weekOf?: string;
     forceRegenerate?: boolean;
@@ -105,97 +117,146 @@ class PredictionService {
     return api.post<PredictedBasket>('/predictions/generate', options);
   }
 
-  // Update predicted basket item
+  /**
+   * Update predicted basket item
+   */
   async updateBasketItem(
     basketId: string,
     itemId: string,
     data: {
       quantity?: number;
       isAccepted?: boolean;
+      reason?: string;
     }
-  ): Promise<PredictedBasketItem> {
-    return api.put<PredictedBasketItem>(`/predictions/baskets/${basketId}/items/${itemId}`, data);
+  ): Promise<PredictedBasket> {
+    return api.put<PredictedBasket>(`/predictions/baskets/${basketId}/items/${itemId}`, data);
   }
 
-  // Remove item from predicted basket
-  async removeBasketItem(basketId: string, itemId: string): Promise<void> {
-    return api.delete(`/predictions/baskets/${basketId}/items/${itemId}`);
+  /**
+   * Accept/reject predicted basket
+   */
+  async updateBasketStatus(
+    basketId: string,
+    status: 'accepted' | 'rejected',
+    feedback?: PredictionFeedback
+  ): Promise<PredictedBasket> {
+    return api.put<PredictedBasket>(`/predictions/baskets/${basketId}/status`, {
+      status,
+      feedback
+    });
   }
 
-  // Accept entire basket
-  async acceptBasket(basketId: string): Promise<PredictedBasket> {
-    return api.post<PredictedBasket>(`/predictions/baskets/${basketId}/accept`);
-  }
-
-  // Reject basket
-  async rejectBasket(basketId: string, reason?: string): Promise<PredictedBasket> {
-    return api.post<PredictedBasket>(`/predictions/baskets/${basketId}/reject`, { reason });
-  }
-
-  // Submit feedback
+  /**
+   * Submit prediction feedback
+   */
   async submitFeedback(feedback: PredictionFeedback): Promise<void> {
     return api.post('/predictions/feedback', feedback);
   }
 
-  // FIXED: Get model metrics through backend proxy instead of direct ML service call
+  // ============================================================================
+  // MODEL METRICS - Via Backend Gateway
+  // ============================================================================
+
+  /**
+   * Get model performance metrics via backend
+   * FIXED: No longer directly calls ML service
+   */
   async getModelMetrics(): Promise<ModelMetrics> {
-    return api.get<ModelMetrics>('/admin/ml/metrics/model-performance');
+    return api.get<ModelMetrics>('/predictions/metrics/model-performance');
   }
 
-  // Get online metrics
+  /**
+   * Get online prediction metrics via backend
+   */
   async getOnlineMetrics(): Promise<OnlineMetrics> {
     return api.get<OnlineMetrics>('/predictions/metrics/online');
   }
 
-  // Get personalized recommendations
-  async getRecommendations(options?: {
-    limit?: number;
-    categoryId?: string;
-    excludeBasket?: boolean;
-  }): Promise<Product[]> {
-    const params = new URLSearchParams();
-    if (options?.limit) params.append('limit', options.limit.toString());
-    if (options?.categoryId) params.append('category', options.categoryId);
-    if (options?.excludeBasket) params.append('excludeBasket', 'true');
-
-    return api.get<Product[]>(`/predictions/recommendations?${params.toString()}`);
+  /**
+   * Get prediction statistics
+   */
+  async getPredictionStats(period: string = 'month'): Promise<{
+    totalPredictions: number;
+    acceptanceRate: number;
+    averageConfidence: number;
+    topPredictedCategories: Array<{
+      category: string;
+      count: number;
+    }>;
+  }> {
+    return api.get(`/predictions/stats?period=${period}`);
   }
 
-  // Get prediction explanation
-  async getPredictionExplanation(basketId: string, productId: string): Promise<any> {
-    return api.get(`/predictions/baskets/${basketId}/items/${productId}/explanation`);
+  // ============================================================================
+  // UTILITY METHODS
+  // ============================================================================
+
+  /**
+   * Check if user has pending predictions
+   */
+  async hasPendingPredictions(): Promise<boolean> {
+    try {
+      const current = await this.getCurrentPredictedBasket();
+      return current !== null && current.status === 'generated';
+    } catch {
+      return false;
+    }
   }
 
-  // Get user preferences
-  async getPreferences(): Promise<any> {
-    return api.get('/predictions/preferences');
+  /**
+   * Get next basket recommendation
+   * This triggers the main ML prediction pipeline
+   */
+  async getNextBasketRecommendation(): Promise<PredictedBasket> {
+    return api.post<PredictedBasket>('/predictions/next-basket');
   }
 
-  // Update user preferences
-  async updatePreferences(preferences: any): Promise<any> {
-    return api.put('/predictions/preferences', preferences);
+  /**
+   * Auto-generate weekly basket
+   */
+  async autoGenerateWeeklyBasket(): Promise<PredictedBasket> {
+    return api.post<PredictedBasket>('/predictions/auto-generate');
   }
 
-  // Get prediction schedule
-  async getSchedule(): Promise<any> {
-    return api.get('/predictions/schedule');
+  /**
+   * Schedule prediction for specific date
+   */
+  async schedulePrediction(weekOf: string): Promise<void> {
+    return api.post('/predictions/schedule', { weekOf });
   }
 
-  // Update prediction schedule
-  async updateSchedule(schedule: any): Promise<any> {
-    return api.put('/predictions/schedule', schedule);
-  }
-
-  // Get prediction history
-  async getPredictionHistory(days?: number): Promise<any> {
-    const params = days ? `?days=${days}` : '';
-    return api.get(`/predictions/history${params}`);
-  }
-
-  // Evaluate prediction accuracy
-  async evaluatePrediction(basketId: string): Promise<any> {
-    return api.get(`/predictions/baskets/${basketId}/evaluate`);
+  /**
+   * Get prediction explanation
+   */
+  async getPredictionExplanation(basketId: string): Promise<{
+    overallConfidence: number;
+    explanations: Array<{
+      productId: string;
+      productName: string;
+      reasons: string[];
+      confidence: number;
+    }>;
+  }> {
+    return api.get(`/predictions/baskets/${basketId}/explanation`);
   }
 }
 
 export const predictionService = new PredictionService();
+
+// ============================================================================
+// ARCHITECTURE CLEANUP:
+// 
+// REMOVED:
+// - Direct ML service calls via mlApi
+// - ML service URL configuration
+// - Direct prediction endpoint calls
+// 
+// ALL COMMUNICATION NOW GOES THROUGH BACKEND GATEWAY:
+// - /api/predictions/* endpoints
+// - Backend handles ML service communication
+// - Centralized error handling and authentication
+// - Consistent API patterns
+// 
+// This maintains proper microservices architecture where the frontend
+// only knows about the backend API gateway, not internal services.
+// ============================================================================

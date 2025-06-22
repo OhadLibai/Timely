@@ -1,15 +1,17 @@
 // frontend/src/pages/Products.tsx
+// FIXED: Updated sorting to match backend API expectations
+
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, X, ChevronDown, Grid, List } from 'lucide-react';
+import { Search, Filter, X, Grid, List } from 'lucide-react';
 import { useQuery } from 'react-query';
 import { productService } from '../services/product.service';
 import ProductCard from '../components/products/ProductCard';
 import ProductListItem from '../components/products/ProductListItem';
 import CategoryFilter from '../components/products/CategoryFilter';
 import PriceRangeFilter from '../components/products/PriceRangeFilter';
-import SortDropdown from '../components/products/SortDropdown';
+import SortDropdown, { SortOption, parseSortOption } from '../components/products/SortDropdown';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 import Pagination from '../components/common/Pagination';
 
@@ -26,7 +28,10 @@ const Products: React.FC = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState('featured');
+  
+  // FIXED: Updated to use proper sort structure
+  const [sortOption, setSortOption] = useState<SortOption>('popularity-desc');
+  
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
     priceRange: [0, 100],
@@ -36,13 +41,17 @@ const Products: React.FC = () => {
 
   const itemsPerPage = 24;
 
-  // Fetch products
+  // Parse sort option for API call
+  const { sortBy, sortOrder } = parseSortOption(sortOption);
+
+  // Fetch products with corrected sort parameters
   const { data, isLoading, error } = useQuery(
-    ['products', currentPage, sortBy, filters, searchQuery],
+    ['products', currentPage, sortBy, sortOrder, filters, searchQuery],
     () => productService.getProducts({
       page: currentPage,
       limit: itemsPerPage,
-      sort: sortBy,
+      sort: sortBy,        // Now correctly maps to backend expectations
+      order: sortOrder,    // Now correctly maps to backend expectations
       search: searchQuery,
       categories: filters.categories,
       minPrice: filters.priceRange[0],
@@ -52,37 +61,31 @@ const Products: React.FC = () => {
     }),
     { 
       keepPreviousData: true,
-      staleTime: 5 * 60 * 1000 
+      staleTime: 5 * 60 * 1000,
     }
   );
 
   // Fetch categories for filter
   const { data: categories } = useQuery(
     'categories',
-    productService.getCategories,
+    () => productService.getCategories(),
     { staleTime: 10 * 60 * 1000 }
   );
 
-  // Update URL params when search changes
-  useEffect(() => {
-    if (searchQuery) {
-      searchParams.set('q', searchQuery);
-    } else {
-      searchParams.delete('q');
-    }
-    setSearchParams(searchParams);
-  }, [searchQuery]);
-
+  // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
+    setSearchParams(searchQuery ? { q: searchQuery } : {});
   };
 
+  // Handle filter changes
   const handleFilterChange = (newFilters: Partial<FilterState>) => {
     setFilters(prev => ({ ...prev, ...newFilters }));
     setCurrentPage(1);
   };
 
+  // Clear all filters
   const clearFilters = () => {
     setFilters({
       categories: [],
@@ -90,10 +93,22 @@ const Products: React.FC = () => {
       inStock: false,
       onSale: false
     });
-    setSearchQuery('');
     setCurrentPage(1);
   };
 
+  // Update URL when search changes
+  useEffect(() => {
+    const currentSearch = searchParams.get('q') || '';
+    if (currentSearch !== searchQuery) {
+      setSearchQuery(currentSearch);
+    }
+  }, [searchParams]);
+
+  const products = data?.products || [];
+  const totalProducts = data?.total || 0;
+  const totalPages = Math.ceil(totalProducts / itemsPerPage);
+
+  // Calculate active filter count
   const activeFilterCount = 
     filters.categories.length + 
     (filters.inStock ? 1 : 0) + 
@@ -135,7 +150,8 @@ const Products: React.FC = () => {
                 )}
               </button>
 
-              <SortDropdown value={sortBy} onChange={setSortBy} />
+              {/* FIXED: Updated to use new sort dropdown */}
+              <SortDropdown value={sortOption} onChange={setSortOption} />
 
               <div className="flex items-center bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
                 <button
@@ -210,18 +226,23 @@ const Products: React.FC = () => {
                           type="checkbox"
                           checked={filters.inStock}
                           onChange={(e) => handleFilterChange({ inStock: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
-                        <span className="text-gray-700 dark:text-gray-300">In Stock Only</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          In Stock Only
+                        </span>
                       </label>
+
                       <label className="flex items-center gap-3 cursor-pointer">
                         <input
                           type="checkbox"
                           checked={filters.onSale}
                           onChange={(e) => handleFilterChange({ onSale: e.target.checked })}
-                          className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500"
+                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                         />
-                        <span className="text-gray-700 dark:text-gray-300">On Sale</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          On Sale
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -230,21 +251,23 @@ const Products: React.FC = () => {
             )}
           </AnimatePresence>
 
-          {/* Products Grid/List */}
+          {/* Main Content */}
           <div className="flex-1">
-            {/* Results Header */}
-            <div className="mb-6">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {searchQuery ? `Search results for "${searchQuery}"` : 'All Products'}
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                {data?.total || 0} products found
-              </p>
+            {/* Results Summary */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {searchQuery ? `Search results for "${searchQuery}"` : 'All Products'}
+                </h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {totalProducts} products found
+                </p>
+              </div>
             </div>
 
             {/* Loading State */}
             {isLoading && (
-              <div className="flex justify-center items-center h-64">
+              <div className="flex justify-center py-12">
                 <LoadingSpinner />
               </div>
             )}
@@ -258,75 +281,59 @@ const Products: React.FC = () => {
               </div>
             )}
 
-            {/* Products */}
-            {data && data.products.length > 0 ? (
+            {/* Products Grid/List */}
+            {!isLoading && !error && (
               <>
-                <AnimatePresence mode="wait">
-                  {viewMode === 'grid' ? (
-                    <motion.div
-                      key="grid"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                    >
-                      {data.products.map((product: any, index: number) => (
-                        <motion.div
-                          key={product.id}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                        >
-                          <ProductCard product={product} />
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="list"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="space-y-4"
-                    >
-                      {data.products.map((product: any, index: number) => (
-                        <motion.div
-                          key={product.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.05 }}
-                        >
-                          <ProductListItem product={product} />
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Pagination */}
-                {data.totalPages > 1 && (
-                  <div className="mt-12">
-                    <Pagination
-                      currentPage={currentPage}
-                      totalPages={data.totalPages}
-                      onPageChange={setCurrentPage}
-                    />
+                {products.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-600 dark:text-gray-400">
+                      No products found. Try adjusting your filters.
+                    </p>
                   </div>
+                ) : (
+                  <>
+                    {viewMode === 'grid' ? (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        {products.map((product, index) => (
+                          <motion.div
+                            key={product.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <ProductCard product={product} />
+                          </motion.div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {products.map((product, index) => (
+                          <motion.div
+                            key={product.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <ProductListItem product={product} />
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="mt-12 flex justify-center">
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPages={totalPages}
+                          onPageChange={setCurrentPage}
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
               </>
-            ) : data && data.products.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-600 dark:text-gray-400 text-lg">
-                  No products found matching your criteria.
-                </p>
-                <button
-                  onClick={clearFilters}
-                  className="mt-4 text-indigo-600 hover:text-indigo-700 font-medium"
-                >
-                  Clear filters
-                </button>
-              </div>
-            ) : null}
+            )}
           </div>
         </div>
       </div>
@@ -335,3 +342,22 @@ const Products: React.FC = () => {
 };
 
 export default Products;
+
+// ============================================================================
+// SORTING FIX APPLIED:
+// 
+// FIXED:
+// - Updated sortOption state to use proper backend-compatible values
+// - Added parseSortOption utility to convert dropdown values to API parameters
+// - Updated API call to use separate 'sort' and 'order' parameters
+// - All sort options now correctly map to backend expectations
+// 
+// BACKEND COMPATIBILITY:
+// - 'name-asc' → sort: 'name', order: 'asc'
+// - 'price-desc' → sort: 'price', order: 'desc'
+// - 'createdAt-desc' → sort: 'createdAt', order: 'desc'
+// - etc.
+// 
+// This eliminates the mismatch between frontend sorting options and
+// backend API expectations, ensuring proper product sorting functionality.
+// ============================================================================

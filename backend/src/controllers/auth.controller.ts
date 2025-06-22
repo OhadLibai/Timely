@@ -271,8 +271,14 @@ export class AuthController {
   }
 }
 
-// Helper functions
+// Helper functions - Updated JWT expiration for dev/test environment
 function generateAccessToken(user: User): string {
+  // Longer token expiration for dev/test convenience
+  // Can be controlled via environment variable
+  const expiresIn = process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test' 
+    ? process.env.JWT_ACCESS_TOKEN_EXPIRY || '8h'  // 8 hours for dev/test
+    : '15m';  // 15 minutes for production
+
   return jwt.sign(
     {
       userId: user.id,
@@ -280,11 +286,12 @@ function generateAccessToken(user: User): string {
       role: user.role
     },
     process.env.JWT_SECRET!,
-    { expiresIn: '15m' }
+    { expiresIn }
   );
 }
 
 function generateRefreshToken(user: User): string {
+  // Refresh token remains the same - 7 days for all environments
   return jwt.sign(
     {
       userId: user.id,

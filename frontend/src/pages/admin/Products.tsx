@@ -1,14 +1,15 @@
 // frontend/src/pages/admin/Products.tsx
+// FIXED: Aligned with read-only backend - removed non-functional CRUD buttons
+
 import React, { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
 import {
-  Plus, Search, Filter, Edit, Trash2, Package,
-  DollarSign, Eye, Upload, Download
+  Search, Filter, Package, DollarSign, Eye
 } from 'lucide-react';
+import { adminService } from '../../services/admin.service';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
-import toast from 'react-hot-toast';
 
 interface Product {
   id: string;
@@ -25,96 +26,65 @@ interface Product {
 const AdminProducts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const queryClient = useQueryClient();
 
-  // Mock data - replace with actual API calls
-  const { data: products, isLoading } = useQuery<Product[]>(
-    ['admin-products'],
-    () => Promise.resolve([
-      {
-        id: '1',
-        name: 'Organic Bananas',
-        description: 'Fresh organic bananas',
-        price: 2.99,
-        category: 'Produce',
-        image: 'https://images.pexels.com/photos/1132047/pexels-photo-1132047.jpeg?auto=compress&cs=tinysrgb&w=400',
-        inStock: true,
-        isActive: true,
-        createdAt: '2024-01-15'
-      },
-      {
-        id: '2',
-        name: 'Whole Wheat Bread',
-        description: 'Fresh baked whole wheat bread',
-        price: 3.49,
-        category: 'Bakery',
-        image: 'https://images.pexels.com/photos/209206/pexels-photo-209206.jpeg?auto=compress&cs=tinysrgb&w=400',
-        inStock: true,
-        isActive: true,
-        createdAt: '2024-01-14'
-      }
-    ]),
+  // Fetch products from backend (read-only)
+  const { data: response, isLoading } = useQuery(
+    ['admin-products', searchTerm, selectedCategory],
+    () => adminService.getProducts({
+      search: searchTerm,
+      category: selectedCategory === 'all' ? undefined : selectedCategory,
+      limit: 100
+    }),
     {
       staleTime: 5 * 60 * 1000,
+      select: (data) => data.products || []
     }
   );
 
-  const deleteProductMutation = useMutation(
-    (productId: string) => {
-      // Replace with actual API call
-      return Promise.resolve();
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['admin-products']);
-        toast.success('Product deleted successfully');
-      },
-      onError: () => {
-        toast.error('Failed to delete product');
-      },
-    }
-  );
+  const products = response || [];
 
-  const handleDeleteProduct = (productId: string) => {
-    if (window.confirm('Are you sure you want to delete this product?')) {
-      deleteProductMutation.mutate(productId);
-    }
-  };
-
-  const filteredProducts = products?.filter(product => {
+  const filteredProducts = products.filter(product => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
-  }) || [];
+  });
+
+  // Calculate stats
+  const stats = {
+    total: products.length,
+    inStock: products.filter(p => p.inStock).length,
+    active: products.filter(p => p.isActive).length,
+    avgPrice: products.length > 0 
+      ? (products.reduce((sum, p) => sum + p.price, 0) / products.length).toFixed(2)
+      : '0.00'
+  };
 
   if (isLoading) return <LoadingSpinner fullScreen />;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Header - Read-only indicator */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Product Management
+            Product Catalog
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Manage your product catalog
+            View product catalog (read-only) - products managed via database seeding
           </p>
         </div>
         
-        <div className="flex gap-3">
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-          >
-            <Plus size={16} />
-            Add Product
-          </button>
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-2">
+          <p className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+            📖 Read-Only Mode
+          </p>
+          <p className="text-xs text-blue-600 dark:text-blue-400">
+            Products seeded from database
+          </p>
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
@@ -123,7 +93,7 @@ const AdminProducts: React.FC = () => {
                 Total Products
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {products?.length || 0}
+                {stats.total}
               </p>
             </div>
             <Package className="h-8 w-8 text-indigo-600" />
@@ -137,7 +107,7 @@ const AdminProducts: React.FC = () => {
                 In Stock
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {products?.filter(p => p.inStock).length || 0}
+                {stats.inStock}
               </p>
             </div>
             <Package className="h-8 w-8 text-green-600" />
@@ -148,13 +118,13 @@ const AdminProducts: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Out of Stock
+                Active Products
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                {products?.filter(p => !p.inStock).length || 0}
+                {stats.active}
               </p>
             </div>
-            <Package className="h-8 w-8 text-red-600" />
+            <Package className="h-8 w-8 text-blue-600" />
           </div>
         </div>
 
@@ -162,41 +132,54 @@ const AdminProducts: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Avg. Price
+                Average Price
               </p>
               <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                ${products?.length ? (products.reduce((sum, p) => sum + p.price, 0) / products.length).toFixed(2) : '0.00'}
+                ${stats.avgPrice}
               </p>
             </div>
-            <DollarSign className="h-8 w-8 text-blue-600" />
+            <DollarSign className="h-8 w-8 text-yellow-600" />
           </div>
         </div>
       </div>
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Search products..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-          />
+      {/* Search and Filter */}
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              />
+            </div>
+          </div>
+          
+          <div className="flex gap-2">
+            <div className="relative">
+              <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className="appearance-none pl-10 pr-8 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="all">All Categories</option>
+                <option value="Produce">Produce</option>
+                <option value="Bakery">Bakery</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Meat">Meat</option>
+                <option value="Pantry">Pantry</option>
+                <option value="Frozen">Frozen</option>
+                <option value="Beverages">Beverages</option>
+                <option value="Snacks">Snacks</option>
+              </select>
+            </div>
+          </div>
         </div>
-
-        <select
-          value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-        >
-          <option value="all">All Categories</option>
-          <option value="Produce">Produce</option>
-          <option value="Bakery">Bakery</option>
-          <option value="Dairy">Dairy</option>
-          <option value="Meat">Meat</option>
-        </select>
       </div>
 
       {/* Products Table */}
@@ -205,8 +188,6 @@ const AdminProducts: React.FC = () => {
           icon={Package}
           title="No products found"
           description="Try adjusting your search or filter criteria."
-          actionText="Add Product"
-          actionFunction={() => setIsCreateModalOpen(true)}
         />
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
@@ -261,8 +242,10 @@ const AdminProducts: React.FC = () => {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      {product.category}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                        {product.category}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       ${product.price.toFixed(2)}
@@ -286,18 +269,13 @@ const AdminProducts: React.FC = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      {/* ONLY View action - removed Edit and Delete buttons */}
                       <div className="flex justify-end gap-2">
-                        <button className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white">
-                          <Eye size={16} />
-                        </button>
-                        <button className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-900 dark:hover:text-indigo-300">
-                          <Edit size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
+                        <button 
+                          className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+                          title="View Product Details"
                         >
-                          <Trash2 size={16} />
+                          <Eye size={16} />
                         </button>
                       </div>
                     </td>
@@ -313,3 +291,23 @@ const AdminProducts: React.FC = () => {
 };
 
 export default AdminProducts;
+
+// ============================================================================
+// UI/BACKEND ALIGNMENT:
+// 
+// REMOVED:
+// - "Add Product" button (backend doesn't support product creation)
+// - "Edit" button in actions column (backend doesn't support product updates)
+// - "Delete" button in actions column (backend doesn't support product deletion)
+// - Product creation modal and related state
+// - Delete product mutation and confirmation
+// 
+// KEPT:
+// - "View" button for product details (read-only)
+// - Search and filter functionality
+// - Product statistics and overview
+// - Clear indication this is read-only mode
+// 
+// This aligns the UI with the backend's read-only catalog approach where
+// products are managed solely through database seeding scripts.
+// ============================================================================

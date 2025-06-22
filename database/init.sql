@@ -63,23 +63,27 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- User preferences table
+-- SIMPLIFIED User Preferences table (ML prediction focused)
 CREATE TABLE IF NOT EXISTS user_preferences (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-    dietary_restrictions TEXT[],
-    preferred_brands TEXT[],
-    excluded_categories UUID[],
-    max_budget DECIMAL(10,2),
-    auto_basket_enabled BOOLEAN DEFAULT false,
-    auto_basket_day INTEGER DEFAULT 0 CHECK (auto_basket_day >= 0 AND auto_basket_day <= 6),
-    auto_basket_time TIME DEFAULT '10:00',
-    notification_preferences JSONB DEFAULT '{}',
-    metadata JSONB DEFAULT '{}',
+    
+    -- Core ML prediction preferences (Essential for demo functionality)
+    auto_basket_enabled BOOLEAN DEFAULT true NOT NULL,
+    auto_basket_day INTEGER DEFAULT 0 CHECK (auto_basket_day >= 0 AND auto_basket_day <= 6) NOT NULL,
+    auto_basket_time TIME DEFAULT '10:00:00' NOT NULL,
+    
+    -- Basic UI preferences (Supporting user experience)
+    email_notifications BOOLEAN DEFAULT true NOT NULL,
+    dark_mode BOOLEAN DEFAULT false NOT NULL,
+    
+    -- Timestamps
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Constraints
+    UNIQUE(user_id)
 );
-
 -- Shopping carts table
 CREATE TABLE IF NOT EXISTS carts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -212,6 +216,7 @@ CREATE TABLE IF NOT EXISTS product_views (
     viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
@@ -225,6 +230,7 @@ CREATE INDEX IF NOT EXISTS idx_cart_items_cart ON cart_items(cart_id);
 CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);
 CREATE INDEX IF NOT EXISTS idx_product_views_user ON product_views(user_id);
 CREATE INDEX IF NOT EXISTS idx_product_views_product ON product_views(product_id);
+CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id);
 
 -- REMOVED: Default user insertions (now handled by Sequelize in init-database.ts)
 -- This ensures consistent password hashing and proper ORM integration
