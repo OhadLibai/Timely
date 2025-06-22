@@ -1,5 +1,5 @@
 // backend/src/routes/order.routes.ts
-// COMPLETED: Added reorder endpoint and other missing routes
+// CLEANED: Removed unimplemented features, kept only core functionality for 4 demands
 
 import { Router } from 'express';
 import { body, query, param } from 'express-validator';
@@ -10,7 +10,7 @@ const router = Router();
 const orderController = new OrderController();
 
 // ============================================================================
-// USER ORDER MANAGEMENT
+// CORE ORDER MANAGEMENT (Essential for Demand 1 - User Experience)
 // ============================================================================
 
 // Get user's order history with pagination and filtering
@@ -40,7 +40,7 @@ router.get(
 );
 
 // ============================================================================
-// ORDER CREATION & CHECKOUT
+// ORDER CREATION (Essential for Demand 1 - Complete Shopping Flow)
 // ============================================================================
 
 // Create a new order from cart
@@ -51,102 +51,44 @@ router.post(
     body('deliveryAddress.street').notEmpty().trim().withMessage('Street address is required'),
     body('deliveryAddress.city').notEmpty().trim().withMessage('City is required'),
     body('deliveryAddress.state').notEmpty().trim().withMessage('State is required'),
-    body('deliveryAddress.zipCode').notEmpty().trim().withMessage('ZIP code is required'),
-    body('deliveryAddress.country').notEmpty().trim().withMessage('Country is required'),
-    body('paymentMethod').notEmpty().withMessage('Payment method is required'),
-    body('paymentMethod.type').isIn(['card', 'paypal', 'applepay', 'googlepay']).withMessage('Invalid payment method type'),
-    body('deliveryType').optional().isIn(['standard', 'express', 'scheduled']).withMessage('Invalid delivery type'),
-    body('scheduledDate').optional().isISO8601().withMessage('Scheduled date must be in ISO 8601 format'),
+    body('deliveryAddress.zipCode').notEmpty().trim().withMessage('Zip code is required'),
+    body('deliveryAddress.country').optional().trim().withMessage('Country must be a string'),
+    body('paymentMethod').notEmpty().trim().withMessage('Payment method is required'),
     body('notes').optional().trim().isLength({ max: 500 }).withMessage('Notes must be less than 500 characters')
   ],
   validateRequest,
   orderController.createOrder
 );
 
-// ============================================================================
-// ORDER ACTIONS
-// ============================================================================
-
-// FIXED: Reorder items from a previous order
-router.post(
-  '/:orderId/reorder',
-  [
-    param('orderId').isUUID().withMessage('Order ID must be a valid UUID'),
-    body('items').optional().isArray().withMessage('Items must be an array'),
-    body('items.*.productId').optional().isUUID().withMessage('Product ID must be a valid UUID'),
-    body('items.*.quantity').optional().isInt({ min: 1 }).withMessage('Quantity must be a positive integer')
-  ],
-  validateRequest,
-  orderController.reorderItems
-);
-
-// Cancel an order
-router.post(
-  '/:orderId/cancel',
-  [
-    param('orderId').isUUID().withMessage('Order ID must be a valid UUID'),
-    body('reason').optional().trim().isLength({ max: 500 }).withMessage('Cancellation reason must be less than 500 characters')
-  ],
-  validateRequest,
-  orderController.cancelOrder
-);
-
-// Add order to favorites
-router.post(
-  '/:orderId/favorites',
-  [
-    param('orderId').isUUID().withMessage('Order ID must be a valid UUID'),
-    body('name').optional().trim().isLength({ min: 1, max: 100 }).withMessage('Favorite name must be between 1 and 100 characters')
-  ],
-  validateRequest,
-  orderController.addOrderToFavorites
-);
-
-// ============================================================================
-// ORDER TRACKING & INFORMATION
-// ============================================================================
-
-// Track order by tracking number
-router.get(
-  '/track/:trackingNumber',
-  [
-    param('trackingNumber').notEmpty().trim().withMessage('Tracking number is required')
-  ],
-  validateRequest,
-  orderController.trackOrder
-);
-
-// Get order statistics for user
-router.get(
-  '/stats',
-  orderController.getOrderStats
-);
-
-// Download order receipt/invoice
-router.get(
-  '/:orderId/receipt',
-  [
-    param('orderId').isUUID().withMessage('Order ID must be a valid UUID')
-  ],
-  validateRequest,
-  orderController.downloadOrderReceipt
-);
-
-// ============================================================================
-// ORDER STATUS UPDATES (Internal use - typically webhook endpoints)
-// ============================================================================
-
-// Update order status (internal/webhook use)
-router.patch(
-  '/:orderId/status',
-  [
-    param('orderId').isUUID().withMessage('Order ID must be a valid UUID'),
-    body('status').isIn(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']).withMessage('Invalid order status'),
-    body('trackingNumber').optional().trim().withMessage('Tracking number must be a string'),
-    body('notes').optional().trim().isLength({ max: 500 }).withMessage('Notes must be less than 500 characters')
-  ],
-  validateRequest,
-  orderController.updateOrderStatus
-);
-
 export default router;
+
+// ============================================================================
+// REMOVED UNIMPLEMENTED FEATURES:
+// 
+// The following routes were removed because their controller methods are not
+// implemented and they are not required for the 4 core demands:
+//
+// - POST /:orderId/reorder (Reorder items from previous order)
+// - POST /:orderId/cancel (Cancel an order) 
+// - POST /:orderId/favorites (Add order to favorites)
+// - GET /track/:trackingNumber (Track order by tracking number)
+// - GET /stats (Get order statistics for user)
+// - GET /:orderId/receipt (Download order receipt/invoice)
+// - PATCH /:orderId/status (Update order status - internal/webhook use)
+//
+// REASON FOR REMOVAL:
+// These features represent advanced e-commerce functionality that is not
+// needed for the dev/test stage focused on demonstrating:
+// 1. User seeding and order history display
+// 2. ML model evaluation  
+// 3. Individual user prediction performance
+// 4. Basic shopping experience
+//
+// The remaining 3 endpoints provide complete functionality for:
+// - Viewing order history (for seeded users to see their populated history)
+// - Viewing individual order details
+// - Creating new orders (completing the shopping flow)
+//
+// This creates a clean, working API that supports all core requirements
+// without dead-end endpoints that would return errors.
+// ============================================================================

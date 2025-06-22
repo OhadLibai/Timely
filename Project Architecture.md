@@ -76,7 +76,8 @@
 │ ├── Auth: JWT, express-validator                                             │
 │ ├── Database: PostgreSQL, pg, sequelize-typescript                          │
 │ ├── Utilities: axios, date-fns, csv-parser, compression, morgan              │
-│ └── Logging: Winston structured logging                                       │
+│ ├── Logging: Winston structured logging                                       │
+│ └── Module System: module-alias, tsc-alias for path resolution               │
 │                                                                                │
 │ Services Integration:                                                          │
 │ ├── ml.service.ts: ML API client (axios-based)                              │
@@ -111,9 +112,11 @@
 │ ├── Core ML: scikit-learn 1.3, LightGBM 4.0, NumPy 1.24, Pandas 2.0       │
 │ ├── Optimization: Optuna 3.3 for hyperparameter tuning                      │
 │ ├── Interpretability: SHAP 0.42 for model explanations                      │
-│ ├── Database: PostgreSQL via psycopg2, SQLAlchemy 2.0                       │
-│ ├── API: FastAPI, Uvicorn, Pydantic 2.3                                     │
-│ └── Utils: python-dotenv, httpx, loguru, pytest                             │
+│ ├── Database: PostgreSQL via psycopg2-binary, SQLAlchemy 2.0, Alembic       │
+│ ├── API: FastAPI 0.103, Uvicorn 0.23, Pydantic 2.3                         │
+│ ├── Auth & Security: python-jose, passlib                                   │
+│ ├── Testing: pytest 7.4, pytest-asyncio, pytest-cov                        │
+│ └── Utils: python-dotenv, httpx, loguru, marshmallow, black, mypy            │
 │                                                                                │
 │ Model Components:                                                              │
 │ ├── StackedBasketModel: Orchestrates 2-stage prediction                      │
@@ -208,6 +211,9 @@
 │ User Prediction Flow:                                                          │
 │ Frontend → Backend → ML Service → Database → Feature Engineering → Model      │
 │ ←─────── ←─────── ←─────────── ←──────── ←────────────────── ←─────           │
+│                                                                                │
+│ Path Aliases Integration:                                                      │
+│ All layers use @/ path mapping for clean imports and maintainable code       │
 │                                                                                │
 │ Admin Demo Flow:                                                               │
 │ Admin Input → CSV Processing → Feature Generation → ML Prediction             │

@@ -1,7 +1,7 @@
 # ml-service/src/database/models.py
-# SQLAlchemy models matching backend schema exactly
+# FIXED: SQLAlchemy models matching backend schema exactly
 
-from sqlalchemy import Column, String, Integer, DateTime, DECIMAL, Boolean, ForeignKey, Text, JSON
+from sqlalchemy import Column, String, Integer, DateTime, DECIMAL, Boolean, ForeignKey, Text, JSON, Time
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
@@ -24,6 +24,9 @@ class User(Base):
     email_verified = Column(Boolean, default=False)
     phone = Column(String(20))
     date_of_birth = Column(DateTime)
+    last_login_at = Column(DateTime)             # ADDED: Missing field
+    reset_password_token = Column(String(255))   # ADDED: Missing field  
+    reset_password_expires = Column(DateTime)    # ADDED: Missing field
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -81,7 +84,7 @@ class Product(Base):
     order_items = relationship("OrderItem", back_populates="product")
 
 class Order(Base):
-    """Order model with CRITICAL temporal fields for ML compatibility"""
+    """Order model matching backend schema with ML temporal fields"""
     __tablename__ = 'orders'
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -89,9 +92,9 @@ class Order(Base):
     order_number = Column(String(50), unique=True, nullable=False)
     
     # CRITICAL: Temporal fields required by ML model (trained on Instacart data)
-    days_since_prior_order = Column(DECIMAL(10, 2), default=0, nullable=False)
-    order_dow = Column(Integer, nullable=False)  # Day of week (0=Monday, 6=Sunday)
-    order_hour_of_day = Column(Integer, nullable=False)  # Hour of day (0-23)
+    days_since_prior_order = Column(DECIMAL(10, 2), default=0)  # Days since user's previous order
+    order_dow = Column(Integer, nullable=False)                 # Day of week (0=Monday, 6=Sunday) 
+    order_hour_of_day = Column(Integer, nullable=False)         # Hour of day (0-23)
     
     status = Column(String(50), default='pending')
     subtotal = Column(DECIMAL(10, 2), nullable=False)
@@ -111,7 +114,7 @@ class Order(Base):
     order_items = relationship("OrderItem", back_populates="order")
 
 class OrderItem(Base):
-    """OrderItem model matching backend schema"""
+    """Order item model matching backend schema"""
     __tablename__ = 'order_items'
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -128,18 +131,36 @@ class OrderItem(Base):
     product = relationship("Product", back_populates="order_items")
 
 class UserPreference(Base):
-    """User preferences model matching backend schema"""
+    """FIXED: User preferences model matching simplified backend schema"""
     __tablename__ = 'user_preferences'
-    
+
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False)
-    dietary_restrictions = Column(ARRAY(String))
-    preferred_brands = Column(ARRAY(String))
-    excluded_categories = Column(ARRAY(UUID(as_uuid=True)))
-    max_budget = Column(DECIMAL(10, 2))
-    auto_basket_enabled = Column(Boolean, default=False)
-    auto_basket_day = Column(Integer, default=0)
-    auto_basket_time = Column(String(5), default='10:00')
-    notification_preferences = Column(JSON, default=dict)
+    user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'), nullable=False, unique=True)
+    
+    # Core ML prediction preferences (Essential for demo functionality)
+    auto_basket_enabled = Column(Boolean, default=True, nullable=False)
+    auto_basket_day = Column(Integer, default=0, nullable=False)  # 0=Sunday, 6=Saturday
+    auto_basket_time = Column(Time, default='10:00:00', nullable=False)
+    
+    # Basic UI preferences (Supporting user experience)
+    email_notifications = Column(Boolean, default=True, nullable=False)
+    dark_mode = Column(Boolean, default=False, nullable=False)
+    
+    # Timestamps
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+# ============================================================================
+# REMOVED COMPLEX FIELDS FROM OLD MODEL:
+# - dietary_restrictions: ARRAY(String) - Complex dietary management
+# - preferred_brands: ARRAY(String) - Brand preference tracking  
+# - excluded_categories: ARRAY(UUID) - Category exclusions
+# - max_budget: DECIMAL(10,2) - Budget management
+# - notification_preferences: JSON - Complex notification settings
+#
+# REASON FOR REMOVAL:
+# These fields were part of a more complex user preference system that is
+# not needed for the current dev/test stage focused on core ML functionality.
+# The simplified model matches the backend exactly and eliminates potential
+# inconsistencies while maintaining all fields required for the 4 core demands.
+# ============================================================================

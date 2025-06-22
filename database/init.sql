@@ -1,6 +1,5 @@
 -- database/init.sql
--- UPDATED: Complete database schema WITHOUT default user insertions
--- Users are handled by Sequelize in init-database.ts for consistent password hashing
+-- FIXED: Complete database schema with missing user fields for backend compatibility
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -46,7 +45,7 @@ CREATE TABLE IF NOT EXISTS products (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Users table
+-- FIXED: Users table with ALL required fields for backend compatibility
 CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     email VARCHAR(255) UNIQUE NOT NULL,
@@ -58,6 +57,9 @@ CREATE TABLE IF NOT EXISTS users (
     email_verified BOOLEAN DEFAULT false,
     phone VARCHAR(20),
     date_of_birth DATE,
+    last_login_at TIMESTAMP,              -- ADDED: Required by backend auth system
+    reset_password_token VARCHAR(255),    -- ADDED: Required by password reset
+    reset_password_expires TIMESTAMP,     -- ADDED: Required by password reset
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -84,12 +86,14 @@ CREATE TABLE IF NOT EXISTS user_preferences (
     -- Constraints
     UNIQUE(user_id)
 );
+
 -- Shopping carts table
 CREATE TABLE IF NOT EXISTS carts (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'abandoned', 'converted')),
     total DECIMAL(10,2) DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -100,6 +104,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
     cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
     product_id UUID NOT NULL REFERENCES products(id),
     quantity INTEGER NOT NULL CHECK (quantity > 0),
+    price DECIMAL(10,2) NOT NULL,
     added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -216,7 +221,6 @@ CREATE TABLE IF NOT EXISTS product_views (
     viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-
 -- Create indexes for better performance
 CREATE INDEX IF NOT EXISTS idx_products_category ON products(category_id);
 CREATE INDEX IF NOT EXISTS idx_products_active ON products(is_active);
@@ -231,6 +235,3 @@ CREATE INDEX IF NOT EXISTS idx_favorites_user ON favorites(user_id);
 CREATE INDEX IF NOT EXISTS idx_product_views_user ON product_views(user_id);
 CREATE INDEX IF NOT EXISTS idx_product_views_product ON product_views(product_id);
 CREATE INDEX IF NOT EXISTS idx_user_preferences_user_id ON user_preferences(user_id);
-
--- REMOVED: Default user insertions (now handled by Sequelize in init-database.ts)
--- This ensures consistent password hashing and proper ORM integration
