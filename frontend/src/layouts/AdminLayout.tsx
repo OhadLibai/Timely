@@ -1,56 +1,118 @@
 // frontend/src/layouts/AdminLayout.tsx
-import React, { useState } from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+// UPDATED: Added navigation for User Seeding and enhanced demo features
+
+import React, { useState, useEffect } from 'react';
+import { Outlet, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ShoppingCart, Menu, X, BarChart3, Package, Users, Settings,
-  LogOut, Home, Brain, TrendingUp, Shield
+  Menu, X, Home, BarChart3, Users, Package, Settings, 
+  ShoppingCart, Shield, LogOut, Brain, Database, Target,
+  UserPlus, Zap
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 
 const AdminLayout: React.FC = () => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
-  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [location.pathname]);
+
+  const handleLogout = () => {
+    logout();
   };
 
+  // Enhanced navigation items with new demo features
   const sidebarItems = [
-    { path: '/admin/dashboard', label: 'Dashboard', icon: BarChart3 },
-    { path: '/admin/products', label: 'Products', icon: Package },
-    { path: '/admin/orders', label: 'Orders', icon: ShoppingCart },
-    { path: '/admin/users', label: 'Users', icon: Users },
-    { path: '/admin/metrics', label: 'ML Metrics', icon: TrendingUp },
-    { path: '/admin/prediction-demo', label: 'Prediction Demo', icon: Brain },
-    { path: '/admin/settings', label: 'Settings', icon: Settings },
+    {
+      label: 'Dashboard',
+      path: '/admin/dashboard',
+      icon: BarChart3,
+      description: 'Overview & analytics'
+    },
+    {
+      label: 'ML Model Metrics',
+      path: '/admin/metrics',
+      icon: Brain,
+      description: 'Performance evaluation',
+      highlight: true
+    },
+    {
+      label: 'Demo User Seeding',
+      path: '/admin/user-seeding',
+      icon: UserPlus,
+      description: 'Create demo users',
+      highlight: true
+    },
+    {
+      label: 'Live Demo Prediction',
+      path: '/admin/demo-prediction',
+      icon: Target,
+      description: 'Test predictions',
+      highlight: true
+    },
+    {
+      label: 'Users',
+      path: '/admin/users',
+      icon: Users,
+      description: 'User management'
+    },
+    {
+      label: 'Products',
+      path: '/admin/products',
+      icon: Package,
+      description: 'Product catalog'
+    },
+    {
+      label: 'Orders',
+      path: '/admin/orders',
+      icon: Database,
+      description: 'Order management'
+    },
+    {
+      label: 'Settings',
+      path: '/admin/settings',
+      icon: Settings,
+      description: 'System configuration'
+    }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile Header */}
-      <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm px-4 py-3 flex items-center justify-between">
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
-        >
-          <Menu size={20} />
-        </button>
-        
-        <Link to="/" className="flex items-center gap-2">
-          <div className="p-1.5 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
-            <ShoppingCart className="w-5 h-5 text-white" />
+      <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 px-4 py-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <Menu size={20} />
+            </button>
+            
+            <Link to="/" className="flex items-center gap-2">
+              <div className="p-1.5 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
+                <ShoppingCart className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <span className="text-lg font-bold text-gray-900 dark:text-white">Timely</span>
+                <div className="flex items-center gap-1 text-xs text-indigo-600 dark:text-indigo-400">
+                  <Shield size={10} />
+                  <span>Admin</span>
+                </div>
+              </div>
+            </Link>
           </div>
-          <span className="text-lg font-bold text-gray-900 dark:text-white">Timely Admin</span>
-        </Link>
 
-        <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
-          <span className="text-white text-sm font-bold">
-            {user?.firstName?.[0]?.toUpperCase() || 'A'}
-          </span>
+          {/* Mobile User Avatar */}
+          <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
+            <span className="text-white font-bold text-sm">
+              {user?.firstName?.[0]?.toUpperCase() || 'A'}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -109,9 +171,44 @@ const AdminLayout: React.FC = () => {
                 </div>
               </div>
 
-              {/* Navigation */}
+              {/* Demo Features Section */}
+              <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap size={16} className="text-yellow-500" />
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                    ML Demo Features
+                  </h3>
+                </div>
+                <div className="space-y-1">
+                  {sidebarItems.filter(item => item.highlight).map((item) => (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => window.innerWidth < 1024 && setIsSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                        location.pathname === item.path
+                          ? 'bg-indigo-50 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-300'
+                          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <item.icon size={18} />
+                      <div className="flex-1">
+                        <div>{item.label}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                          {item.description}
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* Main Navigation */}
               <nav className="p-4 space-y-1">
-                {sidebarItems.map((item) => (
+                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                  Administration
+                </h3>
+                {sidebarItems.filter(item => !item.highlight).map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}

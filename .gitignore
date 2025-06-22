@@ -117,12 +117,14 @@ docker-compose.local.yml
 .tmp/
 TODO
 Gemini.md
+.claude
 CLAUDE.md
 Other CLAUDE.md
 Remove Files.txt
 Remove Functions.txt
 
 # Information details dont want to disclose 
+README
 /testing-scripts
 ml-service/Information.txt
 Possible Enhancements

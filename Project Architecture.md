@@ -1,8 +1,3 @@
-# Timely - AI-Powered Grocery Shopping Platform
-
-## Overview
-Timely is a full-stack e-commerce application that automates weekly grocery shopping using advanced machine learning algorithms. The platform predicts users' next basket based on historical purchase data, preferences, and shopping patterns.
-
 ## 🏗️ Project Architecture
 
 ```
@@ -13,37 +8,47 @@ Timely is a full-stack e-commerce application that automates weekly grocery shop
 
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              FRONTEND LAYER                                    │
-│                        React TypeScript + Vite                                │
+│                     React 18 + TypeScript + Vite 4                           │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │ Pages Architecture:                                                             │
 │ ├── Public Pages: Home, Products, Login, Register, Cart, Checkout             │
 │ ├── User Pages: Orders, Profile, Favorites, PredictedBasket                   │
-│ └── Admin Pages: Dashboard, Metrics, DemoPredictionPage, Management           │
+│ └── Admin Pages: Dashboard, Metrics, DemoPredictionPage, UserSeeding          │
 │                                                                                │
-│ Component Organization:                                                         │
+│ Component Organization (60+ components):                                       │
 │ ├── /common: LoadingSpinner, ErrorBoundary, Pagination, EmptyState           │
 │ ├── /products: ProductCard, CategoryFilter, PriceRangeFilter, SortDropdown    │
 │ ├── /predictions: ConfidenceIndicator, PredictionExplanation                  │
 │ ├── /admin: MetricCard, DateRangePicker, MetricExplanation                    │
 │ ├── /auth: ProtectedRoute, AdminRoute                                         │
-│ └── /navigation: MobileMenu, CartDropdown, NotificationDropdown              │
+│ ├── /navigation: MobileMenu, SearchModal                                      │
+│ ├── /cart: CartDropdown                                                       │
+│ ├── /notifications: NotificationDropdown                                      │
+│ └── /home: Hero, FeatureCard                                                  │
 │                                                                                │
 │ State Management:                                                              │
 │ ├── Zustand Stores: auth.store.ts, cart.store.ts                            │
-│ ├── React Query: API caching and synchronization                             │
-│ └── Service Layer: 7 dedicated API services                                   │
+│ ├── React Query v3: API caching, mutations, and synchronization              │
+│ └── Service Layer: 7 dedicated API services with axios                       │
+│                                                                                │
+│ Path Aliases & Build Optimization:                                            │
+│ ├── @/ path mapping for clean imports (Vite + tsconfig)                      │
+│ ├── Code splitting: vendor, router, ui, charts, utils chunks                 │
+│ ├── Proxy setup: /api -> localhost:5000                                      │
+│ └── Source maps + chunk size optimization                                     │
 │                                                                                │
 │ Key Features:                                                                  │
-│ ├── Lazy loading with React.lazy                                             │
 │ ├── Layout system: MainLayout, AuthLayout, AdminLayout                       │
-│ ├── Tailwind CSS + Framer Motion animations                                  │
-│ └── Mobile-responsive design                                                   │
+│ ├── Tailwind CSS + Framer Motion animations + Headless UI                    │
+│ ├── Mobile-responsive design with intersection observer                       │
+│ ├── Lazy image loading with react-lazy-load-image-component                  │
+│ └── Hot toast notifications + React Hook Form                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                        │ HTTP/REST API
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              BACKEND LAYER                                     │
-│                         Node.js + Express + TypeScript                        │
+│                    Node.js 18+ + Express 4.18 + TypeScript 5                 │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │ Controllers (RESTful APIs):                                                     │
 │ ├── auth.controller.ts: Authentication, JWT tokens                           │
@@ -54,18 +59,24 @@ Timely is a full-stack e-commerce application that automates weekly grocery shop
 │ ├── prediction.controller.ts: ML prediction endpoints                        │
 │ └── admin.controller.ts: Dashboard, metrics, demo operations                 │
 │                                                                                │
-│ Database Models (Sequelize ORM):                                              │
+│ Database Models (Sequelize-TypeScript ORM):                                   │
 │ ├── Core: User, Product, Category, Cart, Order                               │
 │ ├── Relations: CartItem, OrderItem, Favorite                                 │
 │ ├── ML: PredictedBasket, PredictedBasketItem, ModelMetric                   │
 │ └── Analytics: UserPreference, ProductView                                    │
 │                                                                                │
-│ Middleware Stack:                                                              │
-│ ├── Security: Helmet, CORS, Rate limiting                                    │
-│ ├── Auth: JWT validation, role-based access                                  │
-│ ├── Validation: Express-validator                                            │
-│ ├── Logging: Winston structured logging                                       │
-│ └── Error: Global error handling, async wrapper                              │
+│ Path Aliases & Build System:                                                  │
+│ ├── @/ path mapping for clean imports (tsc-alias + module-alias)             │
+│ ├── TypeScript compilation with decorators support                           │
+│ ├── ESLint + Jest testing framework                                          │
+│ └── Nodemon dev server with ts-node                                          │
+│                                                                                │
+│ Dependencies & Tools:                                                          │
+│ ├── Security: Helmet, CORS, bcryptjs, express-rate-limit                    │
+│ ├── Auth: JWT, express-validator                                             │
+│ ├── Database: PostgreSQL, pg, sequelize-typescript                          │
+│ ├── Utilities: axios, date-fns, csv-parser, compression, morgan              │
+│ └── Logging: Winston structured logging                                       │
 │                                                                                │
 │ Services Integration:                                                          │
 │ ├── ml.service.ts: ML API client (axios-based)                              │
@@ -75,7 +86,7 @@ Timely is a full-stack e-commerce application that automates weekly grocery shop
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                            ML SERVICE LAYER                                    │
-│                           Python FastAPI + ML Stack                           │
+│                     Python 3.9+ + FastAPI 0.103 + ML Stack                  │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │ API Endpoints:                                                                 │
 │ ├── /predict/from-database: Live predictions using user's DB history         │
@@ -85,20 +96,29 @@ Timely is a full-stack e-commerce application that automates weekly grocery shop
 │ └── /demo-data/*: CSV-based demo utilities for admin functions               │
 │                                                                                │
 │ Two-Stage ML Architecture:                                                     │
-│ ├── Stage 1: CandidateGenerator (LightGBM)                                   │
+│ ├── Stage 1: CandidateGenerator (LightGBM 4.0)                              │
 │ │   └── Generates 3 candidate baskets + meta-features                        │
-│ └── Stage 2: BasketSelector (GradientBoostingClassifier)                     │
+│ └── Stage 2: BasketSelector (scikit-learn GradientBoostingClassifier)        │
 │     └── Selects optimal basket from candidates                               │
 │                                                                                │
 │ Feature Engineering:                                                           │
+│ ├── UnifiedFeatureEngineer: Standardized feature pipeline                    │
+│ ├── EnhancedFeatureEngineer: Advanced pattern analysis                       │
 │ ├── DatabaseFeatureEngineer: Live database features                          │
-│ ├── EnhancedFeatureEngineer: Historical pattern analysis                     │
 │ └── 50+ engineered features: temporal, behavioral, product-based             │
+│                                                                                │
+│ ML Dependencies & Tools:                                                       │
+│ ├── Core ML: scikit-learn 1.3, LightGBM 4.0, NumPy 1.24, Pandas 2.0       │
+│ ├── Optimization: Optuna 3.3 for hyperparameter tuning                      │
+│ ├── Interpretability: SHAP 0.42 for model explanations                      │
+│ ├── Database: PostgreSQL via psycopg2, SQLAlchemy 2.0                       │
+│ ├── API: FastAPI, Uvicorn, Pydantic 2.3                                     │
+│ └── Utils: python-dotenv, httpx, loguru, pytest                             │
 │                                                                                │
 │ Model Components:                                                              │
 │ ├── StackedBasketModel: Orchestrates 2-stage prediction                      │
 │ ├── PredictionService: Business logic wrapper                                │
-│ ├── BasketPredictionEvaluator: Performance metrics                           │
+│ ├── BasketPredictionEvaluator: Performance metrics (Precision@K, NDCG)      │
 │ └── Trained models: stage1_lgbm.pkl, stage2_gbm.pkl                         │
 │                                                                                │
 │ Data Sources:                                                                  │
@@ -165,10 +185,21 @@ Timely is a full-stack e-commerce application that automates weekly grocery shop
 │ ├── Feature importance visualization                                         │
 │ └── Live prediction demonstrations                                            │
 │                                                                                │
-│ Demo System:                                                                   │
-│ ├── Configurable user seeding from Instacart data                           │
-│ ├── Live prediction vs ground truth comparison                               │
-│ └── Interactive ML performance validation                                     │
+│ NEW: Advanced Demo User Seeding System:                                       │
+│ ├── UserSeeding.tsx: Dedicated interface for demo user creation             │
+│ ├── Instacart user ID input (1-206,209 range)                              │
+│ ├── Quick-seed popular user profiles with descriptions                       │
+│ ├── Complete order history population from CSV data                          │
+│ ├── Generated credentials display with login instructions                    │
+│ ├── Temporal field mapping for realistic historical data                     │
+│ └── Real-time seeding progress with detailed statistics                      │
+│                                                                                │
+│ Demo Workflow Features:                                                        │
+│ ├── Animated UI with Framer Motion progress indicators                      │
+│ ├── Toast notifications for seeding status updates                          │
+│ ├── Recent seeding results display (last 5 users)                           │
+│ ├── Usage instructions and complete demo workflow guide                      │
+│ └── Integration with existing admin dashboard metrics                        │
 └─────────────────────────────────────────────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────────────────────────────────────────────┐
@@ -187,330 +218,3 @@ Timely is a full-stack e-commerce application that automates weekly grocery shop
 │ ←──────────── ←───────────── ←─────────────────── ←──────────────           │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
-
-### **Key Architectural Features**
-
-- **Live ML Integration**: Two-stage prediction model with real database integration
-- **Admin Demo System**: Configurable Instacart user seeding and prediction validation  
-- **Enhanced Service Layer**: Dedicated ML service abstraction in backend
-- **Comprehensive Frontend**: Complete admin dashboard with metrics and demo capabilities
-- **Database-Driven Features**: ML predictions stored and tracked in PostgreSQL
-- **Performance Monitoring**: Real-time model evaluation and feature importance
-- **Flexible Demo Architecture**: Supports both live database and CSV-based demonstrations
-
-## 🚀 Deployment Instructions
-
-### Prerequisites
-- Docker and Docker Compose
-- Node.js 18+ (for local development)
-- Python 3.9+ (for ML development)
-- Git
-
-1. **Clone the repository**:
-```bash
-git clone https://github.com/OhadLibai/timely.git
-cd timely
-```
-
-2. **Download Instacart Dataset**:
-   - Download from: https://www.kaggle.com/datasets/psparks/instacart-market-basket-analysis
-   - Extract to `ml-service/training-data/` directory
-
-### Quick Start with Docker
-
-1. **Build and Start All Services**:
-   ```bash
-   docker-compose up --build -d
-   ```
-
-   This will:
-   - Create PostgreSQL database
-   - Build and start the backend API
-   - Build and start the ML service
-   - Build and start the frontend
-   - Run database migrations
-   - Seed initial data
-   - Train the ML model
-
-2. **Monitor the Progress**:
-   ```bash
-   # View all logs
-   docker-compose logs -f
-   
-   # View specific service logs
-   docker-compose logs -f backend
-   docker-compose logs -f ml-service
-   ```
-
-3. **Access the Application**:
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-   - ML Service API: http://localhost:8000
-   - Admin Dashboard: http://localhost:3000/admin
-
-### Default Credentials
-
-- **Admin Account**:
-  - Email: admin@timely.com
-  - Password: password
-
-- **Test User Account**:
-  - Email: test@timely.com
-  - Password: password
-
-### Verify Installation
-
-1. **Check Service Health**:
-   ```bash
-   # Backend health
-   curl http://localhost:5000/health
-   
-   # ML service health
-   curl http://localhost:8000/health
-   ```
-
-2. **Test Core Features**:
-   - Register a new account
-   - Browse products
-   - Add items to cart
-   - View AI predictions (after login)
-   - Complete a checkout
-
-## Development
-
-### Frontend Development
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-### Backend Development
-```bash
-cd backend
-npm install
-npm run dev
-```
-
-### ML Service Development
-```bash
-cd ml-service
-pip install -r requirements.txt
-python -m uvicorn src.api.main:app --reload
-```
-
-### Database Setup
-```bash
-# Run migrations
-npm run migrate
-
-# Seed database
-npm run seed
-```
-
-## Testing
-
-### Run All Tests
-```bash
-docker-compose -f docker-compose.test.yml up
-```
-
-### Frontend Tests
-```bash
-cd frontend && npm test
-```
-
-### Backend Tests
-```bash
-cd backend && npm test
-```
-
-### ML Tests
-```bash
-cd ml-service && pytest
-```
-
-### **Maintenance**
-
-1. **Backup Database**:
-   ```bash
-   docker-compose exec postgres pg_dump -U timely_user timely_db > backup.sql
-   ```
-
-2. **Update Dependencies**:
-   ```bash
-   # Frontend
-   cd frontend && npm update
-   
-   # Backend
-   cd backend && npm update
-   
-   # ML Service
-   cd ml-service && pip install -r requirements.txt --upgrade
-   ```
-
-### Troubleshooting
-
-1. **Database Connection Issues**:
-   ```bash
-   # Check PostgreSQL status
-   docker-compose ps postgres
-   
-   # View database logs
-   docker-compose logs postgres
-   ```
-
-2. **ML Model Not Loading**:
-   ```bash
-   # Retrain model manually
-   docker-compose run ml-service python -m src.training.train_model
-   ```
-
-3. **Frontend Build Issues**:
-   ```bash
-   # Rebuild frontend
-   docker-compose build --no-cache frontend
-   ```
-
-4. **Clear All Data and Start Fresh**:
-   ```bash
-   docker-compose down -v
-   docker-compose up --build
-   ```
-
-## API Documentation
-
-### Authentication
-```http
-POST /api/auth/login
-POST /api/auth/register
-POST /api/auth/refresh
-```
-
-### Products
-```http
-GET /api/products?search=...
-GET /api/products/:id
-GET /api/products/search
-GET /api/products/categories
-```
-
-### Cart & Orders
-```http
-GET /api/cart
-POST /api/cart/add
-PUT /api/cart/items/:itemId
-DELETE /api/cart/items/:itemId
-POST /api/orders/create
-GET /api/orders
-```
-
-### Predictions
-```http
-GET /api/predictions/current-basket
-POST /api/predictions/feedback
-GET /api/predictions/metrics/online
-```
-
-### User Profile
-```http
-GET /api/users/profile
-PUT /api/users/preferences
-GET /api/users/favorites
-POST /api/users/favorites/add
-```
-
-## 📊 Data & ML Pipeline
-
-1. **Data Ingestion**: Instacart dataset (6 CSV files) processed in ml-service/training-data/
-2. **Preprocessing & Feature Engineering**: Creates history, future, and feature datasets (internally)
-3. **Model Training**: Two-stage stacked model: a LightGBM model + A Scikit-learn GradientBoostingClassifier
-4. **Prediction Service**: Real-time predictions via FastAPI endpoints
-5. **Performance Monitoring**: Metrics tracking with Precision@K, Recall@K, NDCG, F1
-6. **Feedback Loop**: User interactions improve future predictions - Architecturely laid, further enhancements to be deployed
-
-## ML Model Details
-
-### Model Architecture
-- **Internal Processing**: Advanced feature engineering and data preprocessing
-- **Stage 1**: Candidate generation using ensemble methods
-- **Stage 2**: Basket optimization and ranking
-- **Output**: Personalized product recommendations with confidence scores
-
-### Training Data
-- Dataset: Instacart Market Basket Analysis
-- Users: 200,000+
-- Orders: 3.4M+
-- Products: 50,000+
-
-### Features
-- User purchase history
-- Product popularity
-- Temporal patterns (day of week, time since last purchase)
-- Category preferences
-- Price sensitivity
-- Seasonal trends
-
-### Model Performance
-- Precision@10:
-- Recall@10:
-- Hit Rate:
-- NDCG: 
-- F1: 
-
-## ✨ Key Features
-
-### User Features
-- **Automated Weekly Cart Generation**: ML-powered predictions for weekly groceries
-- **Smart Shopping**: Add items to cart with intelligent suggestions
-- **Favorites Management**: Save and organize favorite products
-- **Order History**: View past purchases and reorder easily
-- **Personalized Dashboard**: Track spending, preferences, and recommendations
-- **Delivery Scheduling**: Flexible delivery options
-
-### Admin Features
-- **Analytics Dashboard**: Real-time metrics and model performance
-- **Model Evaluation**: On-demand performance assessment  
-- **ML Model Monitoring**: Track prediction accuracy and performance metrics
-- **Demo Simulation**: Interactive prediction demonstrations
-- **User Management**: Monitor user activity and preferences
-
-### ML Features
-- **Real-time Predictions**: Dynamic basket recommendations
-- **Adaptive Learning**: Continuously improves with user feedback - To be tailored in the future
-- **Performance Metrics**: Precision@K, Recall@K, Hit Rate, NDCG, F1
-
-## 🛠️ Technology Stack
-
-### Frontend Stack
-- **Framework**: React 18 with TypeScript
-- **Build Tool**: Vite for fast development
-- **Styling**: Tailwind CSS with custom design system
-- **State Management**: Zustand for global state
-- **Data Fetching**: React Query for API management
-- **Charts**: Recharts for analytics visualization
-
-### Backend Stack
-- **Runtime**: Node.js 18+ with TypeScript
-- **Framework**: Express.js with comprehensive middleware
-- **ORM**: Sequelize for PostgreSQL interaction
-- **Authentication**: JWT with refresh token rotation
-- **Validation**: Express-validator for input sanitization
-- **Logging**: Winston with structured logging
-- **Testing**: Jest with Supertest for API testing
-
-### ML Service Stack
-- **Framework**: FastAPI with async/await support
-- **ML Library**: LightGBM for gradient boosting + Scikit-learn GradientBoostingClassifier
-- **Data Processing**: Pandas, NumPy for data manipulation
-- **Database**: SQLAlchemy for PostgreSQL access
-- **Performance**: Optimized database queries for fast responses
-- **Evaluation**: Scikit-learn for metrics calculation
-- **Testing**: Pytest with fixtures
-
-### Infrastructure Stack
-- **Database**: PostgreSQL 13+ with optimized indexes
-- **Containerization**: Docker with multi-stage builds
-- **Orchestration**: Docker Compose for development
-- **Reverse Proxy**: Nginx (development)
-- **Monitoring**: Health checks and metrics endpoints

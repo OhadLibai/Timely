@@ -1,4 +1,6 @@
 // frontend/src/App.tsx
+// UPDATED: Added UserSeeding page routing and cleaned up imports
+
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
@@ -41,109 +43,138 @@ const AdminOrders = lazy(() => import('@/pages/admin/Orders'));
 const AdminUsers = lazy(() => import('@/pages/admin/Users'));
 const AdminMetrics = lazy(() => import('@/pages/admin/Metrics'));
 const AdminSettings = lazy(() => import('@/pages/admin/Settings'));
-const AdminDemoPredictionPage = lazy(() => import('@/pages/admin/DemoPredictionPage'));
+const UserSeeding = lazy(() => import('@/pages/admin/UserSeeding'));
+const DemoPredictionPage = lazy(() => import('@/pages/admin/DemoPredictionPage'));
 
-// Create a query client
+// Create React Query client with optimized settings
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
       retry: 1,
       staleTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnWindowFocus: false,
+    },
+    mutations: {
+      retry: 1,
     },
   },
 });
 
-function App() {
+const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <AnimatePresence mode="wait">
-          <Suspense fallback={<LoadingSpinner fullScreen />}>
-            <Routes>
-              {/* Public routes */}
-              <Route element={<MainLayout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/products/:id" element={<ProductDetail />} />
-                <Route path="/about" element={<div>About Page</div>} />
-                <Route path="/contact" element={<div>Contact Page</div>} />
-              </Route>
-
-              {/* Auth routes */}
-              <Route element={<AuthLayout />}>
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-              </Route>
-
-              {/* Protected routes */}
-              <Route element={<ProtectedRoute />}>
-                <Route element={<MainLayout />}>
-                  <Route path="/cart" element={<Cart />} />
-                  <Route path="/checkout" element={<Checkout />} />
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/orders/:id" element={<OrderDetail />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/favorites" element={<Favorites />} />
-                  <Route path="/predicted-basket" element={<PredictedBasket />} />
+        <div className="App">
+          <AnimatePresence mode="wait">
+            <Suspense fallback={<LoadingSpinner fullScreen />}>
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<MainLayout />}>
+                  <Route index element={<Home />} />
+                  <Route path="products" element={<Products />} />
+                  <Route path="products/:id" element={<ProductDetail />} />
                 </Route>
-              </Route>
 
-              {/* Admin routes */}
-              <Route element={<AdminRoute />}>
-                <Route element={<AdminLayout />}>
-                  <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                  <Route path="/admin/products" element={<AdminProducts />} />
-                  <Route path="/admin/orders" element={<AdminOrders />} />
-                  <Route path="/admin/users" element={<AdminUsers />} />
-                  <Route path="/admin/metrics" element={<AdminMetrics />} />
-                  <Route path="/admin/settings" element={<AdminSettings />} />
-                  <Route path="/admin/prediction-demo" element={<AdminDemoPredictionPage />} />
+                {/* Auth Routes */}
+                <Route path="/auth" element={<AuthLayout />}>
+                  <Route path="login" element={<Login />} />
+                  <Route path="register" element={<Register />} />
+                  <Route path="forgot-password" element={<ForgotPassword />} />
+                  <Route path="reset-password" element={<ResetPassword />} />
                 </Route>
-              </Route>
 
-              {/* 404 route */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </AnimatePresence>
+                {/* Protected User Routes */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <MainLayout />
+                  </ProtectedRoute>
+                }>
+                  <Route path="cart" element={<Cart />} />
+                  <Route path="checkout" element={<Checkout />} />
+                  <Route path="orders" element={<Orders />} />
+                  <Route path="orders/:id" element={<OrderDetail />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="favorites" element={<Favorites />} />
+                  <Route path="predicted-basket" element={<PredictedBasket />} />
+                </Route>
 
-        {/* Toast notifications */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 4000,
-            style: {
-              background: '#1F2937',
-              color: '#F3F4F6',
-              borderRadius: '0.5rem',
-              padding: '1rem',
-            },
-            success: {
-              iconTheme: {
-                primary: '#10B981',
-                secondary: '#F3F4F6',
+                {/* Admin Routes */}
+                <Route path="/admin" element={
+                  <AdminRoute>
+                    <AdminLayout />
+                  </AdminRoute>
+                }>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="dashboard" element={<AdminDashboard />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="orders" element={<AdminOrders />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="metrics" element={<AdminMetrics />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                  
+                  {/* NEW: Demo functionality routes */}
+                  <Route path="user-seeding" element={<UserSeeding />} />
+                  <Route path="demo-prediction" element={<DemoPredictionPage />} />
+                  
+                  {/* Legacy route redirects */}
+                  <Route path="demo" element={<Navigate to="/admin/demo-prediction" replace />} />
+                  <Route path="seed-users" element={<Navigate to="/admin/user-seeding" replace />} />
+                </Route>
+
+                {/* Auth redirects */}
+                <Route path="/login" element={<Navigate to="/auth/login" replace />} />
+                <Route path="/register" element={<Navigate to="/auth/register" replace />} />
+
+                {/* 404 fallback */}
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </AnimatePresence>
+
+          {/* Global notifications */}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
               },
-            },
-            error: {
-              iconTheme: {
-                primary: '#EF4444',
-                secondary: '#F3F4F6',
+              success: {
+                duration: 3000,
+                iconTheme: {
+                  primary: '#10b981',
+                  secondary: '#fff',
+                },
               },
-            },
-          }}
-        />
+              error: {
+                duration: 6000,
+                iconTheme: {
+                  primary: '#ef4444',
+                  secondary: '#fff',
+                },
+              },
+              loading: {
+                duration: 0,
+                iconTheme: {
+                  primary: '#6366f1',
+                  secondary: '#fff',
+                },
+              },
+            }}
+          />
 
-        {/* React Query Devtools */}
-        {process.env.NODE_ENV === 'development' && (
-          <ReactQueryDevtools initialIsOpen={false} />
-        )}
+          {/* React Query DevTools (development only) */}
+          {process.env.NODE_ENV === 'development' && (
+            <ReactQueryDevtools 
+              initialIsOpen={false} 
+              position="bottom-right"
+            />
+          )}
+        </div>
       </Router>
     </QueryClientProvider>
   );
-}
+};
 
 export default App;
