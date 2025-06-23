@@ -1,4 +1,6 @@
 // frontend/src/pages/admin/Users.tsx
+// FIXED: Replaced mock data with live API calls to backend
+
 import React, { useState } from 'react';
 import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
@@ -6,6 +8,7 @@ import {
   Users, Search, Filter, Eye, Edit, Ban, UserCheck,
   Mail, Calendar, DollarSign, Package
 } from 'lucide-react';
+import { adminService } from '@/services/admin.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 
@@ -26,99 +29,85 @@ const AdminUsers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Mock data - replace with actual API calls
-  const { data: users, isLoading } = useQuery<User[]>(
-    ['admin-users'],
-    () => Promise.resolve([
-      {
-        id: '1',
-        firstName: 'John',
-        lastName: 'Doe',
-        email: 'john@example.com',
-        role: 'user',
-        isActive: true,
-        lastLoginAt: '2024-01-17T10:30:00Z',
-        createdAt: '2024-01-01T09:00:00Z',
-        totalOrders: 15,
-        totalSpent: 487.65
-      },
-      {
-        id: '2',
-        firstName: 'Jane',
-        lastName: 'Smith',
-        email: 'jane@example.com',
-        role: 'user',
-        isActive: true,
-        lastLoginAt: '2024-01-16T14:20:00Z',
-        createdAt: '2024-01-05T11:30:00Z',
-        totalOrders: 8,
-        totalSpent: 234.89
-      },
-      {
-        id: '3',
-        firstName: 'Admin',
-        lastName: 'User',
-        email: 'admin@timely.com',
-        role: 'admin',
-        isActive: true,
-        lastLoginAt: '2024-01-17T15:45:00Z',
-        createdAt: '2023-12-01T08:00:00Z',
-        totalOrders: 0,
-        totalSpent: 0
-      },
-      {
-        id: '4',
-        firstName: 'Bob',
-        lastName: 'Johnson',
-        email: 'bob@example.com',
-        role: 'user',
-        isActive: false,
-        lastLoginAt: '2024-01-10T12:15:00Z',
-        createdAt: '2024-01-03T16:20:00Z',
-        totalOrders: 3,
-        totalSpent: 89.45
-      }
-    ]),
+  // FIXED: Fetch live data from backend instead of using mock data
+  const { data: response, isLoading, error, refetch } = useQuery(
+    ['admin-users', currentPage, searchTerm, roleFilter, statusFilter],
+    () => adminService.getUsers({
+      page: currentPage,
+      limit: 20,
+      search: searchTerm || undefined,
+      role: roleFilter === 'all' ? undefined : roleFilter,
+      isActive: statusFilter === 'all' ? undefined : statusFilter === 'active',
+      sort: 'createdAt',
+      order: 'desc'
+    }),
     {
-      staleTime: 5 * 60 * 1000,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      keepPreviousData: true,
+      onError: (error) => {
+        console.error('Failed to fetch users:', error);
+      }
     }
   );
 
-  const filteredUsers = users?.filter(user => {
-    const matchesSearch = 
-      user.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'active' && user.isActive) || 
-      (statusFilter === 'inactive' && !user.isActive);
-    return matchesSearch && matchesRole && matchesStatus;
-  }) || [];
+  // Extract users and pagination info from response
+  const users = response?.users || [];
+  const totalUsers = response?.total || 0;
+  const totalPages = response?.totalPages || 1;
 
-  const activeUsers = users?.filter(user => user.isActive).length || 0;
-  const totalUsers = users?.length || 0;
-  const adminUsers = users?.filter(user => user.role === 'admin').length || 0;
-  const totalRevenue = users?.reduce((sum, user) => sum + user.totalSpent, 0) || 0;
+  // Calculate stats from live data
+  const activeUsers = users.filter(user => user.isActive).length;
+  const adminUsers = users.filter(user => user.role === 'admin').length;
+  const totalRevenue = users.reduce((sum, user) => sum + (user.totalSpent || 0), 0);
 
-  if (isLoading) return <LoadingSpinner fullScreen />;
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  const handleFilterChange = (filterType: 'role' | 'status', value: string) => {
+    if (filterType === 'role') {
+      setRoleFilter(value);
+    } else {
+      setStatusFilter(value);
+    }
+    setCurrentPage(1); // Reset to first page when filtering
+  };
+
+  if (error) {
+    return (
+      <div className="p-6">
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <h3 className="text-red-800 font-medium">Failed to load users</h3>
+          <p className="text-red-600 mt-1">
+            There was an error loading the user data. Please try again.
+          </p>
+          <button 
+            onClick={() => refetch()}
+            className="mt-3 bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded-md transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            User Management
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Manage and monitor user accounts
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">User Management</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-1">
+            Manage user accounts and view user activity
           </p>
         </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
           <div className="flex items-center justify-between">
@@ -178,95 +167,117 @@ const AdminUsers: React.FC = () => {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-          <input
-            type="text"
-            placeholder="Search users..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-          />
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+        <div className="flex flex-col md:flex-row gap-4">
+          {/* Search */}
+          <form onSubmit={handleSearch} className="flex-1">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <input
+                type="text"
+                placeholder="Search users by name or email..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+          </form>
+
+          {/* Role Filter */}
+          <div className="flex items-center gap-2">
+            <Filter size={20} className="text-gray-400" />
+            <select
+              value={roleFilter}
+              onChange={(e) => handleFilterChange('role', e.target.value)}
+              className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="all">All Roles</option>
+              <option value="user">Users</option>
+              <option value="admin">Admins</option>
+            </select>
+          </div>
+
+          {/* Status Filter */}
+          <div className="flex items-center gap-2">
+            <select
+              value={statusFilter}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+              className="border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+            </select>
+          </div>
         </div>
-
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-        >
-          <option value="all">All Roles</option>
-          <option value="user">Users</option>
-          <option value="admin">Admins</option>
-        </select>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
-        >
-          <option value="all">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
       </div>
 
       {/* Users Table */}
-      {filteredUsers.length === 0 ? (
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <LoadingSpinner />
+        </div>
+      ) : users.length === 0 ? (
         <EmptyState
           icon={Users}
           title="No users found"
-          description="Try adjusting your search or filter criteria."
+          description={
+            searchTerm || roleFilter !== 'all' || statusFilter !== 'all'
+              ? "No users match your current filters. Try adjusting your search criteria."
+              : "No users have been created yet."
+          }
         />
       ) : (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     User
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Role
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Orders
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Total Spent
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Last Login
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredUsers.map((user) => (
+                {users.map((user, index) => (
                   <motion.tr
                     key={user.id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="h-10 w-10 flex-shrink-0">
-                          <div className="h-10 w-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
-                            <span className="text-white font-bold">
-                              {user.firstName[0]}{user.lastName[0]}
-                            </span>
-                          </div>
+                        <div className="h-10 w-10 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
+                          <span className="text-indigo-600 dark:text-indigo-300 font-medium">
+                            {user.firstName?.charAt(0) || user.email.charAt(0)}
+                          </span>
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900 dark:text-white">
-                            {user.firstName} {user.lastName}
+                            {user.firstName && user.lastName 
+                              ? `${user.firstName} ${user.lastName}`
+                              : 'No Name'
+                            }
                           </div>
                           <div className="text-sm text-gray-500 dark:text-gray-400">
                             {user.email}
@@ -278,7 +289,7 @@ const AdminUsers: React.FC = () => {
                       <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                         user.role === 'admin'
                           ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                          : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                          : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200'
                       }`}>
                         {user.role === 'admin' ? 'Admin' : 'User'}
                       </span>
@@ -295,11 +306,11 @@ const AdminUsers: React.FC = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       <div className="flex items-center gap-1">
                         <Package size={14} />
-                        {user.totalOrders}
+                        {user.totalOrders || 0}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      ${user.totalSpent.toFixed(2)}
+                      ${(user.totalSpent || 0).toFixed(2)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString() : 'Never'}
@@ -329,6 +340,36 @@ const AdminUsers: React.FC = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="bg-white dark:bg-gray-800 px-4 py-3 border-t border-gray-200 dark:border-gray-700 sm:px-6">
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-700 dark:text-gray-300">
+                  Showing {((currentPage - 1) * 20) + 1} to {Math.min(currentPage * 20, totalUsers)} of {totalUsers} users
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-md">
+                    {currentPage}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-3 py-1 border border-gray-300 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

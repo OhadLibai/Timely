@@ -54,26 +54,18 @@ export interface Order {
   updatedAt: string;
 }
 
+// FIXED: Added cartId to match Checkout.tsx implementation
 export interface CreateOrderData {
+  cartId: string; // ADDED: Required by backend when creating order from cart
   deliveryAddress: {
-    addressLine1: string;
-    addressLine2?: string;
+    street: string;     // FIXED: Changed from addressLine1 to match backend expectations
     city: string;
     state: string;
     zipCode: string;
     country: string;
-    type: 'home' | 'work' | 'other';
-  };
-  deliveryOptions: {
-    type: 'standard' | 'express' | 'scheduled';
-    scheduledDate?: string;
-    scheduledTimeStart?: string;
-    scheduledTimeEnd?: string;
-    notes?: string;
   };
   paymentMethod: string;
-  saveAddress?: boolean;
-  savePayment?: boolean;
+  notes?: string;
 }
 
 export interface OrdersResponse {
