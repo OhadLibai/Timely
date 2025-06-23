@@ -1,5 +1,5 @@
 // frontend/src/pages/Cart.tsx
-// CLEANED UP: Removed non-functional promo codes and complex delivery options for demo
+// FIXED: Moved confirmation dialog to component level - proper separation of concerns
 
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -51,10 +51,15 @@ const Cart: React.FC = () => {
     navigate('/checkout');
   };
 
+  // FIXED: Moved confirmation dialog to component level
   const handleClearCart = async () => {
     if (window.confirm('Are you sure you want to clear your cart?')) {
-      await clearCart();
-      toast.success('Cart cleared');
+      try {
+        await clearCart();
+      } catch (error) {
+        // Error is already handled in the store with toast
+        console.error('Failed to clear cart:', error);
+      }
     }
   };
 
@@ -96,100 +101,107 @@ const Cart: React.FC = () => {
           </p>
         </div>
 
-        <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start xl:gap-x-16">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-7">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
               <div className="p-6 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-medium text-gray-900 dark:text-white">
-                    Cart Items
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Items in your cart
                   </h2>
                   <button
                     onClick={handleClearCart}
-                    className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 transition-colors"
+                    disabled={isUpdating}
+                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium flex items-center gap-1 disabled:opacity-50"
                   >
-                    Clear Cart
+                    <Trash2 size={14} />
+                    Clear cart
                   </button>
                 </div>
               </div>
 
               <div className="divide-y divide-gray-200 dark:divide-gray-700">
-                <AnimatePresence>
+                <AnimatePresence mode="popLayout">
                   {cart.items.map((item) => (
                     <motion.div
                       key={item.id}
-                      initial={{ opacity: 1, height: 'auto' }}
+                      layout
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.3 }}
                       className="p-6"
                     >
-                      <div className="flex items-center">
-                        <div className="flex-shrink-0">
+                      <div className="flex items-start gap-4">
+                        <div className="w-20 h-20 flex-shrink-0">
                           <ProductImage
                             src={item.product.imageUrl}
                             alt={item.product.name}
-                            className="w-20 h-20 object-cover rounded-lg"
+                            className="w-full h-full object-cover rounded-lg"
                           />
                         </div>
 
-                        <div className="ml-6 flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="text-base font-medium text-gray-900 dark:text-white">
+                              <h3 className="text-base font-medium text-gray-900 dark:text-white truncate">
                                 {item.product.name}
                               </h3>
-                              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                 {item.product.category?.name}
                               </p>
-                              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                ${Number(item.product.price).toFixed(2)} each
-                              </p>
+                              
+                              {item.product.originalPrice > item.product.price && (
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className="text-sm line-through text-gray-400">
+                                    ${item.product.originalPrice.toFixed(2)}
+                                  </span>
+                                  <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                    Save ${(item.product.originalPrice - item.product.price).toFixed(2)}
+                                  </span>
+                                </div>
+                              )}
                             </div>
+                            
+                            <button
+                              onClick={() => removeItem(item.id)}
+                              disabled={isUpdating}
+                              className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 disabled:opacity-50"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
 
-                            <div className="flex items-center gap-4">
-                              {/* Quantity Controls */}
-                              <div className="flex items-center border border-gray-300 dark:border-gray-600 rounded-md">
-                                <button
-                                  onClick={() => handleQuantityChange(item.id, item.quantity, -1)}
-                                  disabled={isUpdating}
-                                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50"
-                                >
-                                  <Minus size={16} />
-                                </button>
-                                <span className="px-4 py-2 text-gray-900 dark:text-white font-medium">
-                                  {item.quantity}
-                                </span>
-                                <button
-                                  onClick={() => handleQuantityChange(item.id, item.quantity, 1)}
-                                  disabled={isUpdating}
-                                  className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 disabled:opacity-50"
-                                >
-                                  <Plus size={16} />
-                                </button>
-                              </div>
-
-                              {/* Item Total */}
-                              <div className="text-right">
-                                <p className="text-lg font-medium text-gray-900 dark:text-white">
-                                  ${(Number(item.product.price) * item.quantity).toFixed(2)}
-                                </p>
-                                {item.product.isOnSale && (
-                                  <p className="text-sm text-green-600 dark:text-green-400">
-                                    {item.product.salePercentage}% off
-                                  </p>
-                                )}
-                              </div>
-
-                              {/* Remove Button */}
+                          <div className="flex items-center justify-between mt-4">
+                            <div className="flex items-center gap-3">
                               <button
-                                onClick={() => removeItem(item.id)}
+                                onClick={() => handleQuantityChange(item.id, item.quantity, -1)}
                                 disabled={isUpdating}
-                                className="p-2 text-red-500 hover:text-red-700 disabled:opacity-50"
-                                title="Remove item"
+                                className="p-1 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
                               >
-                                <Trash2 size={18} />
+                                <Minus size={14} />
                               </button>
+                              
+                              <span className="w-12 text-center text-sm font-medium text-gray-900 dark:text-white">
+                                {item.quantity}
+                              </span>
+                              
+                              <button
+                                onClick={() => handleQuantityChange(item.id, item.quantity, 1)}
+                                disabled={isUpdating}
+                                className="p-1 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                              >
+                                <Plus size={14} />
+                              </button>
+                            </div>
+                            
+                            <div className="text-right">
+                              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                                ${item.total.toFixed(2)}
+                              </div>
+                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                                ${item.price.toFixed(2)} each
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -201,117 +213,85 @@ const Cart: React.FC = () => {
             </div>
 
             {/* Continue Shopping */}
-            <div className="mt-6">
+            <div className="flex justify-center">
               <Link
                 to="/products"
-                className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors"
+                className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
               >
-                <ArrowRight size={16} className="rotate-180" />
+                <Package size={16} />
                 Continue Shopping
               </Link>
             </div>
           </div>
 
           {/* Order Summary */}
-          <div className="mt-16 lg:mt-0 lg:col-span-5">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-              <div className="p-6">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
-                  Order Summary
-                </h2>
+          <div className="lg:col-span-1">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                Order Summary
+              </h3>
 
-                <div className="space-y-4">
-                  <div className="flex justify-between text-base text-gray-900 dark:text-white">
-                    <p>Subtotal</p>
-                    <p>${subtotal.toFixed(2)}</p>
-                  </div>
-
-                  {savings > 0 && (
-                    <div className="flex justify-between text-base text-green-600 dark:text-green-400">
-                      <p>Savings</p>
-                      <p>-${savings.toFixed(2)}</p>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between text-base text-gray-900 dark:text-white">
-                    <p>Estimated Tax</p>
-                    <p>${estimatedTax.toFixed(2)}</p>
-                  </div>
-
-                  <div className="flex justify-between text-base text-gray-900 dark:text-white">
-                    <div className="flex items-center gap-2">
-                      <p>Delivery</p>
-                      {deliveryFee === 0 && (
-                        <span className="text-xs text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded">
-                          FREE
-                        </span>
-                      )}
-                    </div>
-                    <p>${deliveryFee.toFixed(2)}</p>
-                  </div>
-
-                  {subtotal < 50 && (
-                    <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                      <div className="flex items-start gap-2">
-                        <Info size={16} className="text-blue-600 dark:text-blue-400 mt-0.5" />
-                        <p className="text-sm text-blue-700 dark:text-blue-300">
-                          Add ${(50 - subtotal).toFixed(2)} more for free delivery!
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <div className="flex justify-between text-lg font-medium text-gray-900 dark:text-white">
-                      <p>Total</p>
-                      <p>${total.toFixed(2)}</p>
-                    </div>
-                  </div>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                  <span className="text-gray-900 dark:text-white">${subtotal.toFixed(2)}</span>
                 </div>
-
-                {/* Delivery Info */}
-                <div className="mt-6 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Truck className="text-gray-600 dark:text-gray-400" size={20} />
-                    <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        Standard Delivery
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        Estimated delivery: 2-3 business days
-                      </p>
-                    </div>
+                
+                {savings > 0 && (
+                  <div className="flex justify-between text-green-600 dark:text-green-400">
+                    <span>Savings</span>
+                    <span>-${savings.toFixed(2)}</span>
                   </div>
+                )}
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Estimated Tax</span>
+                  <span className="text-gray-900 dark:text-white">${estimatedTax.toFixed(2)}</span>
                 </div>
-
-                {/* Checkout Button */}
-                <button
-                  onClick={handleCheckout}
-                  disabled={isUpdating || cart.items.length === 0}
-                  className="w-full mt-6 bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                >
-                  {isUpdating ? 'Updating...' : 'Proceed to Checkout'}
-                </button>
-
-                {/* Security Badge */}
-                <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                  <CheckCircle size={16} className="text-green-500" />
-                  <span>Secure checkout guaranteed</span>
+                
+                <div className="flex justify-between">
+                  <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
+                  <span className={deliveryFee === 0 ? "text-green-600 dark:text-green-400" : "text-gray-900 dark:text-white"}>
+                    {deliveryFee === 0 ? 'FREE' : `$${deliveryFee.toFixed(2)}`}
+                  </span>
+                </div>
+                
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                  <div className="flex justify-between font-semibold text-lg">
+                    <span className="text-gray-900 dark:text-white">Total</span>
+                    <span className="text-gray-900 dark:text-white">${total.toFixed(2)}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Recently Viewed */}
-            <div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                You might also like
-              </h3>
-              <div className="space-y-3">
-                {/* This would normally show recommended products */}
-                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  <Package size={32} className="mx-auto mb-2 opacity-50" />
-                  <p className="text-sm">Product recommendations coming soon</p>
+              {/* Free Delivery Notice */}
+              {deliveryFee > 0 && (
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <Truck className="text-blue-600 dark:text-blue-400 mt-0.5" size={16} />
+                    <div className="text-sm">
+                      <p className="text-blue-800 dark:text-blue-200 font-medium">
+                        Add ${(50 - subtotal).toFixed(2)} more for free delivery!
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              {/* Checkout Button */}
+              <button
+                onClick={handleCheckout}
+                disabled={isUpdating || cart.items.length === 0}
+                className="w-full mt-6 bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                Proceed to Checkout
+                <ArrowRight size={16} />
+              </button>
+
+              {/* Security Notice */}
+              <div className="mt-4 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <CheckCircle size={12} />
+                <span>Secure checkout with 256-bit SSL encryption</span>
               </div>
             </div>
           </div>

@@ -1,4 +1,5 @@
 // frontend/src/stores/cart.store.ts
+// FIXED: Removed window.confirm from store to properly separate concerns
 import { create } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
 import { cartService, Cart, CartItem } from '@/services/cart.service';
@@ -114,10 +115,8 @@ export const useCartStore = create<CartState>()(
         }
       },
 
+      // FIXED: Removed window.confirm from store - UI logic moved to component
       clearCart: async () => {
-        const confirmClear = window.confirm('Are you sure you want to clear your cart?');
-        if (!confirmClear) return;
-
         set({ isUpdating: true });
         try {
           const cart = await cartService.clearCart();

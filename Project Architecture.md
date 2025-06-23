@@ -8,20 +8,24 @@
 
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              FRONTEND LAYER                                    │
-│                     React 18 + TypeScript + Vite 4                           │
+│                     React 18.2 + TypeScript 5.1 + Vite 4.4                 │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │ Pages Architecture:                                                             │
 │ ├── Public Pages: Home, Products, Login, Register, Cart, Checkout             │
-│ ├── User Pages: Orders, Profile, Favorites, PredictedBasket                   │
-│ └── Admin Pages: Dashboard, Metrics, DemoPredictionPage, UserSeeding          │
+│ ├── Auth Pages: ForgotPassword, ResetPassword                                 │
+│ ├── User Pages: Orders, OrderDetail, Profile, Favorites, PredictedBasket      │
+│ └── Admin Pages: Dashboard, Metrics, DemoPredictionPage, UserSeeding,         │
+│     Orders, Products, Settings, Users                                         │
 │                                                                                │
 │ Component Organization (60+ components):                                       │
 │ ├── /common: LoadingSpinner, ErrorBoundary, Pagination, EmptyState           │
-│ ├── /products: ProductCard, CategoryFilter, PriceRangeFilter, SortDropdown    │
+│ ├── /products: ProductCard, ProductImage, ProductListItem, CategoryFilter,   │
+│ │   PriceRangeFilter, SortDropdown                                            │
 │ ├── /predictions: ConfidenceIndicator, PredictionExplanation                  │
 │ ├── /admin: MetricCard, DateRangePicker, MetricExplanation                    │
 │ ├── /auth: ProtectedRoute, AdminRoute                                         │
-│ ├── /navigation: MobileMenu, SearchModal                                      │
+│ ├── /navigation: MobileMenu                                                   │
+│ ├── /search: SearchModal                                                      │
 │ ├── /cart: CartDropdown                                                       │
 │ ├── /notifications: NotificationDropdown                                      │
 │ └── /home: Hero, FeatureCard                                                  │
@@ -29,7 +33,8 @@
 │ State Management:                                                              │
 │ ├── Zustand Stores: auth.store.ts, cart.store.ts                            │
 │ ├── React Query v3: API caching, mutations, and synchronization              │
-│ └── Service Layer: 7 dedicated API services with axios                       │
+│ └── Service Layer: 7 dedicated API services (auth, cart, favorite, order,    │
+│     prediction, product, admin) with axios                                   │
 │                                                                                │
 │ Path Aliases & Build Optimization:                                            │
 │ ├── @/ path mapping for clean imports (Vite + tsconfig)                      │
@@ -48,7 +53,7 @@
                                        ▼
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                              BACKEND LAYER                                     │
-│                    Node.js 18+ + Express 4.18 + TypeScript 5                 │
+│                    Node.js 18+ + Express 4.18 + TypeScript 5.1               │
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │ Controllers (RESTful APIs):                                                     │
 │ ├── auth.controller.ts: Authentication, JWT tokens                           │
@@ -74,7 +79,7 @@
 │ Dependencies & Tools:                                                          │
 │ ├── Security: Helmet, CORS, bcryptjs, express-rate-limit                    │
 │ ├── Auth: JWT, express-validator                                             │
-│ ├── Database: PostgreSQL, pg, sequelize-typescript                          │
+│ ├── Database: PostgreSQL, pg 8.11, sequelize 6.33, sequelize-typescript    │
 │ ├── Utilities: axios, date-fns, csv-parser, compression, morgan              │
 │ ├── Logging: Winston structured logging                                       │
 │ └── Module System: module-alias, tsc-alias for path resolution               │
@@ -109,13 +114,14 @@
 │ └── 50+ engineered features: temporal, behavioral, product-based             │
 │                                                                                │
 │ ML Dependencies & Tools:                                                       │
-│ ├── Core ML: scikit-learn 1.3, LightGBM 4.0, NumPy 1.24, Pandas 2.0       │
-│ ├── Optimization: Optuna 3.3 for hyperparameter tuning                      │
-│ ├── Interpretability: SHAP 0.42 for model explanations                      │
-│ ├── Database: PostgreSQL via psycopg2-binary, SQLAlchemy 2.0, Alembic       │
-│ ├── API: FastAPI 0.103, Uvicorn 0.23, Pydantic 2.3                         │
+│ ├── Core ML: scikit-learn 1.3.0, LightGBM 4.0.0, NumPy 1.24.3, Pandas 2.0.3│
+│ ├── Optimization: Optuna 3.3.0 for hyperparameter tuning                   │
+│ ├── Interpretability: SHAP 0.42.1 for model explanations                    │
+│ ├── Database: PostgreSQL via psycopg2-binary 2.9.7, SQLAlchemy 2.0.20,     │
+│ │   Alembic 1.11.3                                                           │
+│ ├── API: FastAPI 0.103.1, Uvicorn 0.23.2, Pydantic 2.3.0                  │
 │ ├── Auth & Security: python-jose, passlib                                   │
-│ ├── Testing: pytest 7.4, pytest-asyncio, pytest-cov                        │
+│ ├── Testing: pytest 7.4.0, pytest-asyncio 0.21.1, pytest-cov 4.1.0        │
 │ └── Utils: python-dotenv, httpx, loguru, marshmallow, black, mypy            │
 │                                                                                │
 │ Model Components:                                                              │
