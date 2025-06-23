@@ -329,6 +329,163 @@ async def evaluate_model():
     except Exception as e:
         logger.error(f"Evaluation failed: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Evaluation failed: {str(e)}")
+    
+    
+@app.post("/demo/prediction-comparison/{user_id_str}", tags=["Demo"])
+async def get_demo_prediction_comparison(user_id_str: str):
+    """
+    DEMAND 3: CONSOLIDATED ENDPOINT - Single call for prediction + ground truth + metrics
+    
+    This replaces the inefficient two-call pattern with a single, optimized endpoint
+    that handles all demo prediction comparison logic in the ML service.
+    """
+    if not app.state.model:
+        raise HTTPException(status_code=503, detail="ML model not available")
+    
+    if not app.state.demo_feature_engineer:
+        raise HTTPException(status_code=503, detail="Demo feature engineer not available")
+        
+    try:
+        logger.info(f"Generating consolidated demo prediction comparison for user {user_id_str}")
+        
+        # ====================================================================
+        # STEP 1: Generate ML prediction from CSV data
+        # ====================================================================
+        try:
+            user_features = app.state.demo_feature_engineer.extract_features_from_csv(user_id_str)
+            if user_features.empty:
+                raise HTTPException(
+                    status_code=404, 
+                    detail=f"No feature data available for user {user_id_str}"
+                )
+            
+            predicted_product_ids = app.state.model.predict(user_id_str, user_features)
+            logger.info(f"Generated prediction with {len(predicted_product_ids)} products")
+            
+        except Exception as e:
+            logger.error(f"Prediction generation failed: {e}")
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Prediction failed: {str(e)}"
+            )
+        
+        # ====================================================================
+        # STEP 2: Fetch ground truth basket from CSV
+        # ====================================================================
+        try:
+            # Find user's actual next basket from train set
+            train_user_data = app.state.train_df[app.state.train_df['user_id'] == int(user_id_str)]
+            
+            if train_user_data.empty:
+                logger.warning(f"No ground truth found for user {user_id_str}")
+                ground_truth_products = []
+            else:
+                # Get the actual products the user bought
+                ground_truth_products = train_user_data['product_id'].tolist()
+                logger.info(f"Found ground truth with {len(ground_truth_products)} products")
+                
+        except Exception as e:
+            logger.error(f"Ground truth retrieval failed: {e}")
+            ground_truth_products = []
+        
+        # ====================================================================
+        # STEP 3: Map product IDs to product names using orders_df
+        # ====================================================================
+        try:
+            # Get predicted product names
+            predicted_product_names = []
+            if predicted_product_ids:
+                predicted_mask = app.state.orders_df['product_id'].isin(predicted_product_ids)
+                predicted_products_data = app.state.orders_df[predicted_mask]['product_name'].unique()
+                predicted_product_names = predicted_products_data.tolist()
+            
+            # Get ground truth product names  
+            ground_truth_product_names = []
+            if ground_truth_products:
+                truth_mask = app.state.orders_df['product_id'].isin(ground_truth_products)
+                truth_products_data = app.state.orders_df[truth_mask]['product_name'].unique()
+                ground_truth_product_names = truth_products_data.tolist()
+                
+        except Exception as e:
+            logger.error(f"Product name mapping failed: {e}")
+            predicted_product_names = [f"Product {pid}" for pid in predicted_product_ids]
+            ground_truth_product_names = [f"Product {pid}" for pid in ground_truth_products]
+        
+        # ====================================================================
+        # STEP 4: Calculate comparison metrics
+        # ====================================================================
+        predicted_set = set(predicted_product_ids)
+        ground_truth_set = set(ground_truth_products)
+        
+        common_products = predicted_set.intersection(ground_truth_set)
+        
+        comparison_metrics = {
+            "predicted_count": len(predicted_product_ids),
+            "actual_count": len(ground_truth_products), 
+            "common_items": len(common_products),
+            "precision": len(common_products) / len(predicted_product_ids) if predicted_product_ids else 0,
+            "recall": len(common_products) / len(ground_truth_products) if ground_truth_products else 0,
+            "jaccard_similarity": len(common_products) / len(predicted_set.union(ground_truth_set)) if predicted_set.union(ground_truth_set) else 0
+        }
+        
+        # Calculate F1 score
+        precision = comparison_metrics["precision"]
+        recall = comparison_metrics["recall"]
+        comparison_metrics["f1_score"] = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+        
+        # ====================================================================
+        # STEP 5: Format response for frontend
+        # ====================================================================
+        predicted_basket = [
+            {
+                "id": str(pid),
+                "name": name,
+                "imageUrl": f"/api/products/{pid}/image",
+                "price": 0,  # Demo price
+                "category": "Demo Category"
+            }
+            for pid, name in zip(predicted_product_ids, predicted_product_names)
+        ]
+        
+        true_future_basket = [
+            {
+                "id": str(pid), 
+                "name": name,
+                "imageUrl": f"/api/products/{pid}/image",
+                "price": 0,  # Demo price
+                "category": "Demo Category"
+            }
+            for pid, name in zip(ground_truth_products, ground_truth_product_names)
+        ]
+        
+        result = {
+            "user_id": user_id_str,
+            "predicted_basket": predicted_basket,
+            "true_future_basket": true_future_basket,
+            "comparison_metrics": comparison_metrics,
+            "source": "consolidated_csv_analysis",
+            "timestamp": datetime.utcnow().isoformat(),
+            "performance_summary": {
+                "match_quality": "excellent" if comparison_metrics["f1_score"] > 0.7 else 
+                               "good" if comparison_metrics["f1_score"] > 0.4 else 
+                               "moderate" if comparison_metrics["f1_score"] > 0.2 else "needs_improvement",
+                "prediction_confidence": len(predicted_product_ids) / 10.0 if len(predicted_product_ids) <= 10 else 1.0
+            }
+        }
+        
+        logger.info(f"✅ Consolidated demo comparison completed for user {user_id_str}")
+        logger.info(f"   Metrics: P={precision:.3f}, R={recall:.3f}, F1={comparison_metrics['f1_score']:.3f}")
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Demo prediction comparison failed for user {user_id_str}: {e}")
+        raise HTTPException(
+            status_code=500, 
+            detail=f"Demo comparison failed: {str(e)}"
+        )
 
 # ============================================================================
 # HELPER FUNCTIONS

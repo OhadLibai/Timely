@@ -94,45 +94,49 @@
 │                            ML SERVICE LAYER                                    │
 │                     Python 3.9+ + FastAPI 0.103 + ML Stack                  │
 ├─────────────────────────────────────────────────────────────────────────────────┤
-│ API Endpoints:                                                                 │
-│ ├── /predict/from-database: Live predictions using user's DB history         │
-│ ├── /predict/for-demo: Demo predictions from Instacart CSV data              │
-│ ├── /evaluate/model: On-demand model performance evaluation                   │
-│ ├── /model/feature-importance: Model interpretability                        │
-│ └── /demo-data/*: CSV-based demo utilities for admin functions               │
+│ Restructured Architecture (core/, data/, features/, models/, services/):      │
 │                                                                                │
-│ Two-Stage ML Architecture:                                                     │
-│ ├── Stage 1: CandidateGenerator (LightGBM 4.0)                              │
-│ │   └── Generates 3 candidate baskets + meta-features                        │
-│ └── Stage 2: BasketSelector (scikit-learn GradientBoostingClassifier)        │
-│     └── Selects optimal basket from candidates                               │
+│ API Layer (/api/):                                                            │
+│ └── main.py: FastAPI application with prediction endpoints                    │
 │                                                                                │
-│ Feature Engineering:                                                           │
-│ ├── UnifiedFeatureEngineer: Standardized feature pipeline                    │
-│ ├── EnhancedFeatureEngineer: Advanced pattern analysis                       │
-│ ├── DatabaseFeatureEngineer: Live database features                          │
-│ └── 50+ engineered features: temporal, behavioral, product-based             │
+│ Core Components (/core/):                                                     │
+│ ├── evaluator.py: Model performance evaluation and metrics                   │
+│ └── logger.py: Centralized logging configuration                             │
+│                                                                                │
+│ Data Layer (/data/):                                                          │
+│ ├── connection.py: Database connection management                             │
+│ ├── csv_loader.py: Instacart dataset loading utilities                       │
+│ └── models.py: SQLAlchemy database models                                     │
+│                                                                                │
+│ Feature Engineering (/features/):                                             │
+│ └── engineering.py: Unified feature extraction and processing                │
+│                                                                                │
+│ ML Models (/models/):                                                         │
+│ ├── stacked_basket_model.py: Main orchestrator for 2-stage prediction       │
+│ ├── stage1_candidate_generator.py: LightGBM-based candidate generation       │
+│ └── stage2_basket_selector.py: GradientBoosting final selection              │
+│                                                                                │
+│ Services (/services/):                                                        │
+│ └── prediction.py: Business logic for prediction workflows                   │
+│                                                                                │
+│ Artifacts & Training:                                                          │
+│ ├── /artifacts/: Trained model storage (PKL files)                          │
+│ └── /training/: Model training notebooks and scripts                         │
 │                                                                                │
 │ ML Dependencies & Tools:                                                       │
 │ ├── Core ML: scikit-learn 1.3.0, LightGBM 4.0.0, NumPy 1.24.3, Pandas 2.0.3│
 │ ├── Optimization: Optuna 3.3.0 for hyperparameter tuning                   │
 │ ├── Interpretability: SHAP 0.42.1 for model explanations                    │
-│ ├── Database: PostgreSQL via psycopg2-binary 2.9.7, SQLAlchemy 2.0.20,     │
-│ │   Alembic 1.11.3                                                           │
+│ ├── Database: PostgreSQL via psycopg2-binary 2.9.7, SQLAlchemy 2.0.20      │
 │ ├── API: FastAPI 0.103.1, Uvicorn 0.23.2, Pydantic 2.3.0                  │
 │ ├── Auth & Security: python-jose, passlib                                   │
 │ ├── Testing: pytest 7.4.0, pytest-asyncio 0.21.1, pytest-cov 4.1.0        │
 │ └── Utils: python-dotenv, httpx, loguru, marshmallow, black, mypy            │
 │                                                                                │
-│ Model Components:                                                              │
-│ ├── StackedBasketModel: Orchestrates 2-stage prediction                      │
-│ ├── PredictionService: Business logic wrapper                                │
-│ ├── BasketPredictionEvaluator: Performance metrics (Precision@K, NDCG)      │
-│ └── Trained models: stage1_lgbm.pkl, stage2_gbm.pkl                         │
-│                                                                                │
 │ Data Sources:                                                                  │
-│ ├── Live Database: Real user interactions                                     │
+│ ├── Live Database: Real user interactions via PostgreSQL                     │
 │ └── Instacart Dataset: 200K+ users, 3.4M+ orders, 50K+ products            │
+│     └── Raw CSV files: orders, products, aisles, departments, order_products │
 └─────────────────────────────────────────────────────────────────────────────────┘
                                        │ SQL Connections
                                        ▼

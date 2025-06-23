@@ -118,6 +118,7 @@ docker-compose.local.yml
 TODO
 Gemini.md
 .claude
+laughing.txt
 CLAUDE.md
 Other CLAUDE.md
 Remove Files.txt
@@ -125,9 +126,12 @@ Remove Functions.txt
 
 # Information details dont want to disclose 
 README
+Project Architecture.md
 /testing-scripts
 ml-service/Information.txt
 Possible Enhancements
 Predicted Basket Flow
 Validating-3-demands.md
+/ml-service/src/models/Model Brief Explanation.txt
+/ml-service/Some Files Explained.txt
 ########################

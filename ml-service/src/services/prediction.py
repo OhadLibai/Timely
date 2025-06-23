@@ -4,7 +4,7 @@
 import pandas as pd
 from typing import List, Dict, Optional
 from ..models.stacked_basket_model import StackedBasketModel
-from ..services.enhanced_feature_engineering import DatabaseFeatureEngineer
+from ..services.unified_feature_engineering import DatabaseFeatureEngineer
 from ..utils.logger import setup_logger
 
 logger = setup_logger(__name__)
@@ -12,7 +12,6 @@ logger = setup_logger(__name__)
 class PredictionService:
     """
     Clean prediction service with direct database access architecture.
-    Feature engineering is completely BLACK BOX - no external access.
     NO LEGACY MODE - app was never deployed.
     """
     
