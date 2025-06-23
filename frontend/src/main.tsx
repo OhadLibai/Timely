@@ -3,66 +3,16 @@ import ReactDOM from 'react-dom/client';
 import App from '@/App';
 import '@/index.css';
 
-// Import performance monitoring
-import { getCLS, getFID, getFCP, getLCP, getTTFB } from 'web-vitals';
-
 // Import error boundary
 import ErrorBoundary from '@/components/common/ErrorBoundary';
-
-// Performance monitoring setup
-const sendToAnalytics = (metric: any) => {
-  // In production, send to your analytics service
-  if (process.env.NODE_ENV === 'production') {
-    // Example: Analytics.track('Web Vital', metric);
-    console.log('Web Vital:', metric);
-  }
-};
-
-// Register Web Vitals
-getCLS(sendToAnalytics);
-getFID(sendToAnalytics);
-getFCP(sendToAnalytics);
-getLCP(sendToAnalytics);
-getTTFB(sendToAnalytics);
-
-// Service Worker registration for PWA support
-const registerServiceWorker = async () => {
-  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
-    try {
-      const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('SW registered: ', registration);
-      
-      // Listen for updates
-      registration.addEventListener('updatefound', () => {
-        const newWorker = registration.installing;
-        if (newWorker) {
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New content available, show update notification
-              if (window.confirm('New version available! Reload to update?')) {
-                window.location.reload();
-              }
-            }
-          });
-        }
-      });
-    } catch (error) {
-      console.log('SW registration failed: ', error);
-    }
-  }
-};
 
 // Global error handling
 window.addEventListener('error', (event) => {
   console.error('Global error:', event.error);
-  // In production, send to error tracking service (e.g., Sentry)
-  // Sentry.captureException(event.error);
 });
 
 window.addEventListener('unhandledrejection', (event) => {
   console.error('Unhandled promise rejection:', event.reason);
-  // In production, send to error tracking service
-  // Sentry.captureException(event.reason);
 });
 
 // Development tools
@@ -80,7 +30,7 @@ if (process.env.NODE_ENV === 'development') {
   (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
     ...((window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ || {}),
     onCommitFiberRoot: (id: any, root: any) => {
-      // Custom profiling logic
+      // Custom profiling logic can be added here if needed
     }
   };
 
@@ -160,9 +110,6 @@ const initializeApp = async () => {
     // Initialize accessibility features
     initializeA11y();
     
-    // Register service worker
-    await registerServiceWorker();
-    
     // Get root element
     const rootElement = document.getElementById('root');
     if (!rootElement) {
@@ -184,12 +131,12 @@ const initializeApp = async () => {
     // Hide initial loader after React hydration
     setTimeout(hideInitialLoader, 100);
     
-    // Performance logging
+    // Development logging
     if (process.env.NODE_ENV === 'development') {
       console.log('✅ Timely app initialized successfully');
-      console.log('📊 Performance monitoring active');
       console.log('🎨 Theme system ready');
       console.log('♿ Accessibility features enabled');
+      console.log('🔧 Dev/Test mode - Production features disabled');
     }
 
   } catch (error) {

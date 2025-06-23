@@ -1,5 +1,5 @@
 // frontend/src/pages/Checkout.tsx
-// CLEANED UP: Simplified checkout process for demo purposes
+// FIXED: Simplified checkout process - removed unused fields
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -16,6 +16,7 @@ import ProductImage from '@/components/products/ProductImage';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 
+// FIXED: Simplified form data - removed unused fields
 interface CheckoutFormData {
   // Contact Information
   firstName: string;
@@ -29,15 +30,9 @@ interface CheckoutFormData {
   state: string;
   zipCode: string;
   
-  // Payment Information
+  // Payment Information (for UI display only - not submitted to backend)
   cardNumber: string;
   expiryDate: string;
-  cvv: string;
-  cardholderName: string;
-  
-  // Preferences
-  saveAddress: boolean;
-  savePayment: boolean;
 }
 
 const Checkout: React.FC = () => {
@@ -81,6 +76,7 @@ const Checkout: React.FC = () => {
   const deliveryFee = subtotal > 50 ? 0 : 5.99;
   const total = subtotal + estimatedTax + deliveryFee - savings;
 
+  // FIXED: Simplified onSubmit - only using fields the backend actually expects
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
     
@@ -160,18 +156,19 @@ const Checkout: React.FC = () => {
                   {step.name}
                 </span>
                 {index < steps.length - 1 && (
-                  <div className="w-16 h-px bg-gray-200 dark:bg-gray-700 mx-4" />
+                  <div className={`w-8 h-px mx-4 ${
+                    currentStep > step.id ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-600'
+                  }`} />
                 )}
               </div>
             ))}
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="lg:grid lg:grid-cols-12 lg:gap-x-12 lg:items-start xl:gap-x-16">
-            
-            {/* Checkout Form */}
-            <div className="lg:col-span-7">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Form */}
+          <div className="lg:col-span-2">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               
               {/* Step 1: Contact & Shipping */}
               {currentStep === 1 && (
@@ -187,152 +184,135 @@ const Checkout: React.FC = () => {
                     </h2>
                   </div>
 
-                  <div className="space-y-6">
-                    {/* Contact Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                        Contact Information
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            First Name *
-                          </label>
-                          <input
-                            type="text"
-                            {...register('firstName', { required: 'First name is required' })}
-                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                          {errors.firstName && (
-                            <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Last Name *
-                          </label>
-                          <input
-                            type="text"
-                            {...register('lastName', { required: 'Last name is required' })}
-                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                          {errors.lastName && (
-                            <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Email *
-                          </label>
-                          <input
-                            type="email"
-                            {...register('email', { 
-                              required: 'Email is required',
-                              pattern: {
-                                value: /^\S+@\S+$/i,
-                                message: 'Invalid email address'
-                              }
-                            })}
-                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                          {errors.email && (
-                            <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
-                          )}
-                        </div>
-                        
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Phone *
-                          </label>
-                          <input
-                            type="tel"
-                            {...register('phone', { required: 'Phone number is required' })}
-                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                          {errors.phone && (
-                            <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Shipping Address */}
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
-                        Shipping Address
-                      </h3>
-                      <div className="space-y-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Street Address *
-                          </label>
-                          <input
-                            type="text"
-                            {...register('address', { required: 'Address is required' })}
-                            className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          />
-                          {errors.address && (
-                            <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>
-                          )}
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              City *
-                            </label>
-                            <input
-                              type="text"
-                              {...register('city', { required: 'City is required' })}
-                              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                            {errors.city && (
-                              <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
-                            )}
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              State *
-                            </label>
-                            <input
-                              type="text"
-                              {...register('state', { required: 'State is required' })}
-                              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                            {errors.state && (
-                              <p className="text-red-500 text-sm mt-1">{errors.state.message}</p>
-                            )}
-                          </div>
-                          
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              ZIP Code *
-                            </label>
-                            <input
-                              type="text"
-                              {...register('zipCode', { required: 'ZIP code is required' })}
-                              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            />
-                            {errors.zipCode && (
-                              <p className="text-red-500 text-sm mt-1">{errors.zipCode.message}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        {...register('saveAddress')}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                      />
-                      <label className="ml-2 block text-sm text-gray-900 dark:text-white">
-                        Save this address for future orders
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        First Name *
                       </label>
+                      <input
+                        type="text"
+                        {...register('firstName', { required: 'First name is required' })}
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      {errors.firstName && (
+                        <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Last Name *
+                      </label>
+                      <input
+                        type="text"
+                        {...register('lastName', { required: 'Last name is required' })}
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      {errors.lastName && (
+                        <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Email *
+                      </label>
+                      <input
+                        type="email"
+                        {...register('email', { 
+                          required: 'Email is required',
+                          pattern: {
+                            value: /^\S+@\S+$/i,
+                            message: 'Invalid email address'
+                          }
+                        })}
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      {errors.email && (
+                        <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Phone *
+                      </label>
+                      <input
+                        type="tel"
+                        {...register('phone', { required: 'Phone number is required' })}
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      {errors.phone && (
+                        <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 space-y-6">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                      <MapPin size={20} />
+                      Shipping Address
+                    </h3>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Street Address *
+                      </label>
+                      <input
+                        type="text"
+                        {...register('address', { required: 'Address is required' })}
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        placeholder="123 Main Street"
+                      />
+                      {errors.address && (
+                        <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          City *
+                        </label>
+                        <input
+                          type="text"
+                          {...register('city', { required: 'City is required' })}
+                          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        {errors.city && (
+                          <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          State *
+                        </label>
+                        <input
+                          type="text"
+                          {...register('state', { required: 'State is required' })}
+                          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          placeholder="CA"
+                        />
+                        {errors.state && (
+                          <p className="text-red-500 text-sm mt-1">{errors.state.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          ZIP Code *
+                        </label>
+                        <input
+                          type="text"
+                          {...register('zipCode', { required: 'ZIP code is required' })}
+                          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          placeholder="12345"
+                        />
+                        {errors.zipCode && (
+                          <p className="text-red-500 text-sm mt-1">{errors.zipCode.message}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
@@ -348,7 +328,7 @@ const Checkout: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Step 2: Payment */}
+              {/* Step 2: Payment (Simplified - UI only) */}
               {currentStep === 2 && (
                 <motion.div
                   initial={{ opacity: 0, x: -20 }}
@@ -363,18 +343,11 @@ const Checkout: React.FC = () => {
                   </div>
 
                   <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Cardholder Name *
-                      </label>
-                      <input
-                        type="text"
-                        {...register('cardholderName', { required: 'Cardholder name is required' })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                      {errors.cardholderName && (
-                        <p className="text-red-500 text-sm mt-1">{errors.cardholderName.message}</p>
-                      )}
+                    <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        💳 <strong>Demo Mode:</strong> Payment fields are for display only. 
+                        No actual payment processing occurs.
+                      </p>
                     </div>
 
                     <div>
@@ -414,32 +387,11 @@ const Checkout: React.FC = () => {
                         </label>
                         <input
                           type="text"
-                          {...register('cvv', { required: 'CVV is required' })}
                           placeholder="123"
                           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
-                        {errors.cvv && (
-                          <p className="text-red-500 text-sm mt-1">{errors.cvv.message}</p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        {...register('savePayment')}
-                        className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-                      />
-                      <label className="ml-2 block text-sm text-gray-900 dark:text-white">
-                        Save this payment method for future orders
-                      </label>
-                    </div>
-
-                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <Lock className="text-gray-600 dark:text-gray-400" size={16} />
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Your payment information is encrypted and secure
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Any 3 digits (demo only)
                         </p>
                       </div>
                     </div>
@@ -525,7 +477,7 @@ const Checkout: React.FC = () => {
                         </>
                       ) : (
                         <>
-                          <CheckCircle size={16} />
+                          <CheckCircle size={20} />
                           Place Order
                         </>
                       )}
@@ -533,68 +485,85 @@ const Checkout: React.FC = () => {
                   </div>
                 </motion.div>
               )}
-            </div>
+            </form>
+          </div>
 
-            {/* Order Summary Sidebar */}
-            <div className="mt-10 lg:mt-0 lg:col-span-5">
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-6">
-                <h2 className="text-lg font-medium text-gray-900 dark:text-white mb-6">
-                  Order Summary
-                </h2>
+          {/* Order Summary */}
+          <div className="lg:col-span-1">
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Package size={20} />
+                Order Summary
+              </h3>
 
-                {/* Cart Items */}
-                <div className="space-y-4 mb-6">
-                  {cart.items.map((item) => (
-                    <div key={item.id} className="flex items-center gap-4">
+              {/* Cart Items */}
+              <div className="space-y-3 mb-6">
+                {cart.items.map((item) => (
+                  <div key={item.id} className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
                       <ProductImage
                         src={item.product.imageUrl}
                         alt={item.product.name}
-                        className="w-16 h-16 object-cover rounded-lg"
+                        className="w-full h-full object-cover"
                       />
-                      <div className="flex-1">
-                        <h3 className="text-sm font-medium text-gray-900 dark:text-white">
-                          {item.product.name}
-                        </h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Qty: {item.quantity}
-                        </p>
-                      </div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
-                        ${(Number(item.product.price) * item.quantity).toFixed(2)}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">
+                        {item.product.name}
+                      </h4>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        Qty: {item.quantity} × ${item.product.price.toFixed(2)}
                       </p>
                     </div>
-                  ))}
-                </div>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      ${(item.quantity * item.product.price).toFixed(2)}
+                    </p>
+                  </div>
+                ))}
+              </div>
 
-                {/* Totals */}
-                <div className="space-y-3 border-t border-gray-200 dark:border-gray-700 pt-4">
+              {/* Order Totals */}
+              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
+                  <span className="text-gray-900 dark:text-white">${subtotal.toFixed(2)}</span>
+                </div>
+                
+                {savings > 0 && (
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                    <span className="text-gray-900 dark:text-white">${subtotal.toFixed(2)}</span>
+                    <span className="text-gray-600 dark:text-gray-400">Savings</span>
+                    <span className="text-green-600 dark:text-green-400">-${savings.toFixed(2)}</span>
                   </div>
-                  {savings > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600 dark:text-gray-400">Savings</span>
-                      <span className="text-green-600 dark:text-green-400">-${savings.toFixed(2)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Tax</span>
-                    <span className="text-gray-900 dark:text-white">${estimatedTax.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Delivery</span>
-                    <span className="text-gray-900 dark:text-white">${deliveryFee.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between text-lg font-medium border-t border-gray-200 dark:border-gray-700 pt-3">
-                    <span className="text-gray-900 dark:text-white">Total</span>
-                    <span className="text-gray-900 dark:text-white">${total.toFixed(2)}</span>
-                  </div>
+                )}
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Delivery</span>
+                  <span className="text-gray-900 dark:text-white">
+                    {deliveryFee === 0 ? 'FREE' : `$${deliveryFee.toFixed(2)}`}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600 dark:text-gray-400">Tax</span>
+                  <span className="text-gray-900 dark:text-white">${estimatedTax.toFixed(2)}</span>
+                </div>
+                
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-2 flex justify-between font-semibold">
+                  <span className="text-gray-900 dark:text-white">Total</span>
+                  <span className="text-gray-900 dark:text-white text-lg">${total.toFixed(2)}</span>
                 </div>
               </div>
+
+              {deliveryFee > 0 && (
+                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <p className="text-xs text-blue-800 dark:text-blue-200">
+                    💡 Add ${(50 - subtotal).toFixed(2)} more for free delivery!
+                  </p>
+                </div>
+              )}
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );

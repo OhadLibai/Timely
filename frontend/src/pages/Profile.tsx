@@ -1,12 +1,12 @@
 // frontend/src/pages/Profile.tsx
-// CLEANED UP: Simplified profile management for demo purposes
+// FIXED: Removed dateOfBirth field that doesn't exist in user model
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { useMutation, useQueryClient } from 'react-query';
 import {
-  User, Mail, Phone, MapPin, Calendar, Settings,
+  User, Mail, Phone, MapPin, Settings,
   Edit3, Save, X, CheckCircle, Eye, EyeOff, Shield
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
@@ -14,12 +14,12 @@ import { userService } from '@/services/user.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 
+// FIXED: Removed dateOfBirth from interface
 interface ProfileFormData {
   firstName: string;
   lastName: string;
   email: string;
   phone?: string;
-  dateOfBirth?: string;
 }
 
 interface PasswordFormData {
@@ -47,7 +47,6 @@ const Profile: React.FC = () => {
       lastName: user?.lastName || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      dateOfBirth: user?.dateOfBirth || ''
     }
   });
 
@@ -108,7 +107,6 @@ const Profile: React.FC = () => {
       lastName: user?.lastName || '',
       email: user?.email || '',
       phone: user?.phone || '',
-      dateOfBirth: user?.dateOfBirth || ''
     });
   };
 
@@ -137,21 +135,19 @@ const Profile: React.FC = () => {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-xl">
-                      {user.firstName?.[0]?.toUpperCase() || 'U'}
+                      {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
                     </span>
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                       {user.firstName} {user.lastName}
-                    </h2>
+                    </h3>
                     <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
                     {user.isAdmin && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Shield size={14} className="text-indigo-600 dark:text-indigo-400" />
-                        <span className="text-xs text-indigo-600 dark:text-indigo-400 font-medium">
-                          Administrator
-                        </span>
-                      </div>
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 text-xs font-medium rounded-full mt-1">
+                        <Shield size={12} />
+                        Administrator
+                      </span>
                     )}
                   </div>
                 </div>
@@ -159,7 +155,7 @@ const Profile: React.FC = () => {
                 {!isEditing && (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 px-4 py-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
                   >
                     <Edit3 size={16} />
                     Edit Profile
@@ -168,187 +164,152 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-6">
-              <form onSubmit={handleSubmitProfile(onSubmitProfile)}>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  
-                  {/* First Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      First Name
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        {...registerProfile('firstName', { required: 'First name is required' })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                        <User size={16} className="text-gray-500 dark:text-gray-400" />
-                        <span className="text-gray-900 dark:text-white">{user.firstName}</span>
-                      </div>
-                    )}
-                    {profileErrors.firstName && (
-                      <p className="text-red-500 text-sm mt-1">{profileErrors.firstName.message}</p>
-                    )}
-                  </div>
-
-                  {/* Last Name */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Last Name
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="text"
-                        {...registerProfile('lastName', { required: 'Last name is required' })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                        <User size={16} className="text-gray-500 dark:text-gray-400" />
-                        <span className="text-gray-900 dark:text-white">{user.lastName}</span>
-                      </div>
-                    )}
-                    {profileErrors.lastName && (
-                      <p className="text-red-500 text-sm mt-1">{profileErrors.lastName.message}</p>
-                    )}
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Email Address
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="email"
-                        {...registerProfile('email', { 
-                          required: 'Email is required',
-                          pattern: {
-                            value: /^\S+@\S+$/i,
-                            message: 'Invalid email address'
-                          }
-                        })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                        <Mail size={16} className="text-gray-500 dark:text-gray-400" />
-                        <span className="text-gray-900 dark:text-white">{user.email}</span>
-                      </div>
-                    )}
-                    {profileErrors.email && (
-                      <p className="text-red-500 text-sm mt-1">{profileErrors.email.message}</p>
-                    )}
-                  </div>
-
-                  {/* Phone */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Phone Number
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="tel"
-                        {...registerProfile('phone')}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="Optional"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                        <Phone size={16} className="text-gray-500 dark:text-gray-400" />
-                        <span className="text-gray-900 dark:text-white">
-                          {user.phone || 'Not provided'}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Date of Birth */}
-                  <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Date of Birth
-                    </label>
-                    {isEditing ? (
-                      <input
-                        type="date"
-                        {...registerProfile('dateOfBirth')}
-                        className="w-full md:w-1/2 p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                    ) : (
-                      <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md w-full md:w-1/2">
-                        <Calendar size={16} className="text-gray-500 dark:text-gray-400" />
-                        <span className="text-gray-900 dark:text-white">
-                          {user.dateOfBirth 
-                            ? new Date(user.dateOfBirth).toLocaleDateString()
-                            : 'Not provided'
-                          }
-                        </span>
-                      </div>
-                    )}
-                  </div>
+            <form onSubmit={handleSubmitProfile(onSubmitProfile)} className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* First Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    First Name
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      {...registerProfile('firstName', { required: 'First name is required' })}
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                      <User size={16} className="text-gray-500 dark:text-gray-400" />
+                      <span className="text-gray-900 dark:text-white">{user.firstName}</span>
+                    </div>
+                  )}
+                  {profileErrors.firstName && (
+                    <p className="text-red-500 text-sm mt-1">{profileErrors.firstName.message}</p>
+                  )}
                 </div>
 
-                {/* Action Buttons */}
-                <AnimatePresence>
-                  {isEditing && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700"
-                    >
-                      <button
-                        type="button"
-                        onClick={handleCancelEdit}
-                        className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                      >
-                        <X size={16} />
-                        Cancel
-                      </button>
-                      <button
-                        type="submit"
-                        disabled={updateProfileMutation.isLoading}
-                        className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {updateProfileMutation.isLoading ? (
-                          <>
-                            <LoadingSpinner size="small" />
-                            Saving...
-                          </>
-                        ) : (
-                          <>
-                            <Save size={16} />
-                            Save Changes
-                          </>
-                        )}
-                      </button>
-                    </motion.div>
+                {/* Last Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Last Name
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="text"
+                      {...registerProfile('lastName', { required: 'Last name is required' })}
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                      <User size={16} className="text-gray-500 dark:text-gray-400" />
+                      <span className="text-gray-900 dark:text-white">{user.lastName}</span>
+                    </div>
                   )}
-                </AnimatePresence>
-              </form>
-            </div>
+                  {profileErrors.lastName && (
+                    <p className="text-red-500 text-sm mt-1">{profileErrors.lastName.message}</p>
+                  )}
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Email Address
+                  </label>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                    <Mail size={16} className="text-gray-500 dark:text-gray-400" />
+                    <span className="text-gray-900 dark:text-white">{user.email}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Email cannot be changed in demo mode
+                  </p>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Phone Number
+                  </label>
+                  {isEditing ? (
+                    <input
+                      type="tel"
+                      {...registerProfile('phone')}
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      placeholder="Optional"
+                    />
+                  ) : (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
+                      <Phone size={16} className="text-gray-500 dark:text-gray-400" />
+                      <span className="text-gray-900 dark:text-white">
+                        {user.phone || 'Not provided'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <AnimatePresence>
+                {isEditing && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700"
+                  >
+                    <button
+                      type="button"
+                      onClick={handleCancelEdit}
+                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <X size={16} />
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={updateProfileMutation.isLoading}
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {updateProfileMutation.isLoading ? (
+                        <>
+                          <LoadingSpinner size="small" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save size={16} />
+                          Save Changes
+                        </>
+                      )}
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </form>
           </div>
 
-          {/* Security Section */}
+          {/* Password Change Section */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Security</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Manage your password and account security
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Password & Security
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Update your password to keep your account secure
                   </p>
                 </div>
-                <button
-                  onClick={() => setShowPasswordForm(!showPasswordForm)}
-                  className="flex items-center gap-2 px-4 py-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-md transition-colors"
-                >
-                  <Settings size={16} />
-                  Change Password
-                </button>
+                
+                {!showPasswordForm && (
+                  <button
+                    onClick={() => setShowPasswordForm(true)}
+                    className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <Settings size={16} />
+                    Change Password
+                  </button>
+                )}
               </div>
             </div>
 
@@ -360,7 +321,7 @@ const Profile: React.FC = () => {
                   exit={{ opacity: 0, height: 0 }}
                   className="p-6"
                 >
-                  <form onSubmit={handleSubmitPassword(onSubmitPassword)} className="space-y-4">
+                  <form onSubmit={handleSubmitPassword(onSubmitPassword)} className="space-y-6">
                     
                     {/* Current Password */}
                     <div>
@@ -371,7 +332,7 @@ const Profile: React.FC = () => {
                         <input
                           type={showCurrentPassword ? 'text' : 'password'}
                           {...registerPassword('currentPassword', { required: 'Current password is required' })}
-                          className="w-full p-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-10"
                         />
                         <button
                           type="button"
@@ -397,11 +358,11 @@ const Profile: React.FC = () => {
                           {...registerPassword('newPassword', { 
                             required: 'New password is required',
                             minLength: {
-                              value: 8,
-                              message: 'Password must be at least 8 characters'
+                              value: 6,
+                              message: 'Password must be at least 6 characters'
                             }
                           })}
-                          className="w-full p-3 pr-10 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 pr-10"
                         />
                         <button
                           type="button"
@@ -424,8 +385,8 @@ const Profile: React.FC = () => {
                       <input
                         type="password"
                         {...registerPassword('confirmPassword', { 
-                          required: 'Please confirm your password',
-                          validate: (value) => 
+                          required: 'Please confirm your new password',
+                          validate: value => 
                             value === watch('newPassword') || 'Passwords do not match'
                         })}
                         className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -435,16 +396,17 @@ const Profile: React.FC = () => {
                       )}
                     </div>
 
-                    {/* Password Form Actions */}
-                    <div className="flex justify-end gap-3 pt-4">
+                    {/* Action Buttons */}
+                    <div className="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-700">
                       <button
                         type="button"
                         onClick={() => {
                           setShowPasswordForm(false);
                           resetPassword();
                         }}
-                        className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >
+                        <X size={16} />
                         Cancel
                       </button>
                       <button

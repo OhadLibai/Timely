@@ -1,4 +1,6 @@
 // frontend/src/components/products/ProductCard.tsx
+// FIXED: Proper favorite status sync with server
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -9,7 +11,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { favoriteService } from '@/services/favorite.service';
 import ProductImage from '@/components/products/ProductImage';
 import toast from 'react-hot-toast';
-import { useMutation, useQueryClient } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 interface ProductCardProps {
   product: Product;
@@ -18,10 +20,20 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
   const { isAuthenticated } = useAuthStore();
   const { addToCart, isProductInCart, isUpdating } = useCartStore();
   const queryClient = useQueryClient();
+
+  // FIXED: Properly fetch favorite status from server
+  const { data: isFavorite = false, isLoading: isFavoriteLoading } = useQuery(
+    ['isFavorite', product.id],
+    () => favoriteService.isProductFavorited(product.id),
+    {
+      enabled: isAuthenticated, // Only run the query if the user is logged in
+      staleTime: Infinity, // The favorite status won't change unless the user clicks
+      refetchOnWindowFocus: false, // Don't refetch when window regains focus
+    }
+  );
 
   const isInCart = isProductInCart(product.id);
   const discount = product.compareAtPrice 
@@ -44,14 +56,20 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
     }
   };
 
+  // FIXED: Properly toggle favorites with explicit add/remove calls
   const toggleFavoriteMutation = useMutation(
-    () => isFavorite 
-      ? favoriteService.removeFavorite(product.id)
-      : favoriteService.addFavorite(product.id),
+    () => {
+      // Decide which service method to call based on the current status
+      if (isFavorite) {
+        return favoriteService.removeFavorite(product.id);
+      } else {
+        return favoriteService.addFavorite(product.id);
+      }
+    },
     {
       onSuccess: () => {
-        setIsFavorite(!isFavorite);
-        queryClient.invalidateQueries('favorites');
+        queryClient.invalidateQueries(['isFavorite', product.id]);
+        queryClient.invalidateQueries('favorites'); // Invalidate the main favorites list
         toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
       },
       onError: () => {
@@ -117,13 +135,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
             transition={{ duration: 0.2 }}
             className="absolute top-3 right-3 flex flex-col gap-2"
           >
+            {/* FIXED: Proper favorite button with server sync */}
             <button
               onClick={handleToggleFavorite}
+              disabled={toggleFavoriteMutation.isLoading || isFavoriteLoading}
               className={`p-2 rounded-full backdrop-blur-sm transition-all ${
                 isFavorite 
                   ? 'bg-red-500 text-white' 
                   : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-red-500 hover:text-white'
-              }`}
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
               <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
             </button>
@@ -184,55 +204,60 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
                     key={i}
                     size={14}
                     className={i < Math.floor(product.avgRating) 
-                      ? 'fill-yellow-400 text-yellow-400' 
+                      ? 'text-yellow-400 fill-current' 
                       : 'text-gray-300 dark:text-gray-600'
                     }
                   />
                 ))}
               </div>
-              <span className="text-xs text-gray-600 dark:text-gray-400">
+              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
                 ({product.reviewCount})
               </span>
             </div>
           )}
 
-          {/* Price */}
-          <div className="flex items-end justify-between mb-3">
-            <div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  ${product.salePrice.toFixed(2)}
-                </span>
-                {product.compareAtPrice && product.compareAtPrice > product.price && (
-                  <span className="text-sm text-gray-500 line-through">
-                    ${product.compareAtPrice.toFixed(2)}
-                  </span>
-                )}
-              </div>
-              {product.unit && (
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  per {product.unit}
+          {/* Price Section */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold text-gray-900 dark:text-white">
+                ${product.price.toFixed(2)}
+              </span>
+              {product.compareAtPrice && (
+                <span className="text-sm text-gray-500 line-through">
+                  ${product.compareAtPrice.toFixed(2)}
                 </span>
               )}
             </div>
+            {discount > 0 && (
+              <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                Save {discount}%
+              </span>
+            )}
           </div>
 
           {/* Add to Cart Button */}
-          <motion.button
-            whileTap={{ scale: 0.95 }}
+          <button
             onClick={handleAddToCart}
-            disabled={isUpdating || !product.inStock || isInCart}
-            className={`w-full py-2.5 px-4 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
+            disabled={isUpdating || product.stock === 0}
+            className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${
               isInCart
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
-                : !product.inStock
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                : product.stock === 0
                 ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                : 'bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800'
-            }`}
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+            } disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             <ShoppingCart size={18} />
-            {isInCart ? 'In Cart' : !product.inStock ? 'Out of Stock' : 'Add to Cart'}
-          </motion.button>
+            {isUpdating ? (
+              'Adding...'
+            ) : isInCart ? (
+              'In Cart'
+            ) : product.stock === 0 ? (
+              'Out of Stock'
+            ) : (
+              'Add to Cart'
+            )}
+          </button>
         </div>
       </Link>
     </motion.div>

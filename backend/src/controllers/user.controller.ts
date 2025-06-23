@@ -1,5 +1,5 @@
 // backend/src/controllers/user.controller.ts
-// ADDED: Missing getProfile and updateProfile methods for user routes
+// FIXED: Removed dateOfBirth from updateProfile method
 
 import { Request, Response, NextFunction } from 'express';
 import { User } from '@/models/user.model';
@@ -52,23 +52,22 @@ export class UserController {
     }
   }
 
-  // Update user profile
+  // FIXED: Update user profile - removed dateOfBirth field
   async updateProfile(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const { firstName, lastName, phone, dateOfBirth } = req.body;
+      const { firstName, lastName, phone } = req.body; // REMOVED dateOfBirth
 
       const user = await User.findByPk(userId);
       if (!user) {
         return res.status(404).json({ error: 'User not found' });
       }
 
-      // Update allowed profile fields
+      // Update allowed profile fields - REMOVED dateOfBirth
       const updateData: any = {};
       if (firstName !== undefined) updateData.firstName = firstName;
       if (lastName !== undefined) updateData.lastName = lastName;
       if (phone !== undefined) updateData.phone = phone;
-      if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;
 
       await user.update(updateData);
 
@@ -102,11 +101,14 @@ export class UserController {
       if (!preferences) {
         preferences = await UserPreference.create({
           userId,
-          autoBasketEnabled: true,
+          autoBasketEnabled: false,
           autoBasketDay: 0, // Sunday
-          autoBasketTime: '10:00:00',
-          emailNotifications: true,
-          darkMode: false
+          autoBasketTime: '09:00',
+          dietaryRestrictions: [],
+          favoriteCategories: [],
+          budgetRange: [50, 200],
+          householdSize: 1,
+          shoppingFrequency: 'weekly'
         });
       }
 
@@ -122,12 +124,15 @@ export class UserController {
   async updatePreferences(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const { 
-        autoBasketEnabled, 
-        autoBasketDay, 
-        autoBasketTime, 
-        emailNotifications, 
-        darkMode 
+      const {
+        autoBasketEnabled,
+        autoBasketDay,
+        autoBasketTime,
+        dietaryRestrictions,
+        favoriteCategories,
+        budgetRange,
+        householdSize,
+        shoppingFrequency
       } = req.body;
 
       let preferences = await UserPreference.findOne({
@@ -138,22 +143,18 @@ export class UserController {
       if (autoBasketEnabled !== undefined) updateData.autoBasketEnabled = autoBasketEnabled;
       if (autoBasketDay !== undefined) updateData.autoBasketDay = autoBasketDay;
       if (autoBasketTime !== undefined) updateData.autoBasketTime = autoBasketTime;
-      if (emailNotifications !== undefined) updateData.emailNotifications = emailNotifications;
-      if (darkMode !== undefined) updateData.darkMode = darkMode;
+      if (dietaryRestrictions !== undefined) updateData.dietaryRestrictions = dietaryRestrictions;
+      if (favoriteCategories !== undefined) updateData.favoriteCategories = favoriteCategories;
+      if (budgetRange !== undefined) updateData.budgetRange = budgetRange;
+      if (householdSize !== undefined) updateData.householdSize = householdSize;
+      if (shoppingFrequency !== undefined) updateData.shoppingFrequency = shoppingFrequency;
 
       if (preferences) {
         await preferences.update(updateData);
       } else {
-        // Create new preferences with provided data
         preferences = await UserPreference.create({
           userId,
-          ...updateData,
-          // Ensure defaults for any missing fields
-          autoBasketEnabled: updateData.autoBasketEnabled ?? true,
-          autoBasketDay: updateData.autoBasketDay ?? 0,
-          autoBasketTime: updateData.autoBasketTime ?? '10:00:00',
-          emailNotifications: updateData.emailNotifications ?? true,
-          darkMode: updateData.darkMode ?? false
+          ...updateData
         });
       }
 
@@ -171,18 +172,15 @@ export class UserController {
   }
 
   // ============================================================================
-  // FAVORITES MANAGEMENT (Supporting user experience)
+  // USER FAVORITES (Essential for user experience)
   // ============================================================================
 
-  // Get user's favorite products
+  // Get user favorites
   async getFavorites(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = (req as any).user.id;
-      const { page = 1, limit = 20 } = req.query;
 
-      const offset = (Number(page) - 1) * Number(limit);
-
-      const favorites = await Favorite.findAndCountAll({
+      const favorites = await Favorite.findAll({
         where: { userId },
         include: [
           {
@@ -191,26 +189,15 @@ export class UserController {
             include: [
               {
                 model: Category,
-                as: 'category',
-                attributes: ['id', 'name']
+                as: 'category'
               }
             ]
           }
         ],
-        order: [['createdAt', 'DESC']],
-        limit: Number(limit),
-        offset
+        order: [['createdAt', 'DESC']]
       });
 
-      res.json({
-        favorites: favorites.rows,
-        pagination: {
-          page: Number(page),
-          limit: Number(limit),
-          total: favorites.count,
-          totalPages: Math.ceil(favorites.count / Number(limit))
-        }
-      });
+      res.json(favorites);
 
     } catch (error) {
       logger.error(`Error fetching favorites for user ${(req as any).user.id}:`, error);
@@ -224,6 +211,12 @@ export class UserController {
       const userId = (req as any).user.id;
       const { productId } = req.body;
 
+      // Check if product exists
+      const product = await Product.findByPk(productId);
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found' });
+      }
+
       // Check if already favorited
       const existingFavorite = await Favorite.findOne({
         where: { userId, productId }
@@ -233,10 +226,14 @@ export class UserController {
         return res.status(400).json({ error: 'Product already in favorites' });
       }
 
-      const favorite = await Favorite.create({ userId, productId });
+      // Create favorite
+      const favorite = await Favorite.create({
+        userId,
+        productId
+      });
 
-      // Fetch complete favorite with product details
-      const completeFavorite = await Favorite.findByPk(favorite.id, {
+      // Fetch favorite with product details
+      const favoriteWithProduct = await Favorite.findByPk(favorite.id, {
         include: [
           {
             model: Product,
@@ -244,18 +241,16 @@ export class UserController {
             include: [
               {
                 model: Category,
-                as: 'category',
-                attributes: ['id', 'name']
+                as: 'category'
               }
             ]
           }
         ]
       });
 
-      res.status(201).json({
-        message: 'Product added to favorites',
-        favorite: completeFavorite
-      });
+      logger.info(`Product ${productId} added to favorites for user ${userId}`);
+
+      res.status(201).json(favoriteWithProduct);
 
     } catch (error) {
       logger.error(`Error adding favorite for user ${(req as any).user.id}:`, error);
@@ -279,28 +274,12 @@ export class UserController {
 
       await favorite.destroy();
 
+      logger.info(`Product ${productId} removed from favorites for user ${userId}`);
+
       res.json({ message: 'Product removed from favorites' });
 
     } catch (error) {
       logger.error(`Error removing favorite for user ${(req as any).user.id}:`, error);
-      next(error);
-    }
-  }
-
-  // Check if product is favorited
-  async checkFavorite(req: Request, res: Response, next: NextFunction) {
-    try {
-      const userId = (req as any).user.id;
-      const { productId } = req.params;
-
-      const favorite = await Favorite.findOne({
-        where: { userId, productId }
-      });
-
-      res.json({ isFavorited: !!favorite });
-
-    } catch (error) {
-      logger.error(`Error checking favorite for user ${(req as any).user.id}:`, error);
       next(error);
     }
   }
@@ -324,28 +303,65 @@ export class UserController {
       next(error);
     }
   }
-}
 
-// ============================================================================
-// IMPLEMENTATION NOTES:
-// 
-// ADDED METHODS:
-// - getProfile: Fetches user profile with preferences and cart
-// - updateProfile: Updates basic profile fields (firstName, lastName, phone, dateOfBirth)
-// - getPreferences: Fetches or creates default ML prediction preferences
-// - updatePreferences: Updates ML prediction and UI preferences
-// - getFavorites: Fetches user's favorite products with pagination
-// - addFavorite: Adds product to user's favorites
-// - removeFavorite: Removes product from user's favorites
-// - checkFavorite: Checks if a product is favorited (for UI state)
-// - getFavoriteIds: Gets array of favorite product IDs (for quick lookups)
-//
-// RATIONALE:
-// These methods provide essential user profile and preference management needed
-// for a complete shopping experience (Demand 4) and support the ML prediction
-// functionality (Demands 1, 3). All methods are fully implemented with proper
-// error handling, logging, and validation.
-//
-// The preferences methods specifically support the ML prediction features by
-// allowing users to configure when and how auto-basket generation occurs.
-// ============================================================================
+  // Check if product is favorited
+  async isProductFavorited(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user.id;
+      const { productId } = req.params;
+
+      const favorite = await Favorite.findOne({
+        where: { userId, productId }
+      });
+
+      res.json({ isFavorited: !!favorite });
+
+    } catch (error) {
+      logger.error(`Error checking favorite status for user ${(req as any).user.id}:`, error);
+      next(error);
+    }
+  }
+
+  // ============================================================================
+  // PASSWORD MANAGEMENT
+  // ============================================================================
+
+  // Change password
+  async changePassword(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = (req as any).user.id;
+      const { currentPassword, newPassword } = req.body;
+
+      const user = await User.findByPk(userId);
+      if (!user) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+
+      // Verify current password
+      const isValidPassword = await user.validatePassword(currentPassword);
+      if (!isValidPassword) {
+        return res.status(400).json({ error: 'Current password is incorrect' });
+      }
+
+      // Update password (will be hashed by the model hook)
+      await user.update({ password: newPassword });
+
+      logger.info(`Password changed for user: ${user.email}`);
+
+      res.json({ message: 'Password changed successfully' });
+
+    } catch (error) {
+      logger.error(`Error changing password for user ${(req as any).user.id}:`, error);
+      next(error);
+    }
+  }
+
+  // ============================================================================
+  // UTILITY METHODS
+  // ============================================================================
+
+  // Get user preferences (alias for compatibility)
+  async getUserPreferences(req: Request, res: Response, next: NextFunction) {
+    return this.getPreferences(req, res, next);
+  }
+}

@@ -1,9 +1,13 @@
+// frontend/src/components/products/ProductListItem.tsx
+// FIXED: Removed non-existent toggleFavorite, implemented proper favorite logic
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { Product } from '@/services/product.service';
 import { useCartStore } from '@/stores/cart.store';
-import { useMutation, useQueryClient } from 'react-query';
+import { useAuthStore } from '@/stores/auth.store';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { favoriteService } from '@/services/favorite.service';
 import { toast } from 'react-hot-toast';
 
@@ -12,15 +16,35 @@ interface ProductListItemProps {
 }
 
 const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
-  const { addItem } = useCartStore();
+  const { addToCart } = useCartStore();
+  const { isAuthenticated } = useAuthStore();
   const queryClient = useQueryClient();
 
+  // FIXED: Proper favorite status fetching like in ProductCard
+  const { data: isFavorite = false, isLoading: isFavoriteLoading } = useQuery(
+    ['isFavorite', product.id],
+    () => favoriteService.isProductFavorited(product.id),
+    {
+      enabled: isAuthenticated,
+      staleTime: Infinity,
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  // FIXED: Proper toggle favorite mutation with explicit add/remove
   const toggleFavoriteMutation = useMutation(
-    () => favoriteService.toggleFavorite(product.id),
+    () => {
+      if (isFavorite) {
+        return favoriteService.removeFavorite(product.id);
+      } else {
+        return favoriteService.addFavorite(product.id);
+      }
+    },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries(['favorites']);
-        toast.success('Updated favorites');
+        queryClient.invalidateQueries(['isFavorite', product.id]);
+        queryClient.invalidateQueries('favorites');
+        toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
       },
       onError: () => {
         toast.error('Failed to update favorites');
@@ -29,7 +53,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
   );
 
   const addToCartMutation = useMutation(
-    () => addItem(product, 1),
+    () => addToCart(product.id),
     {
       onSuccess: () => {
         toast.success('Added to cart');
@@ -42,24 +66,41 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
+    
+    if (!isAuthenticated) {
+      toast.error('Please login to add items to cart');
+      return;
+    }
+    
     addToCartMutation.mutate();
   };
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
+    
+    if (!isAuthenticated) {
+      toast.error('Please login to save favorites');
+      return;
+    }
+    
     toggleFavoriteMutation.mutate();
   };
 
+  const discount = product.compareAtPrice 
+    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
+    : 0;
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow">
       <Link to={`/products/${product.id}`} className="block">
         <div className="flex p-4">
           {/* Product Image */}
-          <div className="flex-shrink-0 w-20 h-20 bg-gray-100 rounded-lg overflow-hidden">
+          <div className="flex-shrink-0 w-20 h-20 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
             <img
-              src={product.imageUrl || 'https://images.pexels.com/photos/264537/pexels-photo-264537.jpeg?auto=compress&cs=tinysrgb&w=400'}}
+              src={product.imageUrl || 'https://images.pexels.com/photos/264537/pexels-photo-264537.jpeg?auto=compress&cs=tinysrgb&w=400'}
               alt={product.name}
               className="w-full h-full object-cover"
+              loading="lazy"
             />
           </div>
           
@@ -67,50 +108,86 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
           <div className="flex-1 ml-4">
             <div className="flex justify-between items-start">
               <div className="flex-1">
-                <h3 className="font-semibold text-gray-900 text-sm mb-1">
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm mb-1">
                   {product.name}
                 </h3>
-                <p className="text-xs text-gray-500 mb-1">
-                  {product.brand} • {product.category}
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                  {product.brand} • {product.category?.name}
                 </p>
                 {product.description && (
-                  <p className="text-xs text-gray-600 line-clamp-2">
+                  <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
                     {product.description}
                   </p>
                 )}
-              </div>
-              
-              {/* Price and Actions */}
-              <div className="flex flex-col items-end ml-4">
-                <div className="text-right mb-2">
-                  <span className="text-lg font-bold text-gray-900">
+                
+                {/* Price */}
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="font-bold text-gray-900 dark:text-white">
                     ${product.price.toFixed(2)}
                   </span>
-                  {product.originalPrice && product.originalPrice > product.price && (
-                    <span className="text-xs text-gray-500 line-through ml-1">
-                      ${product.originalPrice.toFixed(2)}
-                    </span>
+                  {product.compareAtPrice && (
+                    <>
+                      <span className="text-xs text-gray-500 line-through">
+                        ${product.compareAtPrice.toFixed(2)}
+                      </span>
+                      {discount > 0 && (
+                        <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                          -{discount}%
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
+
+                {/* Stock Status */}
+                {product.trackInventory && (
+                  <div className="mt-1">
+                    {product.stock === 0 ? (
+                      <span className="text-xs text-red-600 dark:text-red-400">
+                        Out of stock
+                      </span>
+                    ) : product.stock <= 5 ? (
+                      <span className="text-xs text-orange-600 dark:text-orange-400">
+                        Only {product.stock} left
+                      </span>
+                    ) : (
+                      <span className="text-xs text-green-600 dark:text-green-400">
+                        In stock
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* Actions */}
+              <div className="flex flex-col gap-2 ml-4">
+                {/* FIXED: Proper favorite button */}
+                <button
+                  onClick={handleToggleFavorite}
+                  disabled={toggleFavoriteMutation.isLoading || isFavoriteLoading}
+                  className={`p-2 rounded-full transition-all ${
+                    isFavorite 
+                      ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' 
+                      : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
+                </button>
                 
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleToggleFavorite}
-                    className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                    disabled={toggleFavoriteMutation.isLoading}
-                  >
-                    <Heart className="h-4 w-4 text-gray-400 hover:text-red-500" />
-                  </button>
-                  
-                  <button
-                    onClick={handleAddToCart}
-                    disabled={addToCartMutation.isLoading}
-                    className="flex items-center px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors disabled:opacity-50"
-                  >
-                    <ShoppingCart className="h-3 w-3 mr-1" />
-                    Add
-                  </button>
-                </div>
+                {/* Add to Cart */}
+                <button
+                  onClick={handleAddToCart}
+                  disabled={addToCartMutation.isLoading || product.stock === 0}
+                  className={`p-2 rounded-full transition-all ${
+                    product.stock === 0
+                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+                      : 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  title={product.stock === 0 ? 'Out of stock' : 'Add to cart'}
+                >
+                  <ShoppingCart size={16} />
+                </button>
               </div>
             </div>
           </div>
