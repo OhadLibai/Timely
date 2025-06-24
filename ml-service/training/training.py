@@ -1,8 +1,5 @@
 # =====================================================================================
-# 1. INSTALL DEPENDENCIES
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-# !pip install lightgbm==4.0.0 pandas==2.0.3 scikit-learn==1.3.0 -q
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# 1. IMPORTS
 # =====================================================================================
 
 import pandas as pd
@@ -19,7 +16,7 @@ print("✅ Dependencies installed and modules imported.")
 
 # =====================================================================================
 # 2. DEFINE THE MODEL AND FEATURE ENGINEERING CLASSES
-# (Copying code from your project files to make the notebook self-contained)
+# (Copying code from project files to make the notebook self-contained)
 # =====================================================================================
 
 # --- Logger Setup ---
