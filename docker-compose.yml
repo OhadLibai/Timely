@@ -1,4 +1,4 @@
-# docker-compose.yml - SANITIZED for ML Demo Focus
+# docker-compose.yml - UNIFIED for ML Demo Focus
 version: '3.8'
 
 services:
@@ -11,7 +11,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - POSTGRES_DB=${POSTGRES_DB}
     ports:
-      - "5432:5432"
+      - "${DB_EXPOSED_PORT}:${DB_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
     networks:
       - timely-network
-  
+
   # Database Initialization Service
   init-db:
     container_name: timely-init-db
@@ -30,13 +30,11 @@ services:
       context: ./database
       dockerfile: Dockerfile
     volumes:
-      - ./ml-service/training-data:/training-data:ro
+      - ./ml-service/training-data:/app/training-data:ro
+      - ./backend/src:/app/backend/src:ro # Mount backend models for type consistency
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-      - DB_HOST=db
-      - NODE_ENV=development
+      - DATABASE_URL=${DATABASE_URL}
+      - NODE_ENV=${NODE_ENV}
     depends_on:
       db:
         condition: service_healthy
@@ -51,30 +49,21 @@ services:
       dockerfile: Dockerfile
     container_name: timely-backend
     environment:
-      - NODE_ENV=development
-      - PORT=5000
-      - DB_HOST=db
-      - DB_PORT=5432
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - NODE_ENV=${NODE_ENV}
+      - PORT=${BACKEND_PORT}
+      - DATABASE_URL=${DATABASE_URL}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - ML_SERVICE_URL=http://ml-service:8000
-      - FRONTEND_URL=http://localhost:3000
-      # Sanitized settings
-      - FEATURE_ENGINEERING=black_box
-      - ARCHITECTURE=direct_database_access
-      - BACKGROUND_JOBS=disabled
+      - ML_SERVICE_URL=${ML_SERVICE_URL}
+      - FRONTEND_URL=${FRONTEND_URL}
     ports:
-      - "5000:5000"
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
     depends_on:
       db:
         condition: service_healthy
       init-db:
         condition: service_completed_successfully
     volumes:
-      # Minimal volume mapping for development
       - ./backend:/app
       - /app/node_modules
     command: npm run dev
@@ -82,7 +71,7 @@ services:
     networks:
       - timely-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -94,18 +83,14 @@ services:
       context: ./ml-service
       dockerfile: Dockerfile
     environment:
-      - DB_HOST=db
-      - DB_PORT=5432
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      - DATABASE_URL=${DATABASE_URL}
       - PYTHONPATH=/app
-      # ML Configuration
-      - MODEL_PATH=/app/models
-      - DATA_PATH=/app/training-data
-      - PROCESSED_DATA_PATH=/app/training-data/processed
+      - MODEL_PATH_BASE=${MODEL_PATH_BASE}
+      - PROCESSED_DATA_PATH=${PROCESSED_DATA_PATH}
+      - RAW_DATA_PATH=${RAW_DATA_PATH}
+      - EVALUATION_SAMPLE_SIZE=${EVALUATION_SAMPLE_SIZE}
     ports:
-      - "8000:8000"
+      - "${ML_SERVICE_PORT}:${ML_SERVICE_PORT}"
     depends_on:
       db:
         condition: service_healthy
@@ -113,18 +98,17 @@ services:
         condition: service_completed_successfully
     volumes:
       - ./ml-service:/app
-      - ./ml-service/training-data:/app/training-data:ro
-      - ./ml-service/models:/app/models
+      - ./ml-service/models:/app/models:ro
     restart: unless-stopped
     networks:
       - timely-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${ML_SERVICE_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # React Frontend (Production Build)
+  # React Frontend (served by Nginx)
   frontend:
     build:
       context: ./frontend
@@ -132,9 +116,9 @@ services:
     container_name: timely-frontend
     environment:
       - NODE_ENV=production
-      - VITE_API_URL=http://localhost:5000/api
+      - VITE_API_URL=${VITE_API_URL}
     ports:
-      - "3000:80"
+      - "${FRONTEND_PORT}:80"
     depends_on:
       - backend
     restart: unless-stopped
@@ -152,20 +136,3 @@ volumes:
 networks:
   timely-network:
     driver: bridge
-
-# ============================================================================
-# REMOVED FEATURES:
-# - File upload volumes (no longer needed)
-# - Delivery service containers (simplified checkout)
-# - Background job schedulers (user-initiated actions only)
-# - Complex networking (simplified to single network)
-# - Redis cache (not needed for demo)
-# - Monitoring services (focus on core functionality)
-#
-# SIMPLIFIED CONFIGURATION:
-# - Minimal volume mappings
-# - Essential environment variables only
-# - Health checks for all services
-# - Single network for all services
-# - Clean dependencies between services
-# ============================================================================
