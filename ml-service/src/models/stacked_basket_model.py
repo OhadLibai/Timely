@@ -8,8 +8,9 @@ and online predictions in the application.
 import pandas as pd
 import numpy as np
 import json
-from stage1_candidate_generator import CandidateGenerator
-from stage2_basket_selector import BasketSelector
+import os
+from .stage1_candidate_generator import CandidateGenerator
+from .stage2_basket_selector import BasketSelector
 
 # Helper function to calculate F1 score, as in the reference implementation
 def _calculate_f1(predicted: list, actual: list) -> float:

@@ -7,8 +7,8 @@ from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.pool import StaticPool
 from contextlib import contextmanager
 from typing import Generator
-from ..database.models import Base
-from ..utils.logger import setup_logger
+from ..data.models import Base
+from ..core.logger import setup_logger
 
 logger = setup_logger(__name__)
 

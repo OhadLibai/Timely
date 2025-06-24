@@ -4,8 +4,8 @@
 import pandas as pd
 from typing import List, Dict, Optional
 from ..models.stacked_basket_model import StackedBasketModel
-from ..services.unified_feature_engineering import DatabaseFeatureEngineer
-from ..utils.logger import setup_logger
+from ..features.engineering import UnifiedFeatureEngineer as DatabaseFeatureEngineer
+from ..core.logger import setup_logger
 
 logger = setup_logger(__name__)
 
@@ -29,9 +29,9 @@ class PredictionService:
         self.model = model
         self.processed_data_path = processed_data_path
         
-        # Initialize BLACK BOX feature engineering with database access
+        # Initialize feature engineering with database access
         self.feature_engineer = DatabaseFeatureEngineer(processed_data_path)
-        logger.info("PredictionService initialized with DATABASE mode (feature engineering: BLACK BOX)")
+        logger.info("PredictionService initialized with DATABASE mode")
     
     def predict_next_basket(self, user_id: str) -> List[int]:
         """
@@ -46,8 +46,8 @@ class PredictionService:
         logger.info(f"Starting prediction for user_id: {user_id}")
         
         try:
-            # Generate features using BLACK BOX feature engineering
-            features_df = self.feature_engineer.generate_features_for_user(user_id)
+            # Generate features using feature engineering
+            features_df = self.feature_engineer.generate_features_from_database(user_id)
             
             if features_df.empty:
                 logger.warning(f"No features generated for user {user_id}")

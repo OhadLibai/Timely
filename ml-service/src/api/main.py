@@ -12,11 +12,11 @@ from pydantic import BaseModel
 from typing import List, Dict, Optional
 
 from ..models.stacked_basket_model import StackedBasketModel
-from ..services.prediction_service import EnhancedPredictionService
-from ..services.unified_feature_engineering import DatabaseFeatureEngineer
-from ..evaluation.evaluator import BasketPredictionEvaluator
-from ..utils.logger import setup_logger
-from ..database.connection import test_database_connection
+from ..services.prediction import EnhancedPredictionService
+from ..features.engineering import UnifiedFeatureEngineer as DatabaseFeatureEngineer
+from ..core.evaluator import BasketPredictionEvaluator
+from ..core.logger import setup_logger
+from ..data.connection import test_database_connection
 
 logger = setup_logger(__name__)
 
@@ -149,6 +149,9 @@ app = FastAPI(
     debug=DEBUG_MODE
 )
 
+# CORS configuration
+ALLOWED_ORIGINS = ["*"]  # Configure as needed
+
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -260,7 +263,7 @@ async def get_demo_prediction_comparison(user_id_str: str):
             )
         
         # Use DatabaseFeatureEngineer's CSV-compatible method
-        features_df = app.state.demo_feature_engineer.extract_features_from_csv(
+        features_df = app.state.demo_feature_engineer.generate_features_from_csv_data(
             str(user_id), app.state.orders_df, app.state.order_products_prior_df
         )
         
@@ -512,7 +515,7 @@ async def evaluate_model():
         for user_id in test_sample:
             try:
                 # Generate features and prediction
-                features_df = app.state.demo_feature_engineer.extract_features_from_csv(
+                features_df = app.state.demo_feature_engineer.generate_features_from_csv_data(
                     str(user_id), app.state.orders_df, app.state.order_products_prior_df
                 )
                 

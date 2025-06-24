@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class BasketPredictionEvaluator:
     """
-    Comprehensive evaluation framework for basket prediction
+Comprehensive evaluation framework for basket prediction
     """
     
     def __init__(self):
