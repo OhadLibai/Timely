@@ -1,78 +1,44 @@
 // frontend/src/services/admin.service.ts
-// FIXED: Transform snake_case ML responses to camelCase in service layer
+// FIXED: Updated to support ANY Instacart user ID instead of hardcoded list
 
 import { api } from '@/services/api.client';
 
-// ============================================================================
-// DATA TRANSFORMATION UTILITIES
-// ============================================================================
-
-/**
- * Transform ML service evaluation response from snake_case to camelCase
- */
-function transformEvaluationMetrics(rawMetrics: any): any {
-  if (!rawMetrics) return null;
-
-  const transformed: any = {
-    // Transform nested precision_at_k to camelCase with flat structure
-    precisionAt5: rawMetrics.precision_at_k?.['5'] || 0,
-    precisionAt10: rawMetrics.precision_at_k?.['10'] || 0,
-    precisionAt20: rawMetrics.precision_at_k?.['20'] || 0,
-    
-    // Transform nested recall_at_k to camelCase with flat structure  
-    recallAt5: rawMetrics.recall_at_k?.['5'] || 0,
-    recallAt10: rawMetrics.recall_at_k?.['10'] || 0,
-    recallAt20: rawMetrics.recall_at_k?.['20'] || 0,
-    
-    // Transform simple snake_case fields
-    f1Score: rawMetrics.f1_score || 0,
-    hitRate: rawMetrics.hit_rate || 0,
-    ndcg: rawMetrics.ndcg || 0,
-    
-    // Keep metadata as-is
-    timestamp: rawMetrics.timestamp,
-    evaluationMetadata: rawMetrics.evaluation_metadata
-  };
-
-  // Preserve original raw data for debugging if needed
-  transformed._raw = rawMetrics;
-  
-  return transformed;
+export interface ModelMetrics {
+  precision_at_k: Record<string, number>;
+  recall_at_k: Record<string, number>;
+  hit_rate: number;
+  ndcg: number;
+  f1_score: number;
 }
 
-/**
- * Transform demo prediction response from snake_case to camelCase
- */
-function transformDemoUserPrediction(rawResponse: any): DemoUserPrediction {
-  if (!rawResponse) throw new Error('Invalid demo prediction response');
-
-  return {
-    userId: rawResponse.user_id,
-    predictedBasket: rawResponse.predicted_basket?.map((item: any) => ({
-      id: item.product_id?.toString() || item.id,
-      name: item.product_name || item.name,
-      imageUrl: item.image_url,
-      price: item.price || 0,
-      category: item.category
-    })) || [],
-    trueFutureBasket: rawResponse.true_future_basket?.map((item: any) => ({
-      id: item.product_id?.toString() || item.id,
-      name: item.product_name || item.name,
-      imageUrl: item.image_url,
-      price: item.price || 0,
-      category: item.category
-    })) || [],
-    comparisonMetrics: {
-      predictedCount: rawResponse.comparison_metrics?.predicted_count || 0,
-      actualCount: rawResponse.comparison_metrics?.actual_count || 0,
-      commonItems: rawResponse.comparison_metrics?.common_items || 0
-    }
-  };
+export interface SystemHealth {
+  status: string;
+  database: string;
+  mlService: string;
+  timestamp: string;
 }
 
-// ============================================================================
-// TYPE DEFINITIONS
-// ============================================================================
+export interface DashboardStats {
+  totalUsers: number;
+  totalProducts: number;
+  totalOrders: number;
+  totalRevenue: number;
+  averageOrderValue: number;
+  topCategories: Array<{
+    name: string;
+    count: number;
+  }>;
+  recentOrders: Array<{
+    id: string;
+    user: string;
+    total: number;
+    createdAt: string;
+  }>;
+  monthlyRevenue: Array<{
+    month: string;
+    revenue: number;
+  }>;
+}
 
 export interface DemoUserPrediction {
   userId: string;
@@ -81,26 +47,12 @@ export interface DemoUserPrediction {
   comparisonMetrics: { predictedCount: number; actualCount: number; commonItems: number; };
 }
 
+// FIXED: Updated interface to reflect new backend response
 export interface DemoUserIds {
   message: string;
   note: string;
   feature_engineering: string;
   restriction: string;
-}
-
-export interface TransformedEvaluationMetrics {
-  precisionAt5: number;
-  precisionAt10: number;
-  precisionAt20: number;
-  recallAt5: number;
-  recallAt10: number;
-  recallAt20: number;
-  f1Score: number;
-  hitRate: number;
-  ndcg: number;
-  timestamp?: string;
-  evaluationMetadata?: any;
-  _raw?: any; // Original response for debugging
 }
 
 class AdminService {
@@ -118,53 +70,46 @@ class AdminService {
   }
 
   /**
-   * DEMAND 2: Trigger model evaluation with data transformation
+   * DEMAND 2: Trigger model evaluation
    */
-  async triggerModelEvaluation(): Promise<{ 
-    message: string; 
-    results: TransformedEvaluationMetrics; 
-    timestamp: string 
-  }> {
-    const response = await api.post('/admin/ml/evaluate');
-    
-    // Transform the raw response to camelCase
-    return {
-      message: response.message,
-      results: transformEvaluationMetrics(response.results?.metrics || response.metrics),
-      timestamp: response.timestamp
-    };
+  async triggerModelEvaluation(): Promise<any> {
+    return api.post('/admin/ml/evaluate');
   }
 
   // ============================================================================
-  // DEMO FUNCTIONALITY WITH DATA TRANSFORMATION
+  // DEMO FUNCTIONALITY
   // ============================================================================
   
   /**
-   * Get demo user IDs - no transformation needed
+   * FIXED: Now returns metadata about the demo system instead of hardcoded user IDs
    */
   async getDemoUserIds(): Promise<DemoUserIds> {
     return api.get<DemoUserIds>('/admin/demo/user-ids');
   }
 
   /**
-   * DEMAND 3: Get live demo prediction comparison with data transformation
+   * DEMAND 3: Get live demo prediction comparison
+   * FIXED: Now accepts ANY user ID - no client-side validation
    */
   async getDemoUserPrediction(userId: string): Promise<DemoUserPrediction> {
-    const rawResponse = await api.get(`/admin/demo/user-prediction/${userId}`);
-    return transformDemoUserPrediction(rawResponse);
+    return api.get<DemoUserPrediction>(`/admin/demo/user-prediction/${userId}`);
   }
 
   /**
    * DEMAND 1: Seed a new demo user into the database
+   * FIXED: Now accepts ANY Instacart user ID - no client-side validation
    */
   async seedDemoUser(instacartUserId: string): Promise<any> {
     return api.post(`/admin/demo/seed-user/${instacartUserId}`);
   }
 
   // ============================================================================
-  // PRODUCT MANAGEMENT (READ-ONLY)
+  // READ-ONLY DATA VIEWS (Matching backend routes)
   // ============================================================================
   
+  /**
+   * Get all products (read-only - seeded via database only)
+   */
   async getProducts(params?: {
     page?: number;
     limit?: number;
@@ -172,7 +117,7 @@ class AdminService {
     category?: string;
     isActive?: boolean;
     sort?: string;
-    order?: string;
+    order?: 'asc' | 'desc';
   }): Promise<any> {
     const queryParams = new URLSearchParams();
     
@@ -187,10 +132,9 @@ class AdminService {
     return api.get(`/admin/products?${queryParams.toString()}`);
   }
 
-  // ============================================================================
-  // USER MANAGEMENT (READ-ONLY)
-  // ============================================================================
-  
+  /**
+   * Get all users (read-only - includes demo users)
+   */
   async getUsers(params?: {
     page?: number;
     limit?: number;
@@ -198,7 +142,7 @@ class AdminService {
     role?: string;
     isActive?: boolean;
     sort?: string;
-    order?: string;
+    order?: 'asc' | 'desc';
   }): Promise<any> {
     const queryParams = new URLSearchParams();
     
@@ -213,26 +157,25 @@ class AdminService {
     return api.get(`/admin/users?${queryParams.toString()}`);
   }
 
-  // ============================================================================
-  // ORDER MANAGEMENT (READ-ONLY)
-  // ============================================================================
-  
+  /**
+   * Get all orders (read-only - includes seeded demo orders)
+   */
   async getOrders(params?: {
     page?: number;
     limit?: number;
-    status?: string;
     search?: string;
+    status?: string;
     startDate?: string;
     endDate?: string;
     sort?: string;
-    order?: string;
+    order?: 'asc' | 'desc';  
   }): Promise<any> {
     const queryParams = new URLSearchParams();
     
     if (params?.page) queryParams.append('page', params.page.toString());
     if (params?.limit) queryParams.append('limit', params.limit.toString());
-    if (params?.status) queryParams.append('status', params.status);
     if (params?.search) queryParams.append('search', params.search);
+    if (params?.status) queryParams.append('status', params.status);
     if (params?.startDate) queryParams.append('startDate', params.startDate);
     if (params?.endDate) queryParams.append('endDate', params.endDate);
     if (params?.sort) queryParams.append('sort', params.sort);
@@ -242,41 +185,21 @@ class AdminService {
   }
 
   // ============================================================================
-  // LOGS & MONITORING
+  // ML SERVICE MANAGEMENT
   // ============================================================================
   
-  async getLogs(params?: {
-    level?: string;
-    service?: string;
-    startDate?: string;
-    endDate?: string;
-    limit?: number;
-  }): Promise<any> {
-    const queryParams = new URLSearchParams();
-    
-    if (params?.level) queryParams.append('level', params.level);
-    if (params?.service) queryParams.append('service', params.service);
-    if (params?.startDate) queryParams.append('startDate', params.startDate);
-    if (params?.endDate) queryParams.append('endDate', params.endDate);
-    if (params?.limit) queryParams.append('limit', params.limit.toString());
-
-    return api.get(`/admin/logs?${queryParams.toString()}`);
+  /**
+   * Get ML service status and health
+   */
+  async getMLServiceStatus(): Promise<any> {
+    return api.get('/admin/ml-service/status');
   }
 
-  // ============================================================================
-  // BACKUP & MAINTENANCE
-  // ============================================================================
-  
-  async createBackup(): Promise<any> {
-    return api.post('/admin/backup');
-  }
-
-  async getBackupStatus(): Promise<any> {
-    return api.get('/admin/backup/status');
-  }
-
-  async runMaintenance(tasks: string[]): Promise<any> {
-    return api.post('/admin/maintenance', { tasks });
+  /**
+   * Get architecture status
+   */
+  async getArchitectureStatus(): Promise<any> {
+    return api.get('/admin/architecture/status');
   }
 }
 
