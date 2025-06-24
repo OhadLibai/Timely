@@ -1,4 +1,4 @@
-// backend/src/services/ml.service.ts - CONSOLIDATED HEALTH CHECK METHODS
+// backend/src/services/ml.service.ts - CLEANED VERSION
 
 import axios, { AxiosResponse } from 'axios';
 import logger from '@/utils/logger';
@@ -52,61 +52,61 @@ export const getPredictionFromDatabase = async (userId: string): Promise<any> =>
   }
 };
 
-export const getDemoUserPrediction = async (instacartUserId: string): Promise<any> => {
+export const getDemoUserPrediction = async (userId: string): Promise<any> => {
   try {
-    logger.info(`Getting demo prediction comparison for Instacart user ${instacartUserId}`);
-    const response = await mlApiClient.post(`/demo/prediction-comparison/${instacartUserId}`);
+    const response = await mlApiClient.post(`/demo/prediction-comparison/${userId}`);
     return response.data;
   } catch (error) {
-    logger.error(`Demo prediction comparison failed for user ${instacartUserId}:`, error);
+    logger.error(`Demo prediction failed for user ${userId}:`, error);
     throw error;
   }
 };
 
 // ============================================================================
-// DEMO FUNCTIONALITY (Demands 1 & 3)
+// DEMO FUNCTIONALITY METHODS (Demands 1 & 3)
 // ============================================================================
 
-export const getInstacartUserOrderHistory = async (instacartUserId: string): Promise<any> => {
+export const getInstacartUserOrderHistory = async (userId: number): Promise<any> => {
   try {
-    logger.info(`Fetching order history for Instacart user ${instacartUserId}`);
-    const response = await mlApiClient.get(`/demo-data/instacart-user-order-history/${instacartUserId}`);
+    const response = await mlApiClient.get(`/demo-data/instacart-user-order-history/${userId}`);
     return response.data;
   } catch (error) {
-    logger.error(`Failed to fetch order history for user ${instacartUserId}:`, error);
+    logger.error(`Failed to get Instacart order history for user ${userId}:`, error);
     throw error;
   }
 };
 
-export const getDemoUserIds = async (): Promise<any> => {
+export const getDemoUserIds = async (limit: number = 100): Promise<any> => {
   try {
-    logger.info('Fetching available demo user IDs');
-    const response = await mlApiClient.get('/demo-data/available-users');
+    const response = await mlApiClient.get('/demo-data/available-users', {
+      params: { limit }
+    });
     return response.data;
   } catch (error) {
-    logger.error('Failed to fetch demo user IDs:', error);
+    logger.error('Failed to get demo user IDs:', error);
     throw error;
   }
 };
 
-export const getUserStats = async (instacartUserId: string): Promise<any> => {
+export const getUserStats = async (userId: number): Promise<any> => {
   try {
-    const response = await mlApiClient.get(`/demo-data/user-stats/${instacartUserId}`);
+    const response = await mlApiClient.get(`/demo-data/user-stats/${userId}`);
     return response.data;
   } catch (error) {
-    logger.error(`Failed to fetch user stats for ${instacartUserId}:`, error);
+    logger.error(`Failed to get user stats for ${userId}:`, error);
     throw error;
   }
 };
 
 // ============================================================================
-// MODEL EVALUATION (Demand 2)
+// MODEL EVALUATION METHOD (Demand 2)
 // ============================================================================
 
-export const triggerModelEvaluation = async (): Promise<any> => {
+export const triggerModelEvaluation = async (sampleSize?: number): Promise<any> => {
   try {
-    logger.info('Triggering model evaluation on ML service');
-    const response = await mlApiClient.post('/evaluate-model');
+    const response = await mlApiClient.post('/evaluate-model', null, {
+      params: sampleSize ? { sample_size: sampleSize } : {}
+    });
     return response.data;
   } catch (error) {
     logger.error('Model evaluation failed:', error);
@@ -114,64 +114,26 @@ export const triggerModelEvaluation = async (): Promise<any> => {
   }
 };
 
-// Deprecated - use triggerModelEvaluation instead
-export const getModelPerformanceMetrics = async (): Promise<any> => {
-  logger.warn('getModelPerformanceMetrics is deprecated - use triggerModelEvaluation instead');
-  return triggerModelEvaluation();
-};
-
 // ============================================================================
 // CONSOLIDATED HEALTH & MONITORING
 // ============================================================================
 
-/**
- * CONSOLIDATED: Single comprehensive health check method
- * Replaces: checkMLServiceHealth, getServiceStats, getComprehensiveServiceStatus
- */
 export const getMLServiceStatus = async (): Promise<{
   isHealthy: boolean;
   health: any;
-  serviceInfo: any;
-  capabilities: {
-    database_predictions: boolean;
-    demo_predictions: boolean;
-    model_evaluation: boolean;
-    csv_data_access: boolean;
-  };
+  capabilities: any;
   lastChecked: string;
   errors?: string[];
 }> => {
   const errors: string[] = [];
-  let health: any = null;
-  let serviceInfo: any = null;
+  let health = null;
 
   try {
-    // Parallel health and service info requests
-    const [healthResponse, serviceInfoResponse] = await Promise.allSettled([
-      mlApiClient.get('/health'),
-      mlApiClient.get('/service-info')
-    ]);
-
-    // Process health response
-    if (healthResponse.status === 'fulfilled') {
-      health = healthResponse.value.data;
-      logger.debug('ML service health check successful');
-    } else {
-      errors.push(`Health check failed: ${healthResponse.reason.message}`);
-      logger.error('ML service health check failed:', healthResponse.reason);
-    }
-
-    // Process service info response
-    if (serviceInfoResponse.status === 'fulfilled') {
-      serviceInfo = serviceInfoResponse.value.data;
-      logger.debug('ML service info retrieval successful');
-    } else {
-      errors.push(`Service info failed: ${serviceInfoResponse.reason.message}`);
-      logger.error('ML service info retrieval failed:', serviceInfoResponse.reason);
-    }
-
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    // Single health check call
+    const healthResponse = await mlApiClient.get('/health');
+    health = healthResponse.data;
+  } catch (error: any) {
+    const errorMessage = error.response?.data?.detail || error.message || 'Unknown error';
     errors.push(`ML service unreachable: ${errorMessage}`);
     logger.error('ML service status check failed:', error);
   }
@@ -190,29 +152,10 @@ export const getMLServiceStatus = async (): Promise<{
   return {
     isHealthy,
     health: health || { status: 'unknown', error: 'Health check failed' },
-    serviceInfo: serviceInfo || { status: 'unknown', error: 'Service info unavailable' },
     capabilities,
     lastChecked: new Date().toISOString(),
     ...(errors.length > 0 && { errors })
   };
-};
-
-// Legacy compatibility methods (deprecated)
-export const checkMLServiceHealth = async (): Promise<any> => {
-  logger.warn('checkMLServiceHealth is deprecated - use getMLServiceStatus instead');
-  const status = await getMLServiceStatus();
-  return status.health;
-};
-
-export const getServiceStats = async (): Promise<any> => {
-  logger.warn('getServiceStats is deprecated - use getMLServiceStatus instead');
-  const status = await getMLServiceStatus();
-  return status.serviceInfo;
-};
-
-export const getComprehensiveServiceStatus = async (): Promise<any> => {
-  logger.warn('getComprehensiveServiceStatus is deprecated - use getMLServiceStatus instead');
-  return getMLServiceStatus();
 };
 
 // ============================================================================
@@ -259,18 +202,35 @@ const mlService = {
   
   // Model evaluation (Demand 2)
   triggerModelEvaluation,
-  getModelPerformanceMetrics, // Deprecated
   
-  // CONSOLIDATED health & monitoring
-  getMLServiceStatus, // New consolidated method
-  
-  // Legacy methods (deprecated)
-  checkMLServiceHealth, // Deprecated
-  getServiceStats, // Deprecated
-  getComprehensiveServiceStatus, // Deprecated
+  // Health & monitoring
+  getMLServiceStatus,
   
   // Utilities
   callMLServiceAPI
 };
 
 export default mlService;
+
+// ============================================================================
+// ARCHITECTURE CLEANUP COMPLETE:
+// 
+// ✅ REMOVED REDUNDANT METHODS:
+// - checkMLServiceHealth (deprecated)
+// - getServiceStats (deprecated)
+// - getComprehensiveServiceStatus (deprecated)
+// - getModelPerformanceMetrics (deprecated alias)
+// 
+// ✅ CONSOLIDATED:
+// - Single health check method: getMLServiceStatus
+// - Removed duplicate service info calls
+// - Cleaner error handling
+// 
+// ✅ MAINTAINED:
+// - All core functionality for Demands 1, 2, and 3
+// - Proper logging and error handling
+// - Retry logic for resilience
+// 
+// The service is now clean, focused, and maintains all required functionality
+// while eliminating unnecessary redundancy.
+// ============================================================================
