@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 class BasketPredictionEvaluator:
     """
     Comprehensive evaluation framework for basket prediction
-    Based on Reality Check methodology
     """
     
     def __init__(self):

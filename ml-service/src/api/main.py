@@ -39,7 +39,6 @@ DEBUG_MODE = os.getenv("DEBUG_MODE", "false").lower() == "true"
 
 # Optional settings with sensible defaults
 EVALUATION_SAMPLE_SIZE = int(os.getenv("EVALUATION_SAMPLE_SIZE", "100"))
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "*").split(",")
 
 logger.info(f"ML Service starting - Model Path: {MODEL_PATH_BASE}")
 logger.info(f"Environment: {os.getenv('NODE_ENV', 'development')}")
