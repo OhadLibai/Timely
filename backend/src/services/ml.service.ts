@@ -1,21 +1,19 @@
-// backend/src/services/ml.service.ts
-// CRITICAL FIX: Corrected all endpoint mismatches with ML service
+// backend/src/services/ml.service.ts - CONSOLIDATED HEALTH CHECK METHODS
 
 import axios, { AxiosResponse } from 'axios';
 import logger from '@/utils/logger';
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://ml-service:8000';
 
-// Create axios instance with proper configuration
 export const mlApiClient = axios.create({
   baseURL: ML_SERVICE_URL,
-  timeout: 60000, // Increased timeout for evaluation
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Add request logging
+// Add request/response logging
 mlApiClient.interceptors.request.use(
   (config) => {
     logger.debug(`ML Service Request: ${config.method?.toUpperCase()} ${config.url}`);
@@ -27,7 +25,6 @@ mlApiClient.interceptors.request.use(
   }
 );
 
-// Add response logging
 mlApiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     logger.debug(`ML Service Response: ${response.status} ${response.config.url}`);
@@ -45,10 +42,6 @@ mlApiClient.interceptors.response.use(
 // CORE PREDICTION METHODS
 // ============================================================================
 
-/**
- * Main prediction method for the application.
- * Uses the user's history from the live database.
- */
 export const getPredictionFromDatabase = async (userId: string): Promise<any> => {
   try {
     const response = await mlApiClient.post('/predict/from-database', { user_id: userId });
@@ -59,10 +52,6 @@ export const getPredictionFromDatabase = async (userId: string): Promise<any> =>
   }
 };
 
-/**
- * DEMAND 3: Get consolidated prediction + ground truth comparison
- * FIXED: Now calls the correct consolidated endpoint
- */
 export const getDemoUserPrediction = async (instacartUserId: string): Promise<any> => {
   try {
     logger.info(`Getting demo prediction comparison for Instacart user ${instacartUserId}`);
@@ -75,13 +64,9 @@ export const getDemoUserPrediction = async (instacartUserId: string): Promise<an
 };
 
 // ============================================================================
-// DEMAND 1 HELPER METHODS
+// DEMO FUNCTIONALITY (Demands 1 & 3)
 // ============================================================================
 
-/**
- * DEMAND 1: Get a user's full order history from the original CSV files.
- * Used for seeding the database with realistic user data.
- */
 export const getInstacartUserOrderHistory = async (instacartUserId: string): Promise<any> => {
   try {
     logger.info(`Fetching order history for Instacart user ${instacartUserId}`);
@@ -93,10 +78,6 @@ export const getInstacartUserOrderHistory = async (instacartUserId: string): Pro
   }
 };
 
-/**
- * DEMAND 1 & 3: Get available demo user IDs
- * FIXED: Now calls the correct endpoint
- */
 export const getDemoUserIds = async (): Promise<any> => {
   try {
     logger.info('Fetching available demo user IDs');
@@ -108,9 +89,6 @@ export const getDemoUserIds = async (): Promise<any> => {
   }
 };
 
-/**
- * Get user statistics from CSV data
- */
 export const getUserStats = async (instacartUserId: string): Promise<any> => {
   try {
     const response = await mlApiClient.get(`/demo-data/user-stats/${instacartUserId}`);
@@ -122,13 +100,9 @@ export const getUserStats = async (instacartUserId: string): Promise<any> => {
 };
 
 // ============================================================================
-// DEMAND 2: MODEL EVALUATION METHODS
+// MODEL EVALUATION (Demand 2)
 // ============================================================================
 
-/**
- * DEMAND 2: Trigger comprehensive model evaluation
- * FIXED: Now calls the correct endpoint
- */
 export const triggerModelEvaluation = async (): Promise<any> => {
   try {
     logger.info('Triggering model evaluation on ML service');
@@ -140,93 +114,111 @@ export const triggerModelEvaluation = async (): Promise<any> => {
   }
 };
 
-/**
- * DEMAND 2: Get model performance metrics
- * FIXED: Removed this separate function since evaluation returns metrics directly
- * The triggerModelEvaluation now returns comprehensive metrics
- */
+// Deprecated - use triggerModelEvaluation instead
 export const getModelPerformanceMetrics = async (): Promise<any> => {
   logger.warn('getModelPerformanceMetrics is deprecated - use triggerModelEvaluation instead');
   return triggerModelEvaluation();
 };
 
 // ============================================================================
-// HEALTH & MONITORING METHODS
+// CONSOLIDATED HEALTH & MONITORING
 // ============================================================================
 
 /**
- * Check ML service health status
+ * CONSOLIDATED: Single comprehensive health check method
+ * Replaces: checkMLServiceHealth, getServiceStats, getComprehensiveServiceStatus
  */
-export const checkMLServiceHealth = async (): Promise<any> => {
-  try {
-    const response = await mlApiClient.get('/health');
-    return response.data;
-  } catch (error) {
-    logger.error('ML service health check failed:', error);
-    throw error;
-  }
-};
+export const getMLServiceStatus = async (): Promise<{
+  isHealthy: boolean;
+  health: any;
+  serviceInfo: any;
+  capabilities: {
+    database_predictions: boolean;
+    demo_predictions: boolean;
+    model_evaluation: boolean;
+    csv_data_access: boolean;
+  };
+  lastChecked: string;
+  errors?: string[];
+}> => {
+  const errors: string[] = [];
+  let health: any = null;
+  let serviceInfo: any = null;
 
-/**
- * Get ML service information and statistics
- * FIXED: Now calls the correct endpoint
- */
-export const getServiceStats = async (): Promise<any> => {
   try {
-    const response = await mlApiClient.get('/service-info');
-    return response.data;
-  } catch (error) {
-    logger.error('Failed to fetch service stats:', error);
-    throw error;
-  }
-};
-
-/**
- * Get comprehensive service status for admin dashboard
- */
-export const getComprehensiveServiceStatus = async (): Promise<any> => {
-  try {
-    const [health, stats] = await Promise.all([
-      checkMLServiceHealth().catch(() => null),
-      getServiceStats().catch(() => null)
+    // Parallel health and service info requests
+    const [healthResponse, serviceInfoResponse] = await Promise.allSettled([
+      mlApiClient.get('/health'),
+      mlApiClient.get('/service-info')
     ]);
-    
-    return {
-      isHealthy: !!health,
-      health: health || { status: 'unhealthy' },
-      stats: stats || { status: 'unavailable' },
-      lastChecked: new Date().toISOString(),
-      capabilities: {
-        database_predictions: !!health?.database_available,
-        demo_predictions: !!health?.data_loaded?.orders,
-        model_evaluation: !!health?.model_loaded,
-        csv_data_access: !!health?.data_loaded?.products
-      }
-    };
+
+    // Process health response
+    if (healthResponse.status === 'fulfilled') {
+      health = healthResponse.value.data;
+      logger.debug('ML service health check successful');
+    } else {
+      errors.push(`Health check failed: ${healthResponse.reason.message}`);
+      logger.error('ML service health check failed:', healthResponse.reason);
+    }
+
+    // Process service info response
+    if (serviceInfoResponse.status === 'fulfilled') {
+      serviceInfo = serviceInfoResponse.value.data;
+      logger.debug('ML service info retrieval successful');
+    } else {
+      errors.push(`Service info failed: ${serviceInfoResponse.reason.message}`);
+      logger.error('ML service info retrieval failed:', serviceInfoResponse.reason);
+    }
+
   } catch (error) {
-    logger.error('Comprehensive service status check failed:', error);
-    return {
-      isHealthy: false,
-      health: { status: 'error', error: error.message },
-      stats: { status: 'error' },
-      lastChecked: new Date().toISOString(),
-      capabilities: {
-        database_predictions: false,
-        demo_predictions: false,
-        model_evaluation: false,
-        csv_data_access: false
-      }
-    };
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    errors.push(`ML service unreachable: ${errorMessage}`);
+    logger.error('ML service status check failed:', error);
   }
+
+  // Determine overall health
+  const isHealthy = health?.status === 'healthy' && errors.length === 0;
+
+  // Extract capabilities from health response
+  const capabilities = {
+    database_predictions: health?.database_available && health?.model_loaded,
+    demo_predictions: health?.model_loaded && health?.data_loaded?.orders > 0,
+    model_evaluation: health?.model_loaded && health?.data_loaded?.future_baskets > 0,
+    csv_data_access: health?.data_loaded?.products > 0
+  };
+
+  return {
+    isHealthy,
+    health: health || { status: 'unknown', error: 'Health check failed' },
+    serviceInfo: serviceInfo || { status: 'unknown', error: 'Service info unavailable' },
+    capabilities,
+    lastChecked: new Date().toISOString(),
+    ...(errors.length > 0 && { errors })
+  };
+};
+
+// Legacy compatibility methods (deprecated)
+export const checkMLServiceHealth = async (): Promise<any> => {
+  logger.warn('checkMLServiceHealth is deprecated - use getMLServiceStatus instead');
+  const status = await getMLServiceStatus();
+  return status.health;
+};
+
+export const getServiceStats = async (): Promise<any> => {
+  logger.warn('getServiceStats is deprecated - use getMLServiceStatus instead');
+  const status = await getMLServiceStatus();
+  return status.serviceInfo;
+};
+
+export const getComprehensiveServiceStatus = async (): Promise<any> => {
+  logger.warn('getComprehensiveServiceStatus is deprecated - use getMLServiceStatus instead');
+  return getMLServiceStatus();
 };
 
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
-/**
- * Generic ML service API call with retry logic
- */
 export const callMLServiceAPI = async (
   endpoint: string, 
   method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
@@ -244,7 +236,7 @@ export const callMLServiceAPI = async (
   } catch (error) {
     if (retries > 0) {
       logger.warn(`ML service call failed, retrying... (${retries} attempts left)`);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      await new Promise(resolve => setTimeout(resolve, 1000));
       return callMLServiceAPI(endpoint, method, data, retries - 1);
     }
     throw error;
@@ -267,38 +259,18 @@ const mlService = {
   
   // Model evaluation (Demand 2)
   triggerModelEvaluation,
-  getModelPerformanceMetrics,
+  getModelPerformanceMetrics, // Deprecated
   
-  // Health & monitoring
-  checkMLServiceHealth,
-  getServiceStats,
-  getComprehensiveServiceStatus,
+  // CONSOLIDATED health & monitoring
+  getMLServiceStatus, // New consolidated method
+  
+  // Legacy methods (deprecated)
+  checkMLServiceHealth, // Deprecated
+  getServiceStats, // Deprecated
+  getComprehensiveServiceStatus, // Deprecated
   
   // Utilities
   callMLServiceAPI
 };
 
 export default mlService;
-
-// ============================================================================
-// CRITICAL FIXES APPLIED:
-// 
-// ❌ REMOVED BROKEN ENDPOINTS:
-// - getPredictionForDemo (called /predict/for-demo - doesn't exist)
-// - getGroundTruthBasket (called /demo-data/user-future-basket - doesn't exist)
-// - Old getModelPerformanceMetrics (called /model-performance-metrics - doesn't exist)
-// 
-// ✅ FIXED ENDPOINT MAPPINGS:
-// - getDemoUserPrediction -> /demo/prediction-comparison/{user_id} (consolidated)
-// - getDemoUserIds -> /demo-data/available-users (now works)
-// - getServiceStats -> /service-info (was /stats)
-// - triggerModelEvaluation -> /evaluate-model (returns metrics directly)
-// 
-// ✅ DEMAND COVERAGE:
-// - Demand 1: getInstacartUserOrderHistory + getDemoUserIds (FIXED)
-// - Demand 2: triggerModelEvaluation (FIXED) 
-// - Demand 3: getDemoUserPrediction (FIXED)
-// - Demand 4: Health monitoring (FIXED)
-// 
-// This eliminates the root cause of ALL three broken demands! 🔥
-// ============================================================================

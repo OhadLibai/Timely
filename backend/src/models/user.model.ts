@@ -1,12 +1,8 @@
 // backend/src/models/user.model.ts
-import { Table, Column, Model, DataType, HasOne, HasMany, BeforeCreate, BeforeUpdate } from 'sequelize-typescript';
+// ACTUAL FIX: Sequelize model matching database schema exactly
+
+import { Table, Column, Model, DataType, BeforeCreate, BeforeUpdate } from 'sequelize-typescript';
 import bcrypt from 'bcryptjs';
-import { Cart } from '@/models/cart.model';
-import { Order } from '@/models/order.model';
-import { Favorite } from '@/models/favorite.model';
-import { PredictedBasket } from '@/models/predictedBasket.model';
-import { UserPreference } from '@/models/userPreference.model';
-import { ProductView } from '@/models/productView.model';
 
 export enum UserRole {
   USER = 'user',
@@ -71,6 +67,20 @@ export class User extends Model {
   })
   isActive!: boolean;
 
+  // CRITICAL FIX: Added missing fields from database schema
+  @Column({
+    type: DataType.BOOLEAN,
+    defaultValue: false
+  })
+  emailVerified!: boolean;
+
+  @Column({
+    type: DataType.DATEONLY,
+    allowNull: true
+  })
+  dateOfBirth?: Date;
+
+  // Auth/Security fields
   @Column({
     type: DataType.DATE,
     allowNull: true
@@ -94,16 +104,6 @@ export class User extends Model {
     defaultValue: {}
   })
   metadata!: Record<string, any>;
-
-  // Associations are defined in database.config.ts
-  cart!: Cart;
-  orders!: Order[];
-  favorites!: Favorite[];
-  predictedBaskets!: PredictedBasket[];
-
-  preferences!: UserPreference;
-
-  productViews!: ProductView[];
 
   // Hooks
   @BeforeCreate

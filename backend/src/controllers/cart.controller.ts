@@ -3,6 +3,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { Op } from 'sequelize';
 import { Cart, CartItem, Product, Category, User } from '@/models';
+import { PredictedBasket } from '@/models/predictedBasket.model';
+import { PredictedBasketItem } from '@/models/predictedBasketItem.model';
 import logger from '@/utils/logger';
 
 // Define a more specific type for populated cart items for better type safety
