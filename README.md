@@ -1,7 +1,7 @@
 # Timely - AI-Powered Grocery Shopping Platform
 
 ## Overview
-Timely is a full-stack e-commerce application that automates weekly grocery shopping using advanced machine learning algorithms. The platform predicts users next basket based on historical purchase data, preferences, and shopping patterns.
+Timely is a full-stack e-commerce application that automates weekly grocery shopping using advanced machine learning algorithms. The platform predicts users' next basket based on historical purchase data, preferences, and shopping patterns.
 
 ### **Key Architectural Features**
 
