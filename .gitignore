@@ -55,9 +55,7 @@ jspm_packages/
 .yarn-integrity
 
 # ML/Data files (keep structure but ignore large files)
-/ml-service/training-data/*.csv
-/ml-service/training-data/processed/
-/ml-service/training-data/raw/
+/ml-service/dataset/*.csv
 /ml-service/models/*.pkl
 /ml-service/models/*.joblib
 /ml-service/models/*.h5
@@ -124,8 +122,9 @@ Remove Files.txt
 Remove Functions.txt
 
 # Information details dont want to disclose 
+Project Architecture.md
+README.md
 /testing-scripts
-ml-service/Information.txt
 Possible Enhancements
 Predicted Basket Flow
 Validating-3-demands.md
