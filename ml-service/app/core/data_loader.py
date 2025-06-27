@@ -9,6 +9,7 @@ from loguru import logger
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import json
+from app.config import config
 
 class DataLoader:
     """
@@ -135,7 +136,7 @@ class DataLoader:
         Lazy database connection for sync operations
         """
         try:
-            database_url = os.getenv("DATABASE_URL")
+            database_url = config.DATABASE_URL
             if database_url:
                 self._db_connection = psycopg2.connect(database_url)
                 logger.info("✅ Connected to database for product sync")

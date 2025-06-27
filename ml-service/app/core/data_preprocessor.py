@@ -9,6 +9,7 @@ import os
 from typing import Dict, List, Optional
 from loguru import logger
 import pandas as pd
+from app.config import config
 
 class DataPreprocessor:
     """
@@ -42,10 +43,12 @@ class DataPreprocessor:
     
     @staticmethod
     def save_json_files(history: Dict, future: Dict, keyset: Optional[List] = None, 
-                       output_dir: str = "/app/data"):
+                       output_dir: str = None):
         """
         Save preprocessed data in TIFU-KNN format
         """
+        if output_dir is None:
+            output_dir = config.DATA_PATH
         os.makedirs(output_dir, exist_ok=True)
         
         # Save history
@@ -88,10 +91,12 @@ class DataPreprocessor:
         return merged
     
     @staticmethod
-    def preprocess_for_tifuknn(data_loader, output_dir: str = "/app/data"):
+    def preprocess_for_tifuknn(data_loader, output_dir: str = None):
         """
         Complete preprocessing pipeline for TIFU-KNN
         """
+        if output_dir is None:
+            output_dir = config.DATA_PATH
         logger.info("Starting data preprocessing for TIFU-KNN...")
         
         # Create JSON files

@@ -10,6 +10,7 @@ from loguru import logger
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from app.config import config
 
 from app.models.schemas import (
     PredictionRequest, 
@@ -55,7 +56,7 @@ async def predict_from_csv(
         # Get prediction with confidence scores
         result = await service.predict_from_csv(
             user_id=request.user_id,
-            k=request.k or 20,
+            k=request.k or config.TIFUKNN_CONFIG["top_k"],
             exclude_last_order=request.exclude_last_order or False
         )
         
@@ -90,7 +91,7 @@ async def predict_from_database(
     """
     try:
         user_id = request.get("userId")
-        k = request.get("k", 20)
+        k = request.get("k", config.TIFUKNN_CONFIG["top_k"])
         
         if not user_id:
             raise HTTPException(status_code=400, detail="userId is required")
@@ -148,10 +149,10 @@ async def auto_generate_basket(
         
         if order_count > 0:
             # Demo user - use database
-            result = await service.predict_from_database(user_id, k=20)
+            result = await service.predict_from_database(user_id, k=config.TIFUKNN_CONFIG["top_k"])
         else:
             # Fallback to default recommendations
-            result = await service.get_popular_items(k=20)
+            result = await service.get_popular_items(k=config.TIFUKNN_CONFIG["top_k"])
             
         return {
             "success": True,
@@ -280,15 +281,7 @@ async def get_available_algorithms(
                 "name": "TIFU-KNN",
                 "description": "Temporal-Item-Frequency-based User-KNN",
                 "version": "1.0",
-                "parameters": {
-                    "num_neighbors": 900,
-                    "frequency_groups": 3,
-                    "decay_rates": {
-                        "within_group": 0.9,
-                        "across_groups": 0.7,
-                        "sequential": 0.9
-                    }
-                },
+                "parameters": config.TIFUKNN_CONFIG,
                 "reference": "https://github.com/liming-7/A-Next-Basket-Recommendation-Reality-Check"
             }
         ],

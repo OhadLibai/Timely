@@ -8,6 +8,7 @@ Placeholder 0.85 can be replaced with actual calculated recommendation confidenc
 from typing import List, Dict, Tuple, Any
 import numpy as np
 from collections import defaultdict
+from app.config import config
 
 class ConfidenceCalculator:
     """Calculate actual confidence scores for TIFU-KNN predictions"""
@@ -41,8 +42,8 @@ class ConfidenceCalculator:
         # 2. Support component (how many neighbors recommended this)
         contributors = neighbor_contributions.get(item_id, [])
         num_contributors = len(contributors)
-        max_possible_contributors = 900  # TIFUKNN_NEIGHBORS
-        support_score = min(num_contributors / 100, 1.0)  # Cap at 100 contributors
+        max_possible_contributors = config.TIFUKNN_CONFIG["num_neighbors"]
+        support_score = min(num_contributors / config.CONFIDENCE_SUPPORT_CAP, 1.0)
         
         # 3. Neighbor agreement component (how similar are contributing neighbors)
         neighbor_similarities = [sim for _, sim in contributors]
@@ -55,7 +56,7 @@ class ConfidenceCalculator:
             agreement_score = 0.0
         
         # 4. User history component (confidence based on data availability)
-        history_score = min(user_history_length / 10, 1.0)  # Cap at 10 orders
+        history_score = min(user_history_length / config.CONFIDENCE_HISTORY_CAP, 1.0)
         
         # 5. Rank component (top-ranked items get confidence boost)
         sorted_items = sorted(all_scores.items(), key=lambda x: x[1], reverse=True)

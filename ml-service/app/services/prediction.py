@@ -9,6 +9,7 @@ from typing import List, Dict, Set, Tuple, Optional
 from collections import defaultdict, Counter
 from loguru import logger
 import time
+from app.config import config
 
 # Import the complete TIFU-KNN implementation
 from .tifuknn_complete import TIFUKNNComplete
@@ -155,14 +156,7 @@ class PredictionService:
             'algorithm': 'TIFU-KNN-Complete',
             'version': '1.0',
             'implementation': 'Full reference implementation',
-            'hyperparameters': {
-                'num_neighbors': 900,
-                'within_decay_rate': 0.9,
-                'group_decay_rate': 0.7,
-                'sequential_decay_rate': 0.9,
-                'frequency_groups': 3,
-                'top_k': 20
-            },
+            'hyperparameters': config.TIFUKNN_CONFIG,
             'reference': 'https://github.com/liming-7/A-Next-Basket-Recommendation-Reality-Check',
             'paper': 'Temporal sets: Towards understanding the future through the past'
         }

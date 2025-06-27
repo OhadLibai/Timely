@@ -36,9 +36,11 @@ class Config:
     }
     
     # Evaluation Configuration
+    config.EVALUATION_RANDOM_SEED = int(os.getenv("EVALUATION_RANDOM_SEED"))
     EVALUATION_SAMPLE_SIZE: Optional[int] = None
     if os.getenv("EVALUATION_SAMPLE_SIZE"):
         EVALUATION_SAMPLE_SIZE = int(os.getenv("EVALUATION_SAMPLE_SIZE"))
+
 
 # Global config instance
 config = Config()

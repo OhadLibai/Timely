@@ -10,6 +10,7 @@ from loguru import logger
 import time
 from collections import defaultdict
 import random
+from app.config import config
 
 class EvaluationService:
     """
@@ -45,7 +46,7 @@ class EvaluationService:
         
         # Sample users if requested
         if sample_size and sample_size < len(eval_users):
-            random.seed(42)  # For reproducibility
+            random.seed(config.EVALUATION_RANDOM_SEED)  # For reproducibility
             eval_users = random.sample(eval_users, sample_size)
         
         logger.info(f"Evaluating on {len(eval_users)} users")

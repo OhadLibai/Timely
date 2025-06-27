@@ -45,8 +45,8 @@ async def startup_event():
     
     try:
         # Load data
-        dataset_path = os.getenv("DATASET_PATH", "/app/dataset")
-        data_path = os.getenv("DATA_PATH", "/app/data")
+        dataset_path = config.DATASET_PATH
+        data_path = config.DATA_PATH
         
         # Initialize data loader
         data_loader = DataLoader()

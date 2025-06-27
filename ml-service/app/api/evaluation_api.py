@@ -6,6 +6,7 @@ Model evaluation API endpoints for TIFU-KNN performance metrics
 import os
 from dotenv import load_dotenv
 from pathlib import Path
+from app.config import config
 
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
 from typing import Optional, Dict, Any
@@ -63,31 +64,10 @@ async def evaluate_model(
         if request and request.sample_size:
             sample_size = request.sample_size
         else:
-            sample_size = int(os.getenv("EVALUATION_SAMPLE_SIZE", "100"))
+            sample_size = config.EVALUATION_SAMPLE_SIZE
             
         logger.info(f"Starting model evaluation with sample_size={sample_size or 'all'}")
-        
-        # For small samples, run synchronously
-        if sample_size and sample_size <= 100:
-            metrics = await service.evaluate_model(sample_size=sample_size)
-            
-            return EvaluationResponse(
-                evaluation_id=str(uuid.uuid4()),
-                status="completed",
-                metrics=metrics['metrics'],
-                detailed_metrics=metrics.get('detailed_metrics', {}),
-                sample_size=sample_size,
-                users_evaluated=metrics['users_evaluated'],
-                evaluation_time=metrics['evaluation_time'],
-                timestamp=datetime.utcnow(),
-                model_info={
-                    "algorithm": "TIFU-KNN",
-                    "version": "1.0",
-                    "parameters": metrics.get('parameters', {})
-                }
-            )
-        
-        # For large evaluations, run in background
+
         job_id = str(uuid.uuid4())
         evaluation_jobs[job_id] = {
             "status": "running",

@@ -16,6 +16,7 @@ from scipy.spatial.distance import cosine
 from loguru import logger
 import time
 import random
+from app.config import config
 
 # Load root .env
 root_dir = Path(__file__).parent.parent.parent.parent
@@ -32,15 +33,13 @@ class TIFUKNNComplete:
     """
     
     def __init__(self):
-        # Hyperparameters from Instacart optimal configuration
-        # Command: python tifuknn_new.py instacart_history.json instacart_future.json 
-        #          instacart_keyset_0.json 900 0.9 0.7 0.9 3 20
-        self.num_neighbors = 900          # Number of candidate neighbors
-        self.within_decay_rate = 0.9      # Decay within frequency groups (α)
-        self.group_decay_rate = 0.7       # Decay across groups (β)
-        self.sequential_decay_rate = 0.9  # Sequential basket decay (γ)
-        self.group_size = 3               # Number of frequency groups
-        self.top_k = 20                   # Default number of recommendations
+        # Hyperparameters from config
+        self.num_neighbors = config.TIFUKNN_CONFIG["num_neighbors"]
+        self.within_decay_rate = config.TIFUKNN_CONFIG["within_decay_rate"]
+        self.group_decay_rate = config.TIFUKNN_CONFIG["group_decay_rate"]
+        self.sequential_decay_rate = config.TIFUKNN_CONFIG["sequential_decay_rate"]
+        self.group_size = config.TIFUKNN_CONFIG["group_size"]
+        self.top_k = config.TIFUKNN_CONFIG["top_k"]
         
         # Data storage
         self.history = {}

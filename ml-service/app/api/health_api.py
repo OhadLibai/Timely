@@ -393,10 +393,6 @@ def check_system_resources() -> Dict[str, Any]:
         cpu_percent = psutil.cpu_percent(interval=1)
         memory = psutil.virtual_memory()
         
-        # Define thresholds
-        cpu_threshold = 80
-        memory_threshold = 85
-        
         status = "healthy"
         warnings = []
         
@@ -425,8 +421,8 @@ def check_system_resources() -> Dict[str, Any]:
 def check_data_files_status() -> Dict[str, Any]:
     """Check data files status"""
     try:
-        data_path = os.getenv("DATA_PATH", "/app/data")
-        dataset_path = os.getenv("DATASET_PATH", "/app/dataset")
+        data_path = config.DATA_PATH
+        dataset_path = config.DATASET_PATH
         
         # Check core dataset files
         core_files = [

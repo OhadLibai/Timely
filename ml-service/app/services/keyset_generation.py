@@ -10,6 +10,7 @@ from collections import defaultdict, Counter
 from typing import Dict, List, Set, Tuple
 from loguru import logger
 import os
+from app.config import config
 
 class KeysetGenerator:
     """
@@ -17,8 +18,8 @@ class KeysetGenerator:
     This is critical for the "Frequency" part of Temporal-Item-Frequency-KNN
     """
     
-    def __init__(self, n_groups: int = 3):
-        self.n_groups = n_groups
+    def __init__(self, n_groups: int = None):
+        self.n_groups = n_groups if n_groups is not None else config.TIFUKNN_CONFIG["group_size"]
         
     def create_keyset_from_data(self, user_baskets: Dict[int, List[List[int]]]) -> List[Set[int]]:
         """
@@ -101,13 +102,15 @@ class KeysetGenerator:
         return keyset
 
 
-def generate_instacart_keyset(data_loader, output_dir: str = "/app/data"):
+def generate_instacart_keyset(data_loader, output_dir: str = None):
     """
     Helper function to generate keyset for Instacart data
     """
+    if output_dir is None:
+        output_dir = config.DATA_PATH
     os.makedirs(output_dir, exist_ok=True)
     
-    generator = KeysetGenerator(n_groups=3)
+    generator = KeysetGenerator(n_groups=config.TIFUKNN_CONFIG["group_size"])
     keyset = generator.create_keyset_from_data(data_loader.user_baskets)
     
     output_path = os.path.join(output_dir, "instacart_keyset_0.json")

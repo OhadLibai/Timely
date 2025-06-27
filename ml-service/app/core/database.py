@@ -7,6 +7,7 @@ from loguru import logger
 from typing import Optional, Dict, Any
 from dotenv import load_dotenv
 from pathlib import Path
+from app.config import config
 
 # Load root .env
 root_dir = Path(__file__).parent.parent.parent.parent
@@ -15,7 +16,7 @@ load_dotenv(root_dir / '.env')
 
 def get_db_connection():
     """Get PostgreSQL database connection"""
-    database_url = os.getenv("DATABASE_URL")
+    database_url = config.DATABASE_URL
     
     if not database_url:
         logger.warning("DATABASE_URL not set, database features will be unavailable")
