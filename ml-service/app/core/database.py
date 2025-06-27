@@ -1,10 +1,17 @@
 # ml-service/core/database.py
 import os
+import time
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from loguru import logger
 from typing import Optional, Dict, Any
-import time
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load root .env
+root_dir = Path(__file__).parent.parent.parent.parent
+load_dotenv(root_dir / '.env')
+
 
 def get_db_connection():
     """Get PostgreSQL database connection"""
@@ -19,7 +26,7 @@ def get_db_connection():
     
     for attempt in range(max_retries):
         try:
-            conn = psycopg2.connect(database_url)
+            conn = psycopg2.connect(database_url, cursor_factory=RealDictCursor)
             return conn
         except psycopg2.Error as e:
             logger.error(f"Database connection attempt {attempt + 1} failed: {e}")

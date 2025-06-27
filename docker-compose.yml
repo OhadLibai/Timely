@@ -1,128 +1,119 @@
-# docker-compose.yml - UNIFIED for ML Demo Focus
 version: '3.8'
 
 services:
-  # PostgreSQL Database
-  db:
+  # Database Service
+  database:
+    image: postgres:14-alpine
     container_name: timely-db
-    image: postgres:13
+    env_file:
+      - .env
     environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "${DB_EXPOSED_PORT}:${DB_PORT}"
+      - "${DB_EXPOSED_PORT}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./database/init-database.ts:/docker-entrypoint-initdb.d/02-init-database.ts
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
-    restart: unless-stopped
     networks:
       - timely-network
 
-  # Database Initialization Service
-  init-db:
-    container_name: timely-init-db
-    build:
-      context: ./database
-      dockerfile: Dockerfile
-    volumes:
-      - ./ml-service/training-data:/app/training-data:ro
-      - ./backend/src:/app/backend/src:ro # Mount backend models for type consistency
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-      - NODE_ENV=${NODE_ENV}
-    depends_on:
-      db:
-        condition: service_healthy
-    restart: on-failure
-    networks:
-      - timely-network
-
-  # Node.js Backend API (Single Gateway)
+  # Backend API Service
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: timely-backend
-    environment:
-      - NODE_ENV=${NODE_ENV}
-      - PORT=${BACKEND_PORT}
-      - DATABASE_URL=${DATABASE_URL}
-      - JWT_SECRET=${JWT_SECRET}
-      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
-      - ML_SERVICE_URL=${ML_SERVICE_URL}
-      - FRONTEND_URL=${FRONTEND_URL}
-    ports:
-      - "${BACKEND_PORT}:${BACKEND_PORT}"
-    depends_on:
-      db:
-        condition: service_healthy
-      init-db:
-        condition: service_completed_successfully
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    command: npm run dev
-    restart: unless-stopped
-    networks:
-      - timely-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Python ML Service
-  ml-service:
-    build: ./ml-service
-    container_name: ml-service
-    ports:
-      - "8000:8000"
-    depends_on:
-      - database
     env_file:
       - .env
     environment:
-      - RAW_DATA_PATH=/app/dataset
-      - PREPROCESSED_DATA_PATH=/app/data
+      NODE_ENV: ${NODE_ENV}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      ML_SERVICE_URL: ${ML_SERVICE_URL}
+      FRONTEND_URL: ${FRONTEND_URL}
+    ports:
+      - "${BACKEND_PORT}:5000"
+    depends_on:
+      database:
+        condition: service_healthy
+      ml-service:
+        condition: service_healthy
     volumes:
-      - ./ml-service/dataset:/app/dataset:ro  # CSV files
-      - ml-data:/app/data                     # Preprocessed files
+      - ./backend/src:/app/src:ro
     networks:
-      - timely-net
-    mem_limit: 4g  # TIFU-KNN needs memory
+      - timely-network
+    restart: unless-stopped
 
-volumes:
-  ml-data:  # Persistent volume for preprocessed data
+  # ML Service
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: timely-ml-service
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DATASET_PATH: ${DATASET_PATH}
+      CACHE_PATH: ${CACHE_PATH}
+      LOG_LEVEL: ${LOG_LEVEL}
+      EVALUATION_SAMPLE_SIZE: ${EVALUATION_SAMPLE_SIZE}
+    ports:
+      - "${ML_SERVICE_PORT}:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      # Mount dataset directory (put your CSV files here)
+      - ./ml-service/dataset:/app/dataset:ro
+      # Cache directory for generated JSON files
+      - ml_cache_data:/app/data/cache
+      # Mount app code for development (optional - remove for production)
+      - ./ml-service/app:/app/app:ro
+    networks:
+      - timely-network
+    restart: unless-stopped
 
-  postgres_data:
-
-  # React Frontend (served by Nginx)
+  # Frontend Service
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VITE_API_URL: ${VITE_API_URL}
     container_name: timely-frontend
+    env_file:
+      - .env
     environment:
-      - NODE_ENV=production
-      - VITE_API_URL=${VITE_API_URL}
+      VITE_API_URL: ${VITE_API_URL}
     ports:
-      - "${FRONTEND_PORT}:80"
+      - "${FRONTEND_PORT}:3000"
     depends_on:
       - backend
-    restart: unless-stopped
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
     networks:
       - timely-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+    restart: unless-stopped
 
+# Networks
 networks:
   timely-network:
     driver: bridge
+
+# Volumes
+volumes:
+  postgres_data:
+    name: timely-postgres-data
+  ml_cache_data:
+    name: timely-ml-cache

@@ -11,6 +11,12 @@ from typing import Dict, List, Tuple, Optional
 from loguru import logger
 import pickle
 from collections import defaultdict
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load root .env
+root_dir = Path(__file__).parent.parent.parent.parent
+load_dotenv(root_dir / '.env')
 
 class DataLoader:
     """
@@ -26,6 +32,8 @@ class DataLoader:
         self.user_ids = []
         self.is_loaded = False
         self.preprocessed_data_paths = None
+        self.dataset_path = os.getenv("DATASET_PATH", "/app/dataset")
+        self.cache_path = os.getenv("CACHE_PATH", "/app/data/cache")
         
     def load_instacart_data(self, data_path: str, preprocess: bool = True):
         """
