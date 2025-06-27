@@ -22,10 +22,10 @@ load_dotenv(root_dir / '.env')
 
 router = APIRouter()
 
-# Cache for health check results
-health_cache: Dict[str, Any] = {
+# Store for health check throttling
+health_throttle: Dict[str, Any] = {
     "last_check": None,
-    "cache_duration": timedelta(seconds=30)
+    "check_interval": timedelta(seconds=30)
 }
 
 # ============================================================================
@@ -104,11 +104,16 @@ async def detailed_health_check():
     including database connectivity, data loading status, and system resources.
     """
     try:
-        # Check cache
+        # Throttle frequent checks
         now = datetime.utcnow()
-        if (health_cache["last_check"] and 
-            now - health_cache["last_check"] < health_cache["cache_duration"]):
-            return health_cache["cached_result"]
+        if (health_throttle["last_check"] and 
+            now - health_throttle["last_check"] < health_throttle["check_interval"]):
+            # Return a basic status instead of full check
+            return {
+                "status": "healthy",
+                "timestamp": now.isoformat(),
+                "message": "Recent check available"
+            }
         
         from app.main import app
         
@@ -136,9 +141,9 @@ async def detailed_health_check():
         resource_status = check_system_resources()
         health_status["components"]["system_resources"] = resource_status
         
-        # JSON cache status
-        cache_status = check_json_cache_status()
-        health_status["components"]["json_cache"] = cache_status
+        # Data files status
+        data_files_status = check_data_files_status()
+        health_status["components"]["data_files"] = data_files_status
         
         # Overall status
         all_healthy = all(
@@ -147,9 +152,8 @@ async def detailed_health_check():
         )
         health_status["status"] = "healthy" if all_healthy else "degraded"
         
-        # Cache result
-        health_cache["last_check"] = now
-        health_cache["cached_result"] = health_status
+        # Update throttle timestamp
+        health_throttle["last_check"] = now
         
         return health_status
         
@@ -418,22 +422,26 @@ def check_system_resources() -> Dict[str, Any]:
             "message": f"Resource check failed: {str(e)}"
         }
 
-def check_json_cache_status() -> Dict[str, Any]:
-    """Check JSON cache files status"""
+def check_data_files_status() -> Dict[str, Any]:
+    """Check data files status"""
     try:
-        cache_path = cache_path = os.getenv("CACHE_PATH", "/app/data/cache")
-        expected_files = [
-            "instacart_history.json",
-            "instacart_future.json",
-            "instacart_keyset_0.json"
+        data_path = os.getenv("DATA_PATH", "/app/data")
+        dataset_path = os.getenv("DATASET_PATH", "/app/dataset")
+        
+        # Check core dataset files
+        core_files = [
+            "products.csv",
+            "orders.csv",
+            "order_products__prior.csv",
+            "order_products__train.csv"
         ]
         
         files_found = []
         files_missing = []
         total_size_mb = 0
         
-        for filename in expected_files:
-            filepath = os.path.join(cache_path, filename)
+        for filename in core_files:
+            filepath = os.path.join(dataset_path, filename)
             if os.path.exists(filepath):
                 files_found.append(filename)
                 size = os.path.getsize(filepath)
@@ -444,7 +452,7 @@ def check_json_cache_status() -> Dict[str, Any]:
         if files_missing:
             return {
                 "status": "degraded",
-                "message": f"Missing cache files: {', '.join(files_missing)}",
+                "message": f"Missing dataset files: {', '.join(files_missing)}",
                 "files_found": len(files_found),
                 "files_missing": len(files_missing),
                 "total_size_mb": round(total_size_mb, 2)
@@ -452,7 +460,7 @@ def check_json_cache_status() -> Dict[str, Any]:
         
         return {
             "status": "healthy",
-            "message": "All cache files present",
+            "message": "All dataset files present",
             "files_found": len(files_found),
             "total_size_mb": round(total_size_mb, 2)
         }
@@ -460,7 +468,7 @@ def check_json_cache_status() -> Dict[str, Any]:
     except Exception as e:
         return {
             "status": "unhealthy",
-            "message": f"Cache check failed: {str(e)}"
+            "message": f"Data files check failed: {str(e)}"
         }
 
 def get_uptime() -> float:

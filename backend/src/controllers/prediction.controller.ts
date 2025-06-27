@@ -276,7 +276,7 @@ export class PredictionController {
 
     } catch (error) {
       logger.error('Get model metrics failed:', error);
-      // Return cached or default metrics
+      // Return default metrics
       res.json({
         metrics: {
           precisionAt10: 0.15,
@@ -287,7 +287,7 @@ export class PredictionController {
           personalizationScore: 0.75
         },
         lastUpdated: new Date().toISOString(),
-        cached: true
+        fallback: true
       });
     }
   }

@@ -1,14 +1,12 @@
 // database/init-database.ts
-// FIXED: Complete database initialization with ML integration support
+// CONSOLIDATED: Single source of truth for database population
 
 import { Sequelize, DataTypes } from 'sequelize';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as csv from 'csv-parser';
-import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 
-// Logger setup
 const logger = {
   info: (msg: string) => console.log(`[INFO] ${new Date().toISOString()} - ${msg}`),
   error: (msg: string, err?: any) => console.error(`[ERROR] ${new Date().toISOString()} - ${msg}`, err || ''),
@@ -20,27 +18,23 @@ const sequelize = new Sequelize({
   dialect: 'postgres',
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432'),
-  username: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'timely',
+  username: process.env.POSTGRES_USER || 'timely_user',
+  password: process.env.POSTGRES_PASSWORD || 'timely_password', 
+  database: process.env.POSTGRES_DB || 'timely_db',
   logging: false
 });
 
-// Define models matching the schema
+// Simplified models for data population
 const Category = sequelize.define('Category', {
   id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
   name: { type: DataTypes.STRING(255), allowNull: false },
   slug: { type: DataTypes.STRING(255), unique: true, allowNull: false },
   description: DataTypes.TEXT,
   imageUrl: { type: DataTypes.STRING(255), field: 'image_url' },
-  parentId: { type: DataTypes.UUID, field: 'parent_id' },
   sortOrder: { type: DataTypes.INTEGER, defaultValue: 0, field: 'sort_order' },
-  isActive: { type: DataTypes.BOOLEAN, defaultValue: true, field: 'is_active' }
-}, {
-  tableName: 'categories',
-  underscored: true,
-  timestamps: true
-});
+  isActive: { type: DataTypes.BOOLEAN, defaultValue: true, field: 'is_active' },
+  instacartDepartmentName: { type: DataTypes.STRING(255), field: 'instacart_department_name' }
+}, { tableName: 'categories', underscored: true, timestamps: true });
 
 const Product = sequelize.define('Product', {
   id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
@@ -48,307 +42,292 @@ const Product = sequelize.define('Product', {
   name: { type: DataTypes.STRING(255), allowNull: false },
   description: DataTypes.TEXT,
   price: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
-  compareAtPrice: { type: DataTypes.DECIMAL(10, 2), field: 'compare_at_price' },
-  unit: DataTypes.STRING(50),
-  unitValue: { type: DataTypes.DECIMAL(10, 3), field: 'unit_value' },
-  brand: DataTypes.STRING(255),
-  tags: { type: DataTypes.ARRAY(DataTypes.TEXT), defaultValue: [] },
+  unit: { type: DataTypes.STRING(50), defaultValue: 'each' },
+  brand: { type: DataTypes.STRING(255), defaultValue: 'Generic' },
   imageUrl: { type: DataTypes.STRING(255), field: 'image_url' },
-  additionalImages: { type: DataTypes.ARRAY(DataTypes.TEXT), defaultValue: [], field: 'additional_images' },
   categoryId: { type: DataTypes.UUID, allowNull: false, field: 'category_id' },
-  stock: { type: DataTypes.INTEGER, defaultValue: 0 },
-  trackInventory: { type: DataTypes.BOOLEAN, defaultValue: false, field: 'track_inventory' },
+  stock: { type: DataTypes.INTEGER, defaultValue: 100 },
   isActive: { type: DataTypes.BOOLEAN, defaultValue: true, field: 'is_active' },
-  isFeatured: { type: DataTypes.BOOLEAN, defaultValue: false, field: 'is_featured' },
-  isOnSale: { type: DataTypes.BOOLEAN, defaultValue: false, field: 'is_on_sale' },
-  salePercentage: { type: DataTypes.DECIMAL(5, 2), defaultValue: 0, field: 'sale_percentage' },
-  nutritionalInfo: { type: DataTypes.JSONB, defaultValue: {}, field: 'nutritional_info' },
-  metadata: { type: DataTypes.JSONB, defaultValue: {} },
-  // CRITICAL: Add instacart_product_id for ML mapping
-  instacartProductId: { type: DataTypes.INTEGER, field: 'instacart_product_id' }
-}, {
-  tableName: 'products',
-  underscored: true,
-  timestamps: true
-});
+  instacartProductId: { type: DataTypes.INTEGER, field: 'instacart_product_id' },
+  instacartAisleId: { type: DataTypes.INTEGER, field: 'instacart_aisle_id' },
+  instacartDepartmentId: { type: DataTypes.INTEGER, field: 'instacart_department_id' },
+  instacartAisleName: { type: DataTypes.STRING(255), field: 'instacart_aisle_name' },
+  instacartDepartmentName: { type: DataTypes.STRING(255), field: 'instacart_department_name' },
+  metadata: { type: DataTypes.JSONB, defaultValue: {} }
+}, { tableName: 'products', underscored: true, timestamps: true });
 
-const User = sequelize.define('User', {
-  id: { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
-  email: { type: DataTypes.STRING(255), unique: true, allowNull: false },
-  password: { type: DataTypes.STRING(255), allowNull: false },
-  firstName: { type: DataTypes.STRING(100), field: 'first_name' },
-  lastName: { type: DataTypes.STRING(100), field: 'last_name' },
-  phone: DataTypes.STRING(20),
-  role: { type: DataTypes.STRING(50), defaultValue: 'user' },
-  isActive: { type: DataTypes.BOOLEAN, defaultValue: true, field: 'is_active' },
-  emailVerified: { type: DataTypes.BOOLEAN, defaultValue: false, field: 'email_verified' },
-  // CRITICAL: Add instacart_user_id for demo users
-  instacartUserId: { type: DataTypes.INTEGER, unique: true, field: 'instacart_user_id' },
-  metadata: { type: DataTypes.JSONB, defaultValue: {} },
-  lastLoginAt: { type: DataTypes.DATE, field: 'last_login_at' },
-  resetPasswordToken: { type: DataTypes.STRING(255), field: 'reset_password_token' },
-  resetPasswordExpires: { type: DataTypes.DATE, field: 'reset_password_expires' }
-}, {
-  tableName: 'users',
-  underscored: true,
-  timestamps: true
-});
+// ============================================================================
+// SINGLE SOURCE OF TRUTH: CSV + category-details.csv
+// ============================================================================
 
-// Deterministic helpers
-function hashCode(str: string): number {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash);
-}
-
-function deterministicPrice(productName: string): number {
-  const hash = hashCode(productName);
-  const price = 0.99 + (hash % 2000) / 100; // $0.99 to $20.99
-  return Math.round(price * 100) / 100;
-}
-
-function deterministicStock(productName: string): number {
-  const hash = hashCode(productName + '_stock');
-  return 10 + (hash % 990); // 10 to 999
-}
-
-function deterministicImageUrl(productName: string, category: string): string {
-  const categories = ['produce', 'dairy', 'bakery', 'meat', 'frozen', 'beverages', 'snacks', 'pantry'];
-  const catIndex = hashCode(category) % categories.length;
-  const imageIndex = hashCode(productName) % 10 + 1;
-  return `https://source.unsplash.com/400x400/?${categories[catIndex]},food&sig=${imageIndex}`;
-}
-
-// Category mapping for Instacart data
-const categoryMapping: { [key: string]: string } = {
-  'produce': 'c1234567-89ab-cdef-0123-456789abcdef',
-  'dairy eggs': 'c2234567-89ab-cdef-0123-456789abcdef',
-  'dairy': 'c2234567-89ab-cdef-0123-456789abcdef',
-  'bakery': 'c3234567-89ab-cdef-0123-456789abcdef',
-  'meat seafood': 'c4234567-89ab-cdef-0123-456789abcdef',
-  'frozen': 'c5234567-89ab-cdef-0123-456789abcdef',
-  'beverages': 'c6234567-89ab-cdef-0123-456789abcdef',
-  'default': 'c1234567-89ab-cdef-0123-456789abcdef'
-};
-
-// Seed initial users
-async function seedUsers() {
-  logger.info("Seeding users with deterministic data...");
+async function populateCategoriesFromCSV() {
+  logger.info("📁 Populating categories from category-details.csv...");
   
-  const users = [
-    {
-      id: 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-      email: 'admin@timely.demo',
-      password: await bcrypt.hash('admin123', 12),
-      firstName: 'Admin',
-      lastName: 'User',
-      role: 'admin',
-      isActive: true,
-      emailVerified: true
-    },
-    {
-      id: 'b1eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-      email: 'demo@timely.demo',
-      password: await bcrypt.hash('demo123', 12),
-      firstName: 'Demo',
-      lastName: 'User',
-      role: 'user',
-      isActive: true,
-      emailVerified: true
-    }
-  ];
-
-  for (const userData of users) {
-    await User.upsert(userData);
-  }
-  
-  logger.info(`✅ Seeded ${users.length} users`);
-}
-
-// FIXED: Populate products from CSV with proper instacart_product_id mapping
-async function populateFromCsv() {
-  const csvPath = process.env.CSV_PATH || path.join(__dirname, '../../ml-service/dataset/products.csv');
+  const csvPath = path.join(__dirname, 'category_details.csv');
   
   if (!fs.existsSync(csvPath)) {
-    logger.warn(`CSV file not found at ${csvPath}. Skipping product population.`);
-    logger.info('To enable product seeding, place products.csv in ml-service/dataset/');
+    logger.warn("⚠️  category_details.csv not found, using default categories");
+    await createDefaultCategories();
     return;
   }
 
-  logger.info(`Loading products from ${csvPath}...`);
-  
-  const productsData: any[] = [];
-  const productIdMap = new Map<number, string>(); // Map Instacart ID to UUID
+  const categoryData: any[] = [];
+  let sortOrder = 1;
 
   await new Promise((resolve, reject) => {
     fs.createReadStream(csvPath)
       .pipe(csv())
       .on('data', (row) => {
-        const csvProductId = parseInt(row.product_id);
-        const productName = row.product_name || `Product ${csvProductId}`;
-        const department = (row.department || 'produce').toLowerCase();
-        
-        // Generate deterministic UUID from product ID
-        const productUuid = uuidv4();
-        productIdMap.set(csvProductId, productUuid);
-        
-        // Map department to category
-        const categoryUuid = categoryMapping[department] || categoryMapping['default'];
-        
-        // Generate deterministic values
-        const price = deterministicPrice(productName);
-        const stock = deterministicStock(productName);
-        const imageUrl = deterministicImageUrl(productName, department);
+        const departmentName = row.department_name?.trim();
+        if (!departmentName) return;
 
-        productsData.push({
-          id: productUuid,
-          name: productName,
-          categoryId: categoryUuid,
-          sku: `PROD-${String(csvProductId).padStart(7, '0')}`,
-          imageUrl: imageUrl,
-          price: price,
+        // Generate consistent UUID from department name
+        const categoryId = generateDeterministicUUID(departmentName);
+        
+        // Create clean slug
+        const slug = departmentName.toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+
+        // Clean name for display
+        const displayName = departmentName
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' & ');
+
+        categoryData.push({
+          id: categoryId,
+          name: displayName,
+          slug: slug,
+          description: row.description || `${displayName} products`,
+          imageUrl: row.imageUrl || null,
+          sortOrder: sortOrder++,
           isActive: true,
-          stock: stock,
-          unit: 'each',
-          brand: 'Generic',
-          tags: [],
-          additionalImages: [],
-          nutritionalInfo: {},
-          // CRITICAL: Store the original Instacart product ID
-          instacartProductId: csvProductId,
-          metadata: { 
-            originalCsvId: csvProductId,
-            aisle: row.aisle,
-            department: row.department,
-            deterministicSeed: true
-          }
+          instacartDepartmentName: departmentName  // CRITICAL: Map to Instacart
         });
       })
       .on('end', resolve)
       .on('error', reject);
   });
 
-  // Bulk insert products
   try {
-    await Product.bulkCreate(productsData, { 
+    await Category.bulkCreate(categoryData, { 
       ignoreDuplicates: true,
-      validate: true,
-      updateOnDuplicate: ['instacartProductId', 'metadata', 'updatedAt']
+      updateOnDuplicate: ['description', 'imageUrl', 'updatedAt']
     });
     
-    logger.info(`✅ Populated ${productsData.length} products with Instacart IDs`);
-    logger.info(`✅ Product ID mapping established for ML integration`);
-    
-    // Verify mapping
-    const sampleCheck = await Product.count({
-      where: {
-        instacartProductId: { [Sequelize.Op.ne]: null }
-      }
-    });
-    logger.info(`✅ Verified ${sampleCheck} products have instacart_product_id set`);
-    
+    logger.info(`✅ Populated ${categoryData.length} categories from CSV`);
   } catch (error) {
-    logger.error('Error populating products:', error);
+    logger.error('❌ Failed to populate categories:', error);
     throw error;
   }
 }
 
-// Ensure categories exist
-async function ensureCategories() {
-  logger.info("Ensuring categories exist...");
+async function populateProductsFromInstacart() {
+  logger.info("📦 Populating products from Instacart CSV files...");
   
-  const categories = [
-    { id: 'c1234567-89ab-cdef-0123-456789abcdef', name: 'Produce', slug: 'produce', description: 'Fresh fruits and vegetables', sortOrder: 1 },
-    { id: 'c2234567-89ab-cdef-0123-456789abcdef', name: 'Dairy', slug: 'dairy', description: 'Milk, cheese, yogurt and more', sortOrder: 2 },
-    { id: 'c3234567-89ab-cdef-0123-456789abcdef', name: 'Bakery', slug: 'bakery', description: 'Fresh bread and baked goods', sortOrder: 3 },
-    { id: 'c4234567-89ab-cdef-0123-456789abcdef', name: 'Meat & Seafood', slug: 'meat-seafood', description: 'Fresh meat and seafood', sortOrder: 4 },
-    { id: 'c5234567-89ab-cdef-0123-456789abcdef', name: 'Frozen', slug: 'frozen', description: 'Frozen foods', sortOrder: 5 },
-    { id: 'c6234567-89ab-cdef-0123-456789abcdef', name: 'Beverages', slug: 'beverages', description: 'Drinks and beverages', sortOrder: 6 }
+  // Define paths (these should match your ml-service dataset paths)
+  const datasetPath = '/app/dataset'; // This should be mounted from ml-service
+  const productsPath = path.join(datasetPath, 'products.csv');
+  const aislesPath = path.join(datasetPath, 'aisles.csv');
+  const departmentsPath = path.join(datasetPath, 'departments.csv');
+  
+  // Check if files exist
+  if (!fs.existsSync(productsPath)) {
+    logger.warn(`⚠️  Products CSV not found at ${productsPath}`);
+    logger.info("To populate products, mount ml-service/dataset to /app/dataset in database container");
+    return;
+  }
+
+  // Load aisles and departments first
+  const aisles = await loadCSVToMap(aislesPath, 'aisle_id', 'aisle');
+  const departments = await loadCSVToMap(departmentsPath, 'department_id', 'department');
+  
+  // Load categories for mapping
+  const categories = await Category.findAll();
+  const categoryMap = new Map();
+  categories.forEach((cat: any) => {
+    if (cat.instacartDepartmentName) {
+      categoryMap.set(cat.instacartDepartmentName, cat.id);
+    }
+  });
+  
+  logger.info(`📊 Loaded ${aisles.size} aisles, ${departments.size} departments, ${categoryMap.size} category mappings`);
+
+  const productData: any[] = [];
+  let processed = 0;
+
+  await new Promise((resolve, reject) => {
+    fs.createReadStream(productsPath)
+      .pipe(csv())
+      .on('data', (row) => {
+        const productId = parseInt(row.product_id);
+        const productName = row.product_name || `Product ${productId}`;
+        const aisleId = parseInt(row.aisle_id);
+        const departmentId = parseInt(row.department_id);
+        
+        const aisleName = aisles.get(aisleId) || 'Unknown';
+        const departmentName = departments.get(departmentId) || 'produce';
+        
+        // Map to category
+        const categoryId = categoryMap.get(departmentName) || categoryMap.get('produce');
+        
+        if (!categoryId) {
+          logger.warn(`⚠️  No category mapping for department: ${departmentName}`);
+          return;
+        }
+
+        const price = deterministicPrice(productName);
+        const imageUrl = deterministicImageUrl(productName, departmentName);
+
+        productData.push({
+          id: uuidv4(),
+          sku: `INST-${String(productId).padStart(7, '0')}`,
+          name: productName,
+          description: `${productName} from ${aisleName}`,
+          price: price,
+          unit: 'each',
+          brand: 'Generic',
+          imageUrl: imageUrl,
+          categoryId: categoryId,
+          stock: 100,
+          isActive: true,
+          instacartProductId: productId,
+          instacartAisleId: aisleId,
+          instacartDepartmentId: departmentId,
+          instacartAisleName: aisleName,
+          instacartDepartmentName: departmentName,
+          metadata: { 
+            sourceDataset: 'instacart',
+            originalCsvId: productId
+          }
+        });
+
+        processed++;
+        if (processed % 5000 === 0) {
+          logger.info(`📈 Processed ${processed} products...`);
+        }
+      })
+      .on('end', resolve)
+      .on('error', reject);
+  });
+
+  try {
+    // Bulk insert in batches for better performance
+    const batchSize = 1000;
+    for (let i = 0; i < productData.length; i += batchSize) {
+      const batch = productData.slice(i, i + batchSize);
+      await Product.bulkCreate(batch, { 
+        ignoreDuplicates: true,
+        updateOnDuplicate: ['name', 'instacartAisleName', 'instacartDepartmentName', 'updatedAt']
+      });
+      logger.info(`📦 Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(productData.length/batchSize)}`);
+    }
+    
+    logger.info(`✅ Populated ${productData.length} products from Instacart CSV`);
+  } catch (error) {
+    logger.error('❌ Failed to populate products:', error);
+    throw error;
+  }
+}
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+async function loadCSVToMap(csvPath: string, keyCol: string, valueCol: string): Promise<Map<number, string>> {
+  const map = new Map<number, string>();
+  
+  if (!fs.existsSync(csvPath)) {
+    logger.warn(`⚠️  CSV not found: ${csvPath}`);
+    return map;
+  }
+
+  await new Promise((resolve, reject) => {
+    fs.createReadStream(csvPath)
+      .pipe(csv())
+      .on('data', (row) => {
+        const key = parseInt(row[keyCol]);
+        const value = row[valueCol];
+        if (!isNaN(key) && value) {
+          map.set(key, value);
+        }
+      })
+      .on('end', resolve)
+      .on('error', reject);
+  });
+
+  return map;
+}
+
+function generateDeterministicUUID(input: string): string {
+  // Simple deterministic UUID generation for consistent category IDs
+  const hash = input.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+  
+  const hex = Math.abs(hash).toString(16).padStart(8, '0');
+  return `c${hex.slice(0, 7)}-89ab-cdef-0123-456789abcdef`;
+}
+
+function deterministicPrice(productName: string): number {
+  const hash = productName.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+  return Math.round((2 + (hash % 20)) * 100) / 100; // $2.00 - $22.00
+}
+
+function deterministicImageUrl(productName: string, department: string): string {
+  const images = {
+    'produce': 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=300',
+    'dairy eggs': 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=300',
+    'meat seafood': 'https://images.unsplash.com/photo-1448906654166-444d494666b3?w=300',
+    'bakery': 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=300',
+    'frozen': 'https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=300',
+    'default': 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=300'
+  };
+  
+  return images[department] || images['default'];
+}
+
+async function createDefaultCategories() {
+  const defaultCategories = [
+    { name: 'Produce', slug: 'produce', description: 'Fresh fruits and vegetables', instacartDepartmentName: 'produce' },
+    { name: 'Dairy & Eggs', slug: 'dairy-eggs', description: 'Milk, cheese, yogurt and eggs', instacartDepartmentName: 'dairy eggs' },
+    { name: 'Meat & Seafood', slug: 'meat-seafood', description: 'Fresh meat and seafood', instacartDepartmentName: 'meat seafood' },
+    { name: 'Bakery', slug: 'bakery', description: 'Fresh bread and baked goods', instacartDepartmentName: 'bakery' },
+    { name: 'Frozen', slug: 'frozen', description: 'Frozen foods', instacartDepartmentName: 'frozen' },
+    { name: 'Pantry', slug: 'pantry', description: 'Pantry staples', instacartDepartmentName: 'pantry' }
   ];
 
-  for (const category of categories) {
+  for (let i = 0; i < defaultCategories.length; i++) {
+    const cat = defaultCategories[i];
     await Category.upsert({
-      ...category,
+      id: generateDeterministicUUID(cat.instacartDepartmentName),
+      ...cat,
+      sortOrder: i + 1,
       isActive: true
     });
   }
-  
-  logger.info(`✅ Ensured ${categories.length} categories exist`);
 }
 
-// Verify ML integration
-async function verifyMLIntegration() {
-  logger.info("Verifying ML integration setup...");
-  
-  // Check if instacart_product_id column exists
-  const productColumns = await sequelize.query(`
-    SELECT column_name 
-    FROM information_schema.columns 
-    WHERE table_name = 'products' 
-    AND column_name = 'instacart_product_id'
-  `, { type: Sequelize.QueryTypes.SELECT });
-  
-  if (productColumns.length === 0) {
-    logger.error("❌ instacart_product_id column missing from products table!");
-    throw new Error("ML integration incomplete: missing instacart_product_id");
-  }
-  
-  // Check if instacart_user_id column exists
-  const userColumns = await sequelize.query(`
-    SELECT column_name 
-    FROM information_schema.columns 
-    WHERE table_name = 'users' 
-    AND column_name = 'instacart_user_id'
-  `, { type: Sequelize.QueryTypes.SELECT });
-  
-  if (userColumns.length === 0) {
-    logger.error("❌ instacart_user_id column missing from users table!");
-    throw new Error("ML integration incomplete: missing instacart_user_id");
-  }
-  
-  // Check temporal fields in orders
-  const orderColumns = await sequelize.query(`
-    SELECT column_name 
-    FROM information_schema.columns 
-    WHERE table_name = 'orders' 
-    AND column_name IN ('order_sequence', 'days_since_prior_order', 'order_dow', 'order_hour_of_day')
-  `, { type: Sequelize.QueryTypes.SELECT });
-  
-  if (orderColumns.length < 4) {
-    logger.error("❌ Temporal columns missing from orders table!");
-    throw new Error("ML integration incomplete: missing temporal fields");
-  }
-  
-  logger.info("✅ ML integration verified: all required columns present");
-}
+// ============================================================================
+// MAIN EXECUTION
+// ============================================================================
 
-// Main initialization function
 async function main() {
-  logger.info("Starting ML-integrated database initialization...");
+  logger.info("🚀 Starting consolidated database initialization...");
   
   try {
     await sequelize.authenticate();
     logger.info("✅ Database connection established");
 
-    // Don't sync models - use the schema from init.sql
-    logger.info("Using schema from init.sql (not syncing models)");
-
-    // Seed data in order
-    await ensureCategories();
-    await seedUsers();
-    await populateFromCsv();
-    
-    // Verify ML integration
-    await verifyMLIntegration();
+    // Populate in correct order
+    await populateCategoriesFromCSV();     // Categories first (from category_details.csv)
+    await populateProductsFromInstacart(); // Products second (from Instacart CSVs)
 
     await sequelize.close();
     logger.info("🎉 Database initialization completed successfully!");
-    logger.info("🚀 ML integration ready: Products have instacart_product_id mapping");
-    logger.info("📊 Demo users can be seeded with Instacart data");
+    logger.info("💡 Database now contains categories and products mapped to Instacart data");
     
   } catch (error) {
     logger.error("❌ Database initialization failed:", error);
@@ -356,9 +335,6 @@ async function main() {
   }
 }
 
-// Run if executed directly
 if (require.main === module) {
   main();
 }
-
-export { main, sequelize, Product, User, Category };

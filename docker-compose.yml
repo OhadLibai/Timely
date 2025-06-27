@@ -1,3 +1,5 @@
+# docker-compose.yml - OPTIMIZED VOLUMES CONFIGURATION
+
 version: '3.8'
 
 services:
@@ -17,6 +19,8 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./database/init-database.ts:/docker-entrypoint-initdb.d/02-init-database.ts
+      # ADDED: Mount dataset for database initialization
+      - ./ml-service/dataset:/app/dataset:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
@@ -25,7 +29,53 @@ services:
     networks:
       - timely-network
 
-  # Backend API Service
+  # ML Service - OPTIMIZED VOLUMES
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile
+    container_name: timely-ml-service
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DATASET_PATH: ${DATASET_PATH}
+      EVALUATION_SAMPLE_SIZE: ${EVALUATION_SAMPLE_SIZE}
+    ports:
+      - "${ML_SERVICE_PORT}:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      # ========================================================================
+      # ESSENTIAL VOLUMES (KEEP THESE)
+      # ========================================================================
+      
+      # Dataset directory - CRITICAL for ML operations
+      - ./ml-service/dataset:/app/dataset:ro
+      
+      # ========================================================================
+      # OPTIONAL VOLUMES (CHOOSE BASED ON ENVIRONMENT)
+      # ========================================================================
+      
+      # Development code hot-reload (REMOVE for production)
+      - ./ml-service/app:/app/app:ro
+      
+      # ========================================================================
+      # QUESTIONABLE VOLUMES (RECOMMENDATIONS)
+      # ========================================================================
+      
+      # Cache volume - REMOVE if simplifying (we discussed this)
+      # - ml_cache_data:/app/data/cache
+      
+      # Generic data volume - NOT NEEDED (would conflict with cache)
+      # - ml_data_volume:/app/data
+      
+    networks:
+      - timely-network
+    restart: unless-stopped
+
+  # Backend API Service (unchanged)
   backend:
     build:
       context: ./backend
@@ -48,42 +98,12 @@ services:
       ml-service:
         condition: service_healthy
     volumes:
-      - ./backend/src:/app/src:ro
+      - ./backend/src:/app/src:ro  # Development only
     networks:
       - timely-network
     restart: unless-stopped
 
-  # ML Service
-  ml-service:
-    build:
-      context: ./ml-service
-      dockerfile: Dockerfile
-    container_name: timely-ml-service
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      DATASET_PATH: ${DATASET_PATH}
-      CACHE_PATH: ${CACHE_PATH}
-      LOG_LEVEL: ${LOG_LEVEL}
-      EVALUATION_SAMPLE_SIZE: ${EVALUATION_SAMPLE_SIZE}
-    ports:
-      - "${ML_SERVICE_PORT}:8000"
-    depends_on:
-      database:
-        condition: service_healthy
-    volumes:
-      # Mount dataset directory (put your CSV files here)
-      - ./ml-service/dataset:/app/dataset:ro
-      # Cache directory for generated JSON files
-      - ml_cache_data:/app/data/cache
-      # Mount app code for development (optional - remove for production)
-      - ./ml-service/app:/app/app:ro
-    networks:
-      - timely-network
-    restart: unless-stopped
-
-  # Frontend Service
+  # Frontend Service (unchanged)
   frontend:
     build:
       context: ./frontend
@@ -100,7 +120,7 @@ services:
     depends_on:
       - backend
     volumes:
-      - ./frontend/src:/app/src:ro
+      - ./frontend/src:/app/src:ro      # Development only
       - ./frontend/public:/app/public:ro
     networks:
       - timely-network
@@ -111,9 +131,39 @@ networks:
   timely-network:
     driver: bridge
 
-# Volumes
+# ============================================================================
+# VOLUMES SECTION - SIMPLIFIED
+# ============================================================================
 volumes:
   postgres_data:
     name: timely-postgres-data
-  ml_cache_data:
-    name: timely-ml-cache
+  
+  # REMOVED: ml_cache_data (we decided cache complexity isn't needed for dev/test)
+  # REMOVED: ml_data_volume (redundant and conflicts with cache)
+
+# ============================================================================
+# VOLUME EXPLANATION COMMENTS
+# ============================================================================
+
+# ✅ KEEP: postgres_data
+#    - Purpose: Database persistence
+#    - Essential: Yes, without this you lose all data on restart
+
+# ✅ KEEP: ./ml-service/dataset:/app/dataset:ro  
+#    - Purpose: CSV files for ML processing
+#    - Essential: Yes, this is your single source of truth
+
+# ⚠️  OPTIONAL: ./ml-service/app:/app/app:ro
+#    - Purpose: Development hot-reload
+#    - Essential: No, only for development
+#    - Recommendation: Remove for production deployments
+
+# ❌ REMOVE: ml_cache_data:/app/data/cache
+#    - Purpose: JSON cache files
+#    - Essential: No, adds complexity without significant benefit for dev/test
+#    - Recommendation: Remove based on our earlier discussion
+
+# ❌ REMOVE: ml_data_volume:/app/data  
+#    - Purpose: Generic data storage
+#    - Essential: No, conflicts with cache path and adds confusion
+#    - Recommendation: Remove, use specific paths instead

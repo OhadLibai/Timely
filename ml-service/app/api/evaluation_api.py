@@ -343,18 +343,18 @@ async def get_evaluation_history(
         logger.error(f"Failed to get evaluation history: {e}")
         raise HTTPException(status_code=500, detail="Failed to retrieve history")
 
-@router.delete("/metrics/cache")
-async def clear_metrics_cache(
+@router.delete("/metrics/history")
+async def clear_evaluation_history(
     service: EvaluationService = Depends(get_evaluation_service)
 ):
-    """Clear cached evaluation results"""
+    """Clear evaluation history"""
     try:
-        await service.clear_cache()
-        return {"message": "Evaluation cache cleared successfully"}
+        await service.clear_history()
+        return {"message": "Evaluation history cleared successfully"}
         
     except Exception as e:
-        logger.error(f"Failed to clear cache: {e}")
-        raise HTTPException(status_code=500, detail="Failed to clear cache")
+        logger.error(f"Failed to clear history: {e}")
+        raise HTTPException(status_code=500, detail="Failed to clear history")
 
 # ============================================================================
 # HELPER FUNCTIONS
