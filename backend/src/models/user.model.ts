@@ -1,17 +1,36 @@
-// backend/src/models/user.model.ts
-// ACTUAL FIX: Sequelize model matching database schema exactly
-
-import { Table, Column, Model, DataType, BeforeCreate, BeforeUpdate } from 'sequelize-typescript';
+// backend/src/models/user.model.ts - CRITICAL: Ensure metadata field exists
+import { 
+  Table, Column, Model, DataType, HasMany, HasOne, 
+  BeforeCreate, BeforeUpdate, DefaultScope, Scopes 
+} from 'sequelize-typescript';
 import bcrypt from 'bcryptjs';
+import { Order } from './order.model';
+import { Cart } from './cart.model';
+import { Favorite } from './favorite.model';
+import { PredictedBasket } from './predictedBasket.model';
+import { UserPreference } from './userPreference.model';
+import { ProductView } from './productView.model';
 
 export enum UserRole {
-  USER = 'user',
-  ADMIN = 'admin'
+  ADMIN = 'admin',
+  USER = 'user'
 }
 
+@DefaultScope(() => ({
+  attributes: { exclude: ['password'] }
+}))
+@Scopes(() => ({
+  withPassword: {
+    attributes: { include: ['password'] }
+  },
+  active: {
+    where: { isActive: true }
+  }
+}))
 @Table({
   tableName: 'users',
-  timestamps: true
+  timestamps: true,
+  underscored: true
 })
 export class User extends Model {
   @Column({
@@ -23,8 +42,8 @@ export class User extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false,
     unique: true,
+    allowNull: false,
     validate: {
       isEmail: true
     }
@@ -39,21 +58,15 @@ export class User extends Model {
 
   @Column({
     type: DataType.STRING,
-    allowNull: false
+    allowNull: true
   })
-  firstName!: string;
-
-  @Column({
-    type: DataType.STRING,
-    allowNull: false
-  })
-  lastName!: string;
+  firstName?: string;
 
   @Column({
     type: DataType.STRING,
     allowNull: true
   })
-  phone?: string;
+  lastName?: string;
 
   @Column({
     type: DataType.ENUM(...Object.values(UserRole)),
@@ -67,7 +80,6 @@ export class User extends Model {
   })
   isActive!: boolean;
 
-  // CRITICAL FIX: Added missing fields from database schema
   @Column({
     type: DataType.BOOLEAN,
     defaultValue: false
@@ -75,12 +87,17 @@ export class User extends Model {
   emailVerified!: boolean;
 
   @Column({
+    type: DataType.STRING,
+    allowNull: true
+  })
+  phone?: string;
+
+  @Column({
     type: DataType.DATEONLY,
     allowNull: true
   })
   dateOfBirth?: Date;
 
-  // Auth/Security fields
   @Column({
     type: DataType.DATE,
     allowNull: true
@@ -99,18 +116,45 @@ export class User extends Model {
   })
   resetPasswordExpires?: Date;
 
+  // CRITICAL: Metadata field for storing instacart_user_id and other data
   @Column({
-    type: DataType.JSON,
-    defaultValue: {}
+    type: DataType.JSONB,
+    defaultValue: {},
+    allowNull: false
   })
-  metadata!: Record<string, any>;
+  metadata!: {
+    instacart_user_id?: string;
+    source?: string;
+    seeded_at?: string;
+    [key: string]: any;
+  };
+
+  // Associations
+  @HasMany(() => Order)
+  orders!: Order[];
+
+  @HasOne(() => Cart)
+  cart!: Cart;
+
+  @HasMany(() => Favorite)
+  favorites!: Favorite[];
+
+  @HasMany(() => PredictedBasket)
+  predictedBaskets!: PredictedBasket[];
+
+  @HasOne(() => UserPreference)
+  preferences!: UserPreference;
+
+  @HasMany(() => ProductView)
+  productViews!: ProductView[];
 
   // Hooks
   @BeforeCreate
   @BeforeUpdate
   static async hashPassword(user: User) {
     if (user.changed('password')) {
-      user.password = await bcrypt.hash(user.password, 10);
+      const salt = await bcrypt.genSalt(12);
+      user.password = await bcrypt.hash(user.password, salt);
     }
   }
 
@@ -119,19 +163,36 @@ export class User extends Model {
     return bcrypt.compare(password, this.password);
   }
 
-  toJSON() {
-    const values = { ...this.get() };
-    delete values.password;
-    delete values.resetPasswordToken;
-    delete values.resetPasswordExpires;
-    return values;
-  }
-
   get fullName(): string {
-    return `${this.firstName} ${this.lastName}`;
+    return `${this.firstName || ''} ${this.lastName || ''}`.trim() || this.email;
   }
 
   isAdmin(): boolean {
     return this.role === UserRole.ADMIN;
+  }
+
+  // Helper method to get Instacart user ID
+  getInstacartUserId(): string | null {
+    return this.metadata?.instacart_user_id || null;
+  }
+
+  // Helper method to check if user is a demo user
+  isDemoUser(): boolean {
+    return !!this.metadata?.instacart_user_id && 
+           this.metadata?.source === 'instacart_dataset';
+  }
+
+  // Update last login
+  async updateLastLogin(): Promise<void> {
+    this.lastLoginAt = new Date();
+    await this.save();
+  }
+
+  // JSON representation
+  toJSON() {
+    const values = { ...this.get() };
+    delete values.password;
+    delete values.resetPasswordToken;
+    return values;
   }
 }

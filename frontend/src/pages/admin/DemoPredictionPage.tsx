@@ -1,6 +1,4 @@
 // frontend/src/pages/admin/DemoPredictionPage.tsx
-// ENHANCED: Improved UX for any user ID input with better error handling and suggestions
-
 import React, { useState } from 'react';
 import { useQuery, useMutation } from 'react-query';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -9,420 +7,478 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ProductImage from '@/components/products/ProductImage';
 import { 
   Brain, CheckCircle, AlertCircle, RefreshCw, Search, 
-  Info, TrendingUp, Target, Zap, ArrowRight, Sparkles 
+  Info, TrendingUp, Target, Zap, ArrowRight, Sparkles,
+  ShoppingCart, X, Check
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const DemoPredictionPage: React.FC = () => {
-    const [userIdInput, setUserIdInput] = useState<string>('');
-    const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-    const [showSuggestions, setShowSuggestions] = useState(true);
+  const [userIdInput, setUserIdInput] = useState<string>('');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(true);
 
-    // Enhanced user ID suggestions with descriptions
-    const enhancedSuggestions = [
-        { id: '1', description: 'Heavy grocery shopper', orders: '40+ orders' },
-        { id: '7', description: 'Organic food enthusiast', orders: '35+ orders' },
-        { id: '13', description: 'Family bulk buyer', orders: '50+ orders' },
-        { id: '25', description: 'Health-conscious shopper', orders: '30+ orders' },
-        { id: '31', description: 'Weekend regular', orders: '25+ orders' },
-        { id: '42', description: 'Diverse preferences', orders: '45+ orders' },
-        { id: '55', description: 'Premium brand lover', orders: '20+ orders' },
-        { id: '60', description: 'Quick convenience shopper', orders: '55+ orders' },
-        { id: '78', description: 'International cuisine fan', orders: '35+ orders' },
-        { id: '92', description: 'Meal prep specialist', orders: '30+ orders' }
-    ];
+  // Enhanced user ID suggestions with descriptions
+  const enhancedSuggestions = [
+    { id: '1', description: 'Heavy grocery shopper', orders: '40+ orders' },
+    { id: '7', description: 'Organic food enthusiast', orders: '35+ orders' },
+    { id: '13', description: 'Family bulk buyer', orders: '50+ orders' },
+    { id: '25', description: 'Health-conscious shopper', orders: '30+ orders' },
+    { id: '31', description: 'Weekend regular', orders: '25+ orders' },
+    { id: '42', description: 'Diverse preferences', orders: '45+ orders' },
+    { id: '55', description: 'Premium brand lover', orders: '20+ orders' },
+    { id: '60', description: 'Quick convenience shopper', orders: '55+ orders' },
+    { id: '78', description: 'International cuisine fan', orders: '35+ orders' },
+    { id: '92', description: 'Meal prep specialist', orders: '30+ orders' }
+  ];
 
-    // Get demo system metadata
-    const { data: demoUserMetadata } = useQuery('demoUserMetadata', adminService.getDemoUserIds);
+  // Get demo system metadata
+  const { data: demoUserMetadata } = useQuery('demoUserMetadata', adminService.getDemoUserIds);
 
-    // Get prediction data for selected user
-    const { 
-        data: demoPredictionData, 
-        isLoading: isLoadingPrediction, 
-        error: predictionError,
-        refetch: refetchPrediction,
-        isError 
-    } = useQuery(
-        ['demoUserPrediction', selectedUserId],
-        () => adminService.getDemoUserPrediction(selectedUserId!),
-        { 
-            enabled: !!selectedUserId,
-            retry: 1,
-            staleTime: 30000
-        }
-    );
+  // Get prediction data for selected user
+  const { 
+    data: demoPredictionData, 
+    isLoading: isLoadingPrediction, 
+    error: predictionError,
+    refetch: refetchPrediction,
+    isError 
+  } = useQuery(
+    ['demoUserPrediction', selectedUserId],
+    () => adminService.getDemoUserPrediction(selectedUserId!),
+    { 
+      enabled: !!selectedUserId,
+      retry: 1,
+      staleTime: 30000
+    }
+  );
 
-    const handleUserIdSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (userIdInput.trim()) {
-            const userId = userIdInput.trim();
-            setSelectedUserId(userId);
-            setShowSuggestions(false);
-            refetchPrediction();
-        } else {
-            toast.error("Please enter a valid Instacart user ID.");
-        }
+  const handleUserIdSubmit = () => {
+    if (userIdInput.trim()) {
+      const userId = userIdInput.trim();
+      setSelectedUserId(userId);
+      setShowSuggestions(false);
+      refetchPrediction();
+    } else {
+      toast.error("Please enter a valid Instacart user ID.");
+    }
+  };
+
+  const handleQuickSelect = (userId: string) => {
+    setUserIdInput(userId);
+    setSelectedUserId(userId);
+    setShowSuggestions(false);
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && userIdInput.trim()) {
+      handleUserIdSubmit();
+    }
+  };
+
+  const resetForm = () => {
+    setSelectedUserId(null);
+    setUserIdInput('');
+    setShowSuggestions(true);
+  };
+
+  // Calculate comparison metrics
+  const getComparisonMetrics = () => {
+    if (!demoPredictionData) return null;
+
+    const metrics = demoPredictionData.metrics;
+    const correctItems = metrics.correct_items || 0;
+    const totalPredicted = metrics.total_predicted_items || 0;
+    const totalActual = metrics.total_actual_items || 0;
+
+    return {
+      accuracy: totalPredicted > 0 ? Math.round((correctItems / totalPredicted) * 100) : 0,
+      coverage: totalActual > 0 ? Math.round((correctItems / totalActual) * 100) : 0,
+      correctItems,
+      totalPredicted,
+      totalActual
     };
+  };
 
-    const handleSuggestionClick = (userId: string) => {
-        setUserIdInput(userId);
-        setSelectedUserId(userId);
-        setShowSuggestions(false);
-        refetchPrediction();
-    };
+  const comparisonMetrics = getComparisonMetrics();
 
-    const handleTryAnother = () => {
-        setSelectedUserId(null);
-        setUserIdInput('');
-        setShowSuggestions(true);
-    };
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Target className="text-indigo-600 dark:text-indigo-400" size={28} />
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Live Demo Prediction
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400">
+                  Test TIFU-KNN predictions against actual user baskets
+                </p>
+              </div>
+            </div>
+            {selectedUserId && (
+              <button
+                onClick={resetForm}
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                <RefreshCw size={18} />
+                <span>New Test</span>
+              </button>
+            )}
+          </div>
+        </motion.div>
 
-    const renderProductList = (title: string, products: any[], isPredicted = false, icon: React.ReactNode) => (
-        <div className="w-full lg:w-1/2 px-2">
-            <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 h-full ${
-                isPredicted 
-                    ? 'border-l-4 border-indigo-500' 
-                    : 'border-l-4 border-green-500'
-            }`}>
-                <div className="flex items-center gap-3 mb-6">
-                    {icon}
-                    <h3 className={`text-xl font-semibold ${
-                        isPredicted 
-                            ? 'text-indigo-800 dark:text-indigo-200' 
-                            : 'text-green-800 dark:text-green-200'
-                    }`}>
-                        {title}
-                    </h3>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                        isPredicted
-                            ? 'bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-300'
-                            : 'bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300'
-                    }`}>
-                        {products?.length || 0} items
+        {/* User Selection */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+        >
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <Search className="text-indigo-600" size={20} />
+            Select User for Testing
+          </h2>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Instacart User ID
+              </label>
+              <div className="flex gap-3">
+                <div className="relative flex-1">
+                  <input
+                    type="text"
+                    value={userIdInput}
+                    onChange={(e) => setUserIdInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter any ID (e.g., 1, 42, 100...)"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    disabled={isLoadingPrediction}
+                  />
+                  <Brain className="absolute right-3 top-2.5 text-gray-400" size={20} />
+                </div>
+                <button
+                  onClick={handleUserIdSubmit}
+                  disabled={!userIdInput.trim() || isLoadingPrediction}
+                  className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  <Zap size={18} />
+                  <span>Analyze</span>
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Any user ID from the Instacart dataset (1-206209)
+              </p>
+            </div>
+
+            {/* Quick Selection Grid */}
+            <AnimatePresence>
+              {showSuggestions && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="pt-4 border-t border-gray-200 dark:border-gray-700"
+                >
+                  <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    Popular Test Users
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                    {enhancedSuggestions.map((suggestion) => (
+                      <button
+                        key={suggestion.id}
+                        onClick={() => handleQuickSelect(suggestion.id)}
+                        className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all hover:scale-105"
+                      >
+                        <div className="font-semibold text-gray-900 dark:text-white">
+                          User {suggestion.id}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {suggestion.description}
+                        </div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500">
+                          {suggestion.orders}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
+        {/* Loading State */}
+        {isLoadingPrediction && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8"
+          >
+            <div className="text-center">
+              <div className="flex items-center justify-center gap-3 mb-4">
+                <RefreshCw className="animate-spin text-indigo-600" size={24} />
+                <span className="text-lg font-medium text-gray-900 dark:text-white">
+                  Analyzing User {selectedUserId}...
+                </span>
+              </div>
+              <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <p>• Loading user's purchase history</p>
+                <p>• Running TIFU-KNN prediction algorithm</p>
+                <p>• Comparing with actual basket</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Error State */}
+        {isError && predictionError && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6"
+          >
+            <div className="flex items-start gap-3">
+              <AlertCircle className="text-red-600 dark:text-red-400 mt-0.5" size={20} />
+              <div className="flex-1">
+                <h3 className="font-semibold text-red-900 dark:text-red-100 mb-1">
+                  Analysis Failed
+                </h3>
+                <p className="text-red-800 dark:text-red-200 text-sm">
+                  {(predictionError as any)?.response?.data?.detail || 'Unable to analyze this user'}
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <button
+                    onClick={resetForm}
+                    className="px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors"
+                  >
+                    Try Another User
+                  </button>
+                  <button
+                    onClick={() => refetchPrediction()}
+                    className="px-4 py-2 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 text-sm rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Prediction Results */}
+        {demoPredictionData && !isLoadingPrediction && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-6"
+          >
+            {/* Success Header */}
+            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <CheckCircle className="text-green-600 dark:text-green-400" size={24} />
+                <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
+                  Prediction Analysis Complete for User {selectedUserId}!
+                </h3>
+              </div>
+              
+              {/* Metrics Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Recall</span>
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {(demoPredictionData.metrics.recall * 100).toFixed(0)}%
                     </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    Items correctly predicted
+                  </p>
                 </div>
-                
-                {products && products.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {products.slice(0, 8).map((product: any, index: number) => (
-                            <motion.div
-                                key={product.id || index}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1 }}
-                                className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                            >
-                                <ProductImage
-                                    src={product.imageUrl}
-                                    alt={product.name}
-                                    className="w-12 h-12 object-cover rounded"
-                                />
-                                <div className="flex-1 min-w-0">
-                                    <h4 className="font-medium text-gray-900 dark:text-white text-sm truncate">
-                                        {product.name}
-                                    </h4>
-                                    <div className="flex items-center justify-between mt-1">
-                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                                            {product.category}
-                                        </p>
-                                        <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                                            ${Number(product.price || 0).toFixed(2)}
-                                        </p>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                        {products.length > 8 && (
-                            <div className="col-span-full text-center text-sm text-gray-500 dark:text-gray-400 py-2">
-                                ... and {products.length - 8} more items
-                            </div>
-                        )}
-                    </div>
-                ) : (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <AlertCircle size={48} className="mx-auto mb-3 opacity-50" />
-                        <p>No {isPredicted ? 'predictions' : 'ground truth data'} available</p>
-                    </div>
-                )}
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Precision</span>
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {(demoPredictionData.metrics.precision * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    Prediction accuracy
+                  </p>
+                </div>
+                <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600 dark:text-gray-400">Correct Items</span>
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {comparisonMetrics?.correctItems}/{comparisonMetrics?.totalActual}
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                    Out of actual basket
+                  </p>
+                </div>
+              </div>
             </div>
-        </div>
-    );
 
-    return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-            <div className="max-w-7xl mx-auto space-y-8">
+            {/* Basket Comparison */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Predicted Basket */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <Brain className="text-indigo-600" size={20} />
+                  ML Predicted Basket
+                  <span className="text-sm font-normal text-gray-500">
+                    ({demoPredictionData.predicted_basket.length} items)
+                  </span>
+                </h3>
                 
-                {/* Header */}
-                <div className="text-center">
-                    <div className="flex items-center justify-center gap-3 mb-4">
-                        <div className="p-3 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg">
-                            <Brain className="w-8 h-8 text-white" />
-                        </div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                            Live Demo Prediction
-                        </h1>
-                    </div>
-                    <p className="text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
-                        Enter any Instacart user ID to see our ML model predict their next basket compared to their actual future purchases.
-                        This demonstrates real-time prediction accuracy using the original dataset.
-                    </p>
-                </div>
-
-                {/* Info Box */}
-                <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <div className="flex items-start gap-3">
-                        <Info className="text-blue-600 dark:text-blue-400 mt-0.5" size={20} />
-                        <div>
-                            <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                                How Live Demo Works
-                            </h3>
-                            <div className="text-blue-700 dark:text-blue-300 text-sm space-y-1">
-                                <p>• Enter any user ID from the Instacart dataset (1 to 206,209)</p>
-                                <p>• Our ML model analyzes their shopping history from CSV data</p>
-                                <p>• The system generates basket predictions and compares with actual purchases</p>
-                                <p>• See real accuracy metrics: precision, recall, and item overlap</p>
-                            </div>
-                            {demoUserMetadata?.message && (
-                                <div className="mt-3 p-3 bg-blue-100 dark:bg-blue-800 rounded text-blue-800 dark:text-blue-200">
-                                    <strong>System Status:</strong> {demoUserMetadata.message}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                {/* User ID Input Form */}
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                    <h2 className="text-xl font-semibold mb-6 text-gray-900 dark:text-white">
-                        Select User for Prediction Demo
-                    </h2>
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {demoPredictionData.predicted_basket.map((item, index) => {
+                    const isCorrect = demoPredictionData.actual_basket.some(
+                      actual => actual.product_id === item.product_id
+                    );
                     
-                    <form onSubmit={handleUserIdSubmit} className="space-y-6">
-                        <div>
-                            <label htmlFor="userIdInput" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Enter Instacart User ID:
-                            </label>
-                            <div className="flex gap-3">
-                                <input
-                                    type="text"
-                                    id="userIdInput"
-                                    value={userIdInput}
-                                    onChange={(e) => setUserIdInput(e.target.value)}
-                                    placeholder="e.g., 1, 42, 1337, 156789..."
-                                    className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                                    disabled={isLoadingPrediction}
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={isLoadingPrediction || !userIdInput.trim()}
-                                    className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isLoadingPrediction ? (
-                                        <RefreshCw size={16} className="animate-spin" />
-                                    ) : (
-                                        <Search size={16} />
-                                    )}
-                                    {isLoadingPrediction ? 'Analyzing...' : 'Predict'}
-                                </button>
-                            </div>
+                    return (
+                      <div
+                        key={item.product_id}
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          isCorrect 
+                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+                            : 'bg-gray-50 dark:bg-gray-900 border-gray-200 dark:border-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-gray-500">#{index + 1}</span>
+                          <span className={`font-medium ${
+                            isCorrect 
+                              ? 'text-green-800 dark:text-green-200' 
+                              : 'text-gray-900 dark:text-white'
+                          }`}>
+                            {item.product_name}
+                          </span>
                         </div>
-                    </form>
-
-                    {/* Quick Suggestions */}
-                    <AnimatePresence>
-                        {showSuggestions && (
-                            <motion.div
-                                initial={{ opacity: 0, height: 0 }}
-                                animate={{ opacity: 1, height: 'auto' }}
-                                exit={{ opacity: 0, height: 0 }}
-                                className="mt-6"
-                            >
-                                <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                                    Quick Demo - Popular User IDs:
-                                </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-                                    {enhancedSuggestions.map((suggestion) => (
-                                        <button
-                                            key={suggestion.id}
-                                            onClick={() => handleSuggestionClick(suggestion.id)}
-                                            disabled={isLoadingPrediction}
-                                            className="p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
-                                        >
-                                            <div className="font-semibold text-indigo-600 dark:text-indigo-400">
-                                                User {suggestion.id}
-                                            </div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                                {suggestion.description}
-                                            </div>
-                                            <div className="text-xs text-gray-400 dark:text-gray-500">
-                                                {suggestion.orders}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                        {isCorrect && <Check className="text-green-600" size={18} />}
+                      </div>
+                    );
+                  })}
                 </div>
+              </motion.div>
 
-                {/* Loading State */}
-                {isLoadingPrediction && (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8"
-                    >
-                        <div className="text-center">
-                            <div className="flex items-center justify-center gap-3 mb-4">
-                                <RefreshCw className="animate-spin text-indigo-600" size={24} />
-                                <span className="text-lg font-medium text-gray-900 dark:text-white">
-                                    Analyzing User {selectedUserId}...
-                                </span>
-                            </div>
-                            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                                <p>• Loading order history from CSV data</p>
-                                <p>• Generating ML features</p>
-                                <p>• Running prediction model</p>
-                                <p>• Fetching ground truth data</p>
-                            </div>
+              {/* Actual Basket */}
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+              >
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <ShoppingCart className="text-green-600" size={20} />
+                  Actual User Basket
+                  <span className="text-sm font-normal text-gray-500">
+                    ({demoPredictionData.actual_basket.length} items)
+                  </span>
+                </h3>
+                
+                <div className="space-y-2 max-h-96 overflow-y-auto">
+                  {demoPredictionData.actual_basket.map((item, index) => {
+                    const wasPredicted = demoPredictionData.predicted_basket.some(
+                      pred => pred.product_id === item.product_id
+                    );
+                    
+                    return (
+                      <div
+                        key={item.product_id}
+                        className={`flex items-center justify-between p-3 rounded-lg border ${
+                          wasPredicted 
+                            ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800' 
+                            : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-sm text-gray-500">#{index + 1}</span>
+                          <span className={`font-medium ${
+                            wasPredicted 
+                              ? 'text-green-800 dark:text-green-200' 
+                              : 'text-red-800 dark:text-red-200'
+                          }`}>
+                            {item.product_name}
+                          </span>
                         </div>
-                    </motion.div>
-                )}
-
-                {/* Error State */}
-                {isError && predictionError && !isLoadingPrediction && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6"
-                    >
-                        <div className="flex items-start gap-3">
-                            <AlertCircle className="text-red-600 dark:text-red-400 mt-0.5" size={20} />
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">
-                                    Prediction Failed
-                                </h3>
-                                <p className="text-red-700 dark:text-red-300 text-sm mb-4">
-                                    {(predictionError as any)?.response?.data?.detail || 
-                                     `User ${selectedUserId} not found in the Instacart dataset.`}
-                                </p>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={handleTryAnother}
-                                        className="px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors"
-                                    >
-                                        Try Another User
-                                    </button>
-                                    <button
-                                        onClick={() => refetchPrediction()}
-                                        className="px-4 py-2 border border-red-300 dark:border-red-700 text-red-700 dark:text-red-300 text-sm rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors"
-                                    >
-                                        Retry
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* Prediction Results */}
-                {demoPredictionData && !isLoadingPrediction && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-6"
-                    >
-                        {/* Success Header */}
-                        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <CheckCircle className="text-green-600 dark:text-green-400" size={24} />
-                                <h3 className="text-lg font-semibold text-green-800 dark:text-green-200">
-                                    Prediction Analysis Complete for User {selectedUserId}! 🎯
-                                </h3>
-                            </div>
-                            
-                            {/* Comparison Metrics */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                        {demoPredictionData.comparisonMetrics.predictedCount}
-                                    </div>
-                                    <div className="text-sm text-green-700 dark:text-green-300">Predicted Items</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                        {demoPredictionData.comparisonMetrics.actualCount}
-                                    </div>
-                                    <div className="text-sm text-green-700 dark:text-green-300">Actual Items</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                        {demoPredictionData.comparisonMetrics.commonItems}
-                                    </div>
-                                    <div className="text-sm text-green-700 dark:text-green-300">Matches</div>
-                                </div>
-                                <div className="text-center">
-                                    <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                                        {demoPredictionData.comparisonMetrics.accuracy?.toFixed(1) || 
-                                         ((demoPredictionData.comparisonMetrics.commonItems / 
-                                           Math.max(demoPredictionData.comparisonMetrics.actualCount, 1)) * 100).toFixed(1)}%
-                                    </div>
-                                    <div className="text-sm text-green-700 dark:text-green-300">Accuracy</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Side-by-Side Comparison */}
-                        <div className="flex flex-col lg:flex-row gap-6">
-                            {renderProductList(
-                                "ML Model Prediction", 
-                                demoPredictionData.predictedBasket,
-                                true,
-                                <Brain className="text-indigo-600 dark:text-indigo-400" size={24} />
-                            )}
-                            {renderProductList(
-                                "Actual Future Basket", 
-                                demoPredictionData.trueFutureBasket,
-                                false,
-                                <Target className="text-green-600 dark:text-green-400" size={24} />
-                            )}
-                        </div>
-
-                        {/* Action Buttons */}
-                        <div className="flex justify-center gap-4">
-                            <button
-                                onClick={handleTryAnother}
-                                className="flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                            >
-                                <ArrowRight size={16} />
-                                Try Another User
-                            </button>
-                            <button
-                                onClick={() => refetchPrediction()}
-                                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
-                            >
-                                <RefreshCw size={16} />
-                                Refresh Prediction
-                            </button>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* No results yet */}
-                {!selectedUserId && !isLoadingPrediction && (
-                    <div className="text-center py-12">
-                        <Sparkles className="mx-auto mb-4 text-gray-400" size={48} />
-                        <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                            Ready for Demo
-                        </h3>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Enter a user ID above or click one of the suggested users to see live ML predictions!
-                        </p>
-                    </div>
-                )}
+                        {wasPredicted ? (
+                          <Check className="text-green-600" size={18} />
+                        ) : (
+                          <X className="text-red-600" size={18} />
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
             </div>
-        </div>
-    );
+
+            {/* Legend */}
+            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4">
+              <div className="flex items-center justify-center gap-8 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-green-200 dark:bg-green-800 rounded"></div>
+                  <span className="text-gray-600 dark:text-gray-400">Correctly Predicted</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-red-200 dark:bg-red-800 rounded"></div>
+                  <span className="text-gray-600 dark:text-gray-400">Missed Item</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  <span className="text-gray-600 dark:text-gray-400">Extra Prediction</span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Info Card */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-lg shadow-sm p-6 text-white"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold mb-2">About This Demo</h3>
+              <p className="text-indigo-100 text-sm mb-3">
+                This tool demonstrates TIFU-KNN's ability to predict what products a user will purchase next
+                based on their historical shopping patterns.
+              </p>
+              <div className="flex items-center gap-4 text-sm">
+                <span className="flex items-center gap-1">
+                  <Sparkles size={16} />
+                  Real-time predictions
+                </span>
+                <span className="flex items-center gap-1">
+                  <Target size={16} />
+                  Actual vs predicted comparison
+                </span>
+                <span className="flex items-center gap-1">
+                  <TrendingUp size={16} />
+                  Performance metrics
+                </span>
+              </div>
+            </div>
+            <Brain className="text-indigo-200" size={48} />
+          </div>
+        </motion.div>
+      </div>
+    </div>
+  );
 };
 
 export default DemoPredictionPage;

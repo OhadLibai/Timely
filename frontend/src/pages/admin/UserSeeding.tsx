@@ -1,12 +1,11 @@
 // frontend/src/pages/admin/UserSeeding.tsx
-// NEW PAGE: Dedicated interface for seeding demo users from Instacart data
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQueryClient } from 'react-query';
 import { 
   UserPlus, Database, CheckCircle, AlertCircle, 
-  Info, Loader2, Mail, Key, Calendar, Package
+  Info, Loader2, Mail, Key, Calendar, Package,
+  Sparkles, Users, ShoppingCart, Clock
 } from 'lucide-react';
 import { adminService } from '@/services/admin.service';
 import toast from 'react-hot-toast';
@@ -28,286 +27,346 @@ interface SeedingResult {
 const UserSeeding: React.FC = () => {
   const [instacartUserId, setInstacartUserId] = useState<string>('');
   const [seedingResults, setSeedingResults] = useState<SeedingResult[]>([]);
+  const [showInstructions, setShowInstructions] = useState(true);
   const queryClient = useQueryClient();
 
   // Popular Instacart user IDs for quick testing
   const popularUserIds = [
-    { id: '1', description: 'Heavy grocery shopper' },
-    { id: '7', description: 'Frequent organic buyer' },
-    { id: '13', description: 'Family shopper' },
-    { id: '25', description: 'Health-conscious buyer' },
-    { id: '31', description: 'Bulk shopper' },
-    { id: '42', description: 'Diverse preferences' },
-    { id: '55', description: 'Regular schedule' },
-    { id: '60', description: 'Weekend shopper' },
-    { id: '78', description: 'Premium brands' },
-    { id: '92', description: 'Convenience focused' }
+    { id: '1', description: 'Heavy grocery shopper', orderCount: '40+ orders' },
+    { id: '7', description: 'Frequent organic buyer', orderCount: '35+ orders' },
+    { id: '13', description: 'Family shopper', orderCount: '50+ orders' },
+    { id: '25', description: 'Health-conscious buyer', orderCount: '30+ orders' },
+    { id: '31', description: 'Bulk shopper', orderCount: '25+ orders' },
+    { id: '42', description: 'Diverse preferences', orderCount: '45+ orders' },
+    { id: '55', description: 'Regular schedule', orderCount: '20+ orders' },
+    { id: '60', description: 'Weekend shopper', orderCount: '55+ orders' },
+    { id: '78', description: 'Premium brands', orderCount: '35+ orders' },
+    { id: '92', description: 'Convenience focused', orderCount: '30+ orders' }
   ];
 
-  const seedUserMutation = useMutation(adminService.seedDemoUser, {
-    onMutate: (userId) => {
-      toast.loading(`🌱 Seeding demo user ${userId}... This may take a moment.`, { 
-        id: `seed-${userId}`,
-        duration: 0
-      });
-    },
-    onSuccess: (data, userId) => {
-      toast.dismiss(`seed-${userId}`);
-      
-      // Add result to the list
-      setSeedingResults(prev => [data, ...prev.slice(0, 4)]); // Keep last 5 results
-      
-      // Clear input
-      setInstacartUserId('');
-      
-      // Invalidate related queries
-      queryClient.invalidateQueries(['admin-users']);
-      queryClient.invalidateQueries(['dashboard-stats']);
-      
-      toast.success(`✅ User ${userId} seeded successfully!`, { 
-        duration: 6000,
-        icon: '🎉'
-      });
-    },
-    onError: (error: any, userId) => {
-      toast.dismiss(`seed-${userId}`);
-      
-      const errorMessage = error.response?.data?.error || 'Failed to seed user';
-      const suggestion = error.response?.data?.suggestion || '';
-      
-      toast.error(`❌ ${errorMessage}${suggestion ? `\n💡 ${suggestion}` : ''}`, { 
-        duration: 8000 
-      });
+  const seedUserMutation = useMutation(
+    (userId: string) => adminService.seedDemoUser(userId),
+    {
+      onMutate: (userId) => {
+        toast.loading(`🌱 Seeding demo user ${userId}... This may take a moment.`, { 
+          id: `seed-${userId}`,
+          duration: 0
+        });
+      },
+      onSuccess: (data, userId) => {
+        toast.dismiss(`seed-${userId}`);
+        
+        // Add result to the list
+        setSeedingResults(prev => [data, ...prev.slice(0, 4)]); // Keep last 5 results
+        
+        // Clear input
+        setInstacartUserId('');
+        setShowInstructions(false);
+        
+        // Invalidate related queries
+        queryClient.invalidateQueries(['admin-users']);
+        queryClient.invalidateQueries(['dashboard-stats']);
+        
+        toast.success(`✅ User ${userId} seeded successfully!`, { 
+          duration: 6000,
+          icon: '🎉'
+        });
+      },
+      onError: (error: any, userId) => {
+        toast.dismiss(`seed-${userId}`);
+        
+        const errorMessage = error.response?.data?.error || 'Failed to seed user';
+        const suggestion = error.response?.data?.suggestion || '';
+        
+        toast.error(
+          <div>
+            <strong>❌ {errorMessage}</strong>
+            {suggestion && <p className="mt-1 text-sm">{suggestion}</p>}
+          </div>,
+          { duration: 8000 }
+        );
+      }
     }
-  });
+  );
 
-  const handleSeedUser = (userId: string) => {
-    if (!userId.trim()) {
-      toast.error('Please enter a valid Instacart user ID');
-      return;
+  const handleSubmit = () => {
+    if (instacartUserId.trim()) {
+      seedUserMutation.mutate(instacartUserId.trim());
     }
-    
-    seedUserMutation.mutate(userId.trim());
   };
 
   const handleQuickSeed = (userId: string) => {
     setInstacartUserId(userId);
-    handleSeedUser(userId);
+    seedUserMutation.mutate(userId);
   };
 
-  const handleFormSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleSeedUser(instacartUserId);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && instacartUserId.trim() && !seedUserMutation.isLoading) {
+      handleSubmit();
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-4xl mx-auto space-y-8">
-        
+      <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
-              <UserPlus className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+        >
+          <div className="flex items-center gap-3 mb-4">
+            <UserPlus className="text-indigo-600 dark:text-indigo-400" size={28} />
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
               Demo User Seeding
             </h1>
           </div>
-          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Create demo users with real Instacart shopping history for testing and demonstration purposes. 
-            Each user will have their complete order history populated from the original dataset.
+          <p className="text-gray-600 dark:text-gray-400">
+            Create demo users with real Instacart purchase history for testing the ML prediction system.
           </p>
-        </div>
+        </motion.div>
 
-        {/* Info Panel */}
-        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-          <div className="flex items-start gap-3">
-            <Info className="text-blue-600 dark:text-blue-400 mt-0.5" size={20} />
-            <div className="space-y-2">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-200">
-                How Demo User Seeding Works
-              </h3>
-              <div className="text-blue-700 dark:text-blue-300 text-sm space-y-1">
-                <p>• Enter any Instacart user ID (1-206,209) from the original dataset</p>
-                <p>• The system fetches their complete order history from CSV files</p>
-                <p>• A new user account is created with proper temporal field mapping</p>
-                <p>• All historical orders are populated in the live database</p>
-                <p>• The user can then log in and see their "past" orders immediately</p>
-                <p>• ML predictions will work based on this seeded history</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* User Input Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-            Seed New Demo User
-          </h2>
-          
-          <form onSubmit={handleFormSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="instacartUserId" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Instacart User ID
-              </label>
-              <div className="flex gap-3">
-                <input
-                  type="text"
-                  id="instacartUserId"
-                  value={instacartUserId}
-                  onChange={(e) => setInstacartUserId(e.target.value)}
-                  placeholder="Enter any user ID (e.g., 1, 42, 156789...)"
-                  className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  disabled={seedUserMutation.isLoading}
-                />
-                <button
-                  type="submit"
-                  disabled={seedUserMutation.isLoading || !instacartUserId.trim()}
-                  className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {seedUserMutation.isLoading ? (
-                    <Loader2 size={16} className="animate-spin" />
-                  ) : (
-                    <Database size={16} />
-                  )}
-                  Seed User
-                </button>
-              </div>
-            </div>
-          </form>
-        </div>
-
-        {/* Quick Seed Options */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            Quick Seed - Popular User IDs
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6 text-sm">
-            These user IDs are known to have rich shopping histories perfect for demonstrations:
-          </p>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-            {popularUserIds.map((user) => (
-              <button
-                key={user.id}
-                onClick={() => handleQuickSeed(user.id)}
-                disabled={seedUserMutation.isLoading}
-                className="p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <div className="font-semibold text-indigo-600 dark:text-indigo-400">
-                  User {user.id}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  {user.description}
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Seeding Results */}
+        {/* Instructions */}
         <AnimatePresence>
-          {seedingResults.length > 0 && (
+          {showInstructions && (
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6"
             >
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                Recent Seeding Results
-              </h2>
-              
-              <div className="space-y-4">
-                {seedingResults.map((result, index) => (
-                  <motion.div
-                    key={`${result.userId}-${index}`}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 rounded-lg p-4"
-                  >
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="text-green-600 dark:text-green-400 mt-0.5" size={20} />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold text-green-800 dark:text-green-200">
-                            Demo User Created Successfully
-                          </h3>
-                          <span className="px-2 py-1 bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 text-xs rounded-full">
-                            Instacart ID: {result.instacartUserId}
-                          </span>
-                        </div>
-                        
-                        <div className="grid md:grid-cols-2 gap-4 text-sm">
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                              <Mail size={14} />
-                              <span className="font-mono">{result.email}</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                              <Key size={14} />
-                              <span className="font-mono">{result.password}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                              <Calendar size={14} />
-                              <span>{result.stats.ordersCreated} orders created</span>
-                            </div>
-                            <div className="flex items-center gap-2 text-green-700 dark:text-green-300">
-                              <Package size={14} />
-                              <span>{result.stats.orderItemsCreated} items seeded</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-3 p-3 bg-green-100 dark:bg-green-800/50 rounded text-xs text-green-700 dark:text-green-300">
-                          <strong>Login Instructions:</strong> Use the email and password above to log in. 
-                          The user will see their complete order history as if they've been using the app for months!
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
+              <div className="flex items-start gap-3">
+                <Info className="text-blue-600 dark:text-blue-400 mt-0.5" size={20} />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                    How User Seeding Works
+                  </h3>
+                  <ol className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold">1.</span>
+                      <span>Enter any Instacart user ID (e.g., 1-206209)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold">2.</span>
+                      <span>The system creates a new user account and imports their complete order history</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold">3.</span>
+                      <span>Login credentials are generated automatically (default password: demo_password)</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="font-semibold">4.</span>
+                      <span>The user can then login and request ML-generated basket predictions</span>
+                    </li>
+                  </ol>
+                </div>
+                <button
+                  onClick={() => setShowInstructions(false)}
+                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
+                >
+                  ×
+                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Usage Instructions */}
-        <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-6">
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-4">
-            Complete Demo Workflow
-          </h3>
-          <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
-            <div className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">1</span>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Seeding Form */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+          >
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <Database className="text-indigo-600" size={20} />
+              Seed New User
+            </h2>
+
+            <div className="space-y-4">
               <div>
-                <strong>Seed Demo User:</strong> Enter an Instacart user ID and click "Seed User"
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Instacart User ID
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={instacartUserId}
+                    onChange={(e) => setInstacartUserId(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter any ID (e.g., 1, 42, 100...)"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    disabled={seedUserMutation.isLoading}
+                  />
+                  <Users className="absolute right-3 top-2.5 text-gray-400" size={20} />
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  Any number from 1 to 206209 (total users in dataset)
+                </p>
+              </div>
+
+              <button
+                onClick={handleSubmit}
+                disabled={!instacartUserId.trim() || seedUserMutation.isLoading}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {seedUserMutation.isLoading ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : (
+                  <Sparkles size={18} />
+                )}
+                <span>{seedUserMutation.isLoading ? 'Seeding User...' : 'Seed User'}</span>
+              </button>
+            </div>
+
+            {/* Quick Seed Options */}
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                Popular Test Users
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {popularUserIds.slice(0, 6).map((user) => (
+                  <button
+                    key={user.id}
+                    onClick={() => handleQuickSeed(user.id)}
+                    disabled={seedUserMutation.isLoading}
+                    className="p-3 text-left border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-gray-900 dark:text-white">
+                        User {user.id}
+                      </span>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        {user.orderCount}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                      {user.description}
+                    </p>
+                  </button>
+                ))}
               </div>
             </div>
-            <div className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">2</span>
-              <div>
-                <strong>User Login:</strong> Use the generated email and password to log in as the demo user
+          </motion.div>
+
+          {/* Results Section */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-4"
+          >
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <Clock className="text-green-600" size={20} />
+              Recent Seeding Results
+            </h2>
+
+            {seedingResults.length === 0 ? (
+              <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-8 text-center">
+                <Package className="mx-auto text-gray-400 mb-3" size={48} />
+                <p className="text-gray-600 dark:text-gray-400">
+                  No users seeded yet. Start by entering an Instacart user ID.
+                </p>
               </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">3</span>
-              <div>
-                <strong>View Order History:</strong> The user will see their complete shopping history
+            ) : (
+              <div className="space-y-3">
+                {seedingResults.map((result, index) => (
+                  <motion.div
+                    key={`${result.instacartUserId}-${index}`}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="text-green-600" size={20} />
+                        <h3 className="font-semibold text-gray-900 dark:text-white">
+                          User {result.instacartUserId} Seeded
+                        </h3>
+                      </div>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">
+                        Just now
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <Mail className="text-gray-400" size={16} />
+                        <div>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Email</p>
+                          <p className="font-mono text-gray-900 dark:text-white">
+                            {result.email}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Key className="text-gray-400" size={16} />
+                        <div>
+                          <p className="text-xs text-gray-600 dark:text-gray-400">Password</p>
+                          <p className="font-mono text-gray-900 dark:text-white">
+                            demo_password
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-4 text-xs text-gray-600 dark:text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <ShoppingCart size={14} />
+                        {result.stats.ordersCreated} orders
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Package size={14} />
+                        {result.stats.orderItemsCreated} items
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <CheckCircle size={14} />
+                        {result.stats.successRate}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 p-2 bg-indigo-50 dark:bg-indigo-900/20 rounded text-xs text-indigo-700 dark:text-indigo-300">
+                      💡 Login with these credentials to test ML predictions
+                    </div>
+                  </motion.div>
+                ))}
               </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <span className="flex-shrink-0 w-6 h-6 bg-indigo-600 text-white rounded-full flex items-center justify-center text-xs font-bold">4</span>
-              <div>
-                <strong>Generate Predictions:</strong> Use the "Predict Next Basket" feature to see ML recommendations
-              </div>
-            </div>
-          </div>
+            )}
+          </motion.div>
         </div>
+
+        {/* Info Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg shadow-sm p-6 text-white"
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold mb-2">Instacart Dataset</h3>
+              <p className="text-purple-100 text-sm mb-3">
+                Real purchase history from 200,000+ users with 3M+ orders
+              </p>
+              <div className="flex items-center gap-6 text-sm">
+                <span className="flex items-center gap-2">
+                  <Users size={16} />
+                  206,209 users
+                </span>
+                <span className="flex items-center gap-2">
+                  <Package size={16} />
+                  49,688 products
+                </span>
+                <span className="flex items-center gap-2">
+                  <Calendar size={16} />
+                  Multiple years of data
+                </span>
+              </div>
+            </div>
+            <Sparkles className="text-purple-200" size={48} />
+          </div>
+        </motion.div>
       </div>
     </div>
   );

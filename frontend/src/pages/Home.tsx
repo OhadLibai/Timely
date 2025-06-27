@@ -1,220 +1,235 @@
-// frontend/src/pages/Home.tsx
+// frontend/src/pages/Home.tsx - Updated with Auto-Generate Basket
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Clock, Brain, TrendingUp, ChevronRight, Sparkles } from 'lucide-react';
-import { useQuery } from 'react-query';
-import { productService } from '@/services/product.service';
-import ProductCard from '@/components/products/ProductCard';
-import Hero from '@/components/home/Hero';
-import FeatureCard from '@/components/home/FeatureCard';
+import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
+import AutoGenerateBasket from '@/components/predictions/AutoGenerateBasket';
+import { 
+  ShoppingCart, TrendingUp, Clock, Heart, 
+  Package, Truck, Shield, Sparkles, Brain
+} from 'lucide-react';
 
 const Home: React.FC = () => {
-  const { user } = useAuthStore();
-  
-  const { data: featuredProducts, isLoading } = useQuery(
-    'featured-products',
-    () => productService.getFeaturedProducts(),
-    { staleTime: 5 * 60 * 1000 }
-  );
+  const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuthStore();
 
   const features = [
     {
       icon: Brain,
       title: 'AI-Powered Predictions',
-      description: 'Our ML algorithm learns your shopping habits and predicts your weekly needs with remarkable accuracy.',
-      color: 'from-purple-500 to-pink-500'
+      description: 'TIFU-KNN algorithm predicts your next basket with 25% accuracy',
+      color: 'from-purple-500 to-indigo-600'
     },
     {
       icon: Clock,
-      title: 'Save Time Every Week',
-      description: 'Automated weekly carts mean no more repetitive shopping lists. Spend time on what matters.',
-      color: 'from-blue-500 to-cyan-500'
-    },
-    {
-      icon: ShoppingCart,
-      title: 'Smart Shopping',
-      description: 'Review and customize your predicted basket before checkout. Full control, zero hassle.',
-      color: 'from-green-500 to-emerald-500'
+      title: 'Save Time Shopping',
+      description: 'Auto-generate your weekly basket in seconds',
+      color: 'from-blue-500 to-cyan-600'
     },
     {
       icon: TrendingUp,
-      title: 'Adaptive Learning',
-      description: 'The more you shop, the smarter it gets. Our system continuously improves its predictions.',
-      color: 'from-orange-500 to-red-500'
+      title: 'Smart Recommendations',
+      description: 'Personalized suggestions based on your history',
+      color: 'from-green-500 to-emerald-600'
+    },
+    {
+      icon: Shield,
+      title: 'Secure & Private',
+      description: 'Your shopping data is always protected',
+      color: 'from-orange-500 to-red-600'
     }
   ];
 
+  const stats = [
+    { label: 'Active Users', value: '10K+', icon: Package },
+    { label: 'Predictions Made', value: '100K+', icon: Brain },
+    { label: 'Time Saved', value: '1000+ hrs', icon: Clock },
+    { label: 'Accuracy Rate', value: '25%', icon: TrendingUp }
+  ];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Hero Section */}
-      <Hero />
-
-      {/* Features Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 opacity-10"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center"
           >
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Why Choose Timely?
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Experience the future of grocery shopping with our advanced AI technology
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+              Smart Grocery Shopping with{' '}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
+                AI Predictions
+              </span>
+            </h1>
+            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+              Let our TIFU-KNN algorithm predict your next grocery basket based on your shopping patterns. 
+              Save time and never forget your essentials again.
             </p>
-          </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <FeatureCard key={index} {...feature} index={index} />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section for logged-in users */}
-      {user && (
-        <section className="py-16 px-4 bg-gradient-to-r from-indigo-600 to-purple-600">
-          <div className="max-w-4xl mx-auto text-center text-white">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Sparkles className="w-16 h-16 mx-auto mb-6" />
-              <h2 className="text-3xl font-bold mb-4">
-                Your AI Basket is Ready!
-              </h2>
-              <p className="text-xl mb-8 opacity-90">
-                We've analyzed your shopping patterns and prepared your weekly essentials
-              </p>
-              <Link
-                to="/predicted-basket"
-                className="inline-flex items-center px-8 py-4 bg-white text-indigo-600 font-bold rounded-full hover:bg-gray-100 transition-all transform hover:scale-105"
-              >
-                View My Predicted Basket
-                <ChevronRight className="ml-2" />
-              </Link>
-            </motion.div>
-          </div>
-        </section>
-      )}
-
-      {/* Featured Products */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="flex justify-between items-center mb-12"
-          >
-            <div>
-              <h2 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Featured Products
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 mt-2">
-                Handpicked selections just for you
-              </p>
-            </div>
-            <Link
-              to="/products"
-              className="flex items-center text-indigo-600 hover:text-indigo-700 font-semibold"
-            >
-              View All Products
-              <ChevronRight className="ml-1" />
-            </Link>
-          </motion.div>
-
-          {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {[...Array(8)].map((_, i) => (
-                <div key={i} className="animate-pulse">
-                  <div className="bg-gray-300 dark:bg-gray-700 h-64 rounded-lg mb-4"></div>
-                  <div className="bg-gray-300 dark:bg-gray-700 h-4 rounded w-3/4 mb-2"></div>
-                  <div className="bg-gray-300 dark:bg-gray-700 h-4 rounded w-1/2"></div>
+            {isAuthenticated ? (
+              <div className="space-y-6">
+                {/* Prominent Auto-Generate Feature */}
+                <AutoGenerateBasket 
+                  variant="card" 
+                  className="max-w-2xl mx-auto"
+                  onNavigate={navigate}
+                />
+                
+                {/* Quick Actions */}
+                <div className="flex justify-center gap-4 mt-6">
+                  <button
+                    onClick={() => navigate('/products')}
+                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Browse Products
+                  </button>
+                  <button
+                    onClick={() => navigate('/orders')}
+                    className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    View Past Orders
+                  </button>
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredProducts?.slice(0, 8).map((product: any, index: number) => (
-                <motion.div
-                  key={product.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+              </div>
+            ) : (
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={() => navigate('/register')}
+                  className="px-8 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
                 >
-                  <ProductCard product={product} />
-                </motion.div>
-              ))}
-            </div>
+                  Get Started
+                </button>
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-8 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Sign In
+                </button>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Demo User Hint */}
+          {isAuthenticated && user?.metadata?.instacart_user_id && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+              className="mt-8 text-center"
+            >
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-sm">
+                <Sparkles size={16} />
+                <span>Demo User: Instacart ID {user.metadata.instacart_user_id}</span>
+              </div>
+            </motion.div>
           )}
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 px-4 bg-white dark:bg-gray-800">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
-            {[
-              { value: '50K+', label: 'Happy Customers' },
-              { value: '95%', label: 'Prediction Accuracy' },
-              { value: '2hrs', label: 'Average Time Saved' },
-              { value: '4.9', label: 'Customer Rating' }
-            ].map((stat, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.5 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <div className="text-4xl font-bold text-indigo-600 mb-2">
-                  {stat.value}
-                </div>
-                <div className="text-gray-600 dark:text-gray-300">
-                  {stat.label}
-                </div>
-              </motion.div>
-            ))}
-          </div>
+      {/* Features Section */}
+      <section className="py-16 bg-white dark:bg-gray-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
+              Why Choose Timely?
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {features.map((feature, index) => (
+                <motion.div
+                  key={feature.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index }}
+                  className="relative group"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r opacity-0 group-hover:opacity-10 transition-opacity rounded-xl"
+                    style={{ 
+                      backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))`,
+                      '--tw-gradient-from': feature.color.split(' ')[1],
+                      '--tw-gradient-to': feature.color.split(' ')[3]
+                    } as any}
+                  />
+                  <div className="relative p-6 bg-gray-50 dark:bg-gray-900 rounded-xl hover:shadow-lg transition-shadow">
+                    <div className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${feature.color} mb-4`}>
+                      <feature.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300">
+                      {feature.description}
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* CTA Section for non-logged users */}
-      {!user && (
-        <section className="py-20 px-4">
+      {/* Stats Section */}
+      <section className="py-16 bg-gray-100 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="max-w-4xl mx-auto text-center"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
           >
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
-              Ready to Save Time on Grocery Shopping?
+            <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
+              Powered by Real Data
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
-              Join thousands of satisfied customers who've revolutionized their weekly shopping
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link
-                to="/register"
-                className="px-8 py-4 bg-indigo-600 text-white font-bold rounded-full hover:bg-indigo-700 transition-all transform hover:scale-105"
-              >
-                Get Started Free
-              </Link>
-              <Link
-                to="/products"
-                className="px-8 py-4 bg-gray-200 text-gray-800 font-bold rounded-full hover:bg-gray-300 transition-all transform hover:scale-105"
-              >
-                Browse Products
-              </Link>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {stats.map((stat, index) => (
+                <motion.div
+                  key={stat.label}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.1 * index }}
+                  className="text-center"
+                >
+                  <div className="inline-flex p-3 bg-white dark:bg-gray-800 rounded-full shadow-md mb-4">
+                    <stat.icon className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                  </div>
+                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                    {stat.value}
+                  </div>
+                  <div className="text-gray-600 dark:text-gray-400">
+                    {stat.label}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      {!isAuthenticated && (
+        <section className="py-16 bg-gradient-to-r from-purple-600 to-indigo-600">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold text-white mb-4">
+              Ready to Experience AI-Powered Shopping?
+            </h2>
+            <p className="text-xl text-purple-100 mb-8">
+              Join thousands of users who save time with smart predictions
+            </p>
+            <button
+              onClick={() => navigate('/register')}
+              className="px-8 py-4 bg-white text-purple-600 rounded-lg font-semibold text-lg hover:bg-purple-50 transition-colors"
+            >
+              Start Free Today
+            </button>
+          </div>
         </section>
       )}
     </div>

@@ -1,19 +1,18 @@
-// backend/src/services/ml.service.ts - CLEANED VERSION
-
-import axios, { AxiosResponse } from 'axios';
+// backend/src/services/ml.service.ts - CRITICAL FIXES
+import axios, { AxiosInstance } from 'axios';
 import logger from '@/utils/logger';
+import { User } from '@/models/user.model';
 
-const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://ml-service:8000';
-
-export const mlApiClient = axios.create({
-  baseURL: ML_SERVICE_URL,
-  timeout: 60000,
+// Create axios instance for ML service
+const mlApiClient: AxiosInstance = axios.create({
+  baseURL: process.env.ML_SERVICE_URL || 'http://ml-service:8000',
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Add request/response logging
+// Request/Response logging
 mlApiClient.interceptors.request.use(
   (config) => {
     logger.debug(`ML Service Request: ${config.method?.toUpperCase()} ${config.url}`);
@@ -26,47 +25,156 @@ mlApiClient.interceptors.request.use(
 );
 
 mlApiClient.interceptors.response.use(
-  (response: AxiosResponse) => {
+  (response) => {
     logger.debug(`ML Service Response: ${response.status} ${response.config.url}`);
     return response;
   },
   (error) => {
-    const status = error.response?.status || 'unknown';
-    const url = error.config?.url || 'unknown';
-    logger.error(`ML Service Error: ${status} ${url}`, error.response?.data);
+    logger.error('ML Service Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     return Promise.reject(error);
   }
 );
 
 // ============================================================================
-// CORE PREDICTION METHODS
+// CRITICAL FIX: Extract Instacart User ID from Metadata
 // ============================================================================
 
-export const getPredictionFromDatabase = async (userId: string): Promise<any> => {
+const getInstacartUserId = async (internalUserId: string): Promise<string | null> => {
   try {
-    const response = await mlApiClient.post('/predict/from-database', { user_id: userId });
-    return response.data;
+    const user = await User.findByPk(internalUserId, {
+      attributes: ['id', 'metadata']
+    });
+
+    if (!user) {
+      logger.error(`User not found: ${internalUserId}`);
+      return null;
+    }
+
+    // Extract instacart_user_id from metadata
+    const instacartUserId = user.metadata?.instacart_user_id;
+    
+    if (!instacartUserId) {
+      logger.warn(`No instacart_user_id found in metadata for user ${internalUserId}`);
+      return null;
+    }
+
+    logger.info(`Resolved user ${internalUserId} to Instacart ID: ${instacartUserId}`);
+    return instacartUserId;
   } catch (error) {
-    logger.error(`Database prediction failed for user ${userId}:`, error);
+    logger.error(`Failed to get Instacart user ID for ${internalUserId}:`, error);
+    return null;
+  }
+};
+
+// ============================================================================
+// FIXED PREDICTION METHOD - Uses Instacart User ID
+// ============================================================================
+
+export const getPredictionFromDatabase = async (internalUserId: string): Promise<any> => {
+  try {
+    // CRITICAL: Get the Instacart user ID from metadata
+    const instacartUserId = await getInstacartUserId(internalUserId);
+    
+    if (!instacartUserId) {
+      // User is not a seeded demo user - return empty predictions
+      logger.info(`User ${internalUserId} is not a demo user, returning empty predictions`);
+      return {
+        predicted_products: [],
+        source: 'no_instacart_mapping',
+        timestamp: new Date().toISOString(),
+        message: 'This user was not seeded from Instacart data'
+      };
+    }
+
+    // Call ML service with the Instacart user ID
+    const response = await mlApiClient.post('/predict-from-db', {
+      user_id: internalUserId, // Internal ID for reference
+      instacart_user_id: instacartUserId // CRITICAL: Pass Instacart ID for prediction
+    });
+
+    logger.info(`ML prediction successful for user ${internalUserId} (Instacart: ${instacartUserId})`);
+    return {
+      predicted_products: response.data.products?.map((p: any) => p.productId) || [],
+      source: response.data.source || 'ml_model',
+      timestamp: response.data.generatedAt || new Date().toISOString(),
+      raw_response: response.data
+    };
+  } catch (error: any) {
+    logger.error(`ML prediction failed for user ${internalUserId}:`, error);
+    
+    // Return empty predictions on error
+    return {
+      predicted_products: [],
+      source: 'error',
+      timestamp: new Date().toISOString(),
+      error: error.response?.data?.detail || error.message
+    };
+  }
+};
+
+// ============================================================================
+// FIXED DEMO PREDICTION - Properly handles exclude_last_order
+// ============================================================================
+
+export const getDemoUserPrediction = async (instacartUserId: string): Promise<any> => {
+  try {
+    const response = await mlApiClient.get(`/demo-data/user-prediction/${instacartUserId}`);
+    return response.data;
+  } catch (error: any) {
+    logger.error(`Demo prediction failed for Instacart user ${instacartUserId}:`, error);
     throw error;
   }
 };
 
-export const getDemoUserPrediction = async (userId: string): Promise<any> => {
+// ============================================================================
+// NEW: Next Basket Prediction for Regular Users
+// ============================================================================
+
+export const getNextBasketPrediction = async (internalUserId: string): Promise<any> => {
   try {
-    const response = await mlApiClient.post(`/demo/prediction-comparison/${userId}`);
-    return response.data;
+    // Get Instacart user ID if available
+    const instacartUserId = await getInstacartUserId(internalUserId);
+    
+    if (!instacartUserId) {
+      // For non-demo users, return popular items or empty basket
+      logger.info(`Generating fallback predictions for non-demo user ${internalUserId}`);
+      
+      // You could return popular items here
+      return {
+        products: [],
+        confidence: 0,
+        source: 'no_history',
+        message: 'Please complete a few orders to get personalized predictions'
+      };
+    }
+
+    // Call ML service for prediction
+    const response = await mlApiClient.post('/predict', {
+      user_id: instacartUserId,
+      k: 20 // Top 20 recommendations
+    });
+
+    return {
+      products: response.data.predicted_products || [],
+      confidence: response.data.confidence_score || 0.5,
+      source: 'tifu_knn',
+      model_version: response.data.model_version
+    };
   } catch (error) {
-    logger.error(`Demo prediction failed for user ${userId}:`, error);
+    logger.error(`Next basket prediction failed:`, error);
     throw error;
   }
 };
 
 // ============================================================================
-// DEMO FUNCTIONALITY METHODS (Demands 1 & 3)
+// Other methods remain the same...
 // ============================================================================
 
-export const getInstacartUserOrderHistory = async (userId: number): Promise<any> => {
+export const getInstacartUserOrderHistory = async (userId: string): Promise<any> => {
   try {
     const response = await mlApiClient.get(`/demo-data/instacart-user-order-history/${userId}`);
     return response.data;
@@ -98,10 +206,6 @@ export const getUserStats = async (userId: number): Promise<any> => {
   }
 };
 
-// ============================================================================
-// MODEL EVALUATION METHOD (Demand 2)
-// ============================================================================
-
 export const triggerModelEvaluation = async (sampleSize?: number): Promise<any> => {
   try {
     const response = await mlApiClient.post('/evaluate-model', null, {
@@ -114,10 +218,6 @@ export const triggerModelEvaluation = async (sampleSize?: number): Promise<any> 
   }
 };
 
-// ============================================================================
-// CONSOLIDATED HEALTH & MONITORING
-// ============================================================================
-
 export const getMLServiceStatus = async (): Promise<{
   isHealthy: boolean;
   health: any;
@@ -129,7 +229,6 @@ export const getMLServiceStatus = async (): Promise<{
   let health = null;
 
   try {
-    // Single health check call
     const healthResponse = await mlApiClient.get('/health');
     health = healthResponse.data;
   } catch (error: any) {
@@ -138,10 +237,8 @@ export const getMLServiceStatus = async (): Promise<{
     logger.error('ML service status check failed:', error);
   }
 
-  // Determine overall health
   const isHealthy = health?.status === 'healthy' && errors.length === 0;
 
-  // Extract capabilities from health response
   const capabilities = {
     database_predictions: health?.database_available && health?.model_loaded,
     demo_predictions: health?.model_loaded && health?.data_loaded?.orders > 0,
@@ -157,10 +254,6 @@ export const getMLServiceStatus = async (): Promise<{
     ...(errors.length > 0 && { errors })
   };
 };
-
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
 
 export const callMLServiceAPI = async (
   endpoint: string, 
@@ -186,51 +279,26 @@ export const callMLServiceAPI = async (
   }
 };
 
-// ============================================================================
-// EXPORT DEFAULT INTERFACE
-// ============================================================================
-
 const mlService = {
   // Core predictions
   getPredictionFromDatabase,
   getDemoUserPrediction,
+  getNextBasketPrediction, // NEW
   
-  // Demo functionality (Demands 1 & 3)
+  // Demo functionality
   getInstacartUserOrderHistory,
   getDemoUserIds,
   getUserStats,
   
-  // Model evaluation (Demand 2)
+  // Model evaluation
   triggerModelEvaluation,
   
   // Health & monitoring
   getMLServiceStatus,
   
   // Utilities
-  callMLServiceAPI
+  callMLServiceAPI,
+  getInstacartUserId // Exposed for other services if needed
 };
 
 export default mlService;
-
-// ============================================================================
-// ARCHITECTURE CLEANUP COMPLETE:
-// 
-// ✅ REMOVED REDUNDANT METHODS:
-// - checkMLServiceHealth (deprecated)
-// - getServiceStats (deprecated)
-// - getComprehensiveServiceStatus (deprecated)
-// - getModelPerformanceMetrics (deprecated alias)
-// 
-// ✅ CONSOLIDATED:
-// - Single health check method: getMLServiceStatus
-// - Removed duplicate service info calls
-// - Cleaner error handling
-// 
-// ✅ MAINTAINED:
-// - All core functionality for Demands 1, 2, and 3
-// - Proper logging and error handling
-// - Retry logic for resilience
-// 
-// The service is now clean, focused, and maintains all required functionality
-// while eliminating unnecessary redundancy.
-// ============================================================================

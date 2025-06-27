@@ -1,4 +1,4 @@
-// backend/src/routes/prediction.routes.ts
+// backend/src/routes/prediction.routes.ts - FIXED with auto-generate endpoints
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
 import { PredictionController } from '@/controllers/prediction.controller';
@@ -6,6 +6,26 @@ import { validateRequest } from '@/middleware/validation.middleware';
 
 const router = Router();
 const predictionController = new PredictionController();
+
+// ============================================================================
+// CRITICAL NEW ENDPOINTS FOR USER BASKET GENERATION
+// ============================================================================
+
+// Auto-generate next basket (Main endpoint for users)
+router.post(
+  '/auto-generate',
+  predictionController.autoGenerateBasket
+);
+
+// Get next basket recommendation (Alternative endpoint)
+router.post(
+  '/next-basket', 
+  predictionController.getNextBasketRecommendation
+);
+
+// ============================================================================
+// EXISTING ENDPOINTS
+// ============================================================================
 
 // Get current predicted basket
 router.get(
@@ -35,7 +55,7 @@ router.get(
   predictionController.getUserPredictedBaskets
 );
 
-// Generate new prediction
+// Generate new prediction (generic endpoint)
 router.post(
   '/generate',
   [
@@ -82,7 +102,7 @@ router.post(
   predictionController.addBasketItem
 );
 
-// Accept predicted basket
+// Accept predicted basket (convert to cart)
 router.post(
   '/baskets/:basketId/accept',
   [
@@ -117,6 +137,12 @@ router.post(
   predictionController.submitFeedback
 );
 
+// Get model performance metrics (for frontend display)
+router.get(
+  '/metrics/model-performance',
+  predictionController.getModelMetrics
+);
+
 // Get online metrics
 router.get(
   '/metrics/online',
@@ -137,10 +163,9 @@ router.get(
 
 // Get prediction explanation
 router.get(
-  '/baskets/:basketId/items/:productId/explanation',
+  '/baskets/:basketId/explanation',
   [
-    param('basketId').isUUID(),
-    param('productId').isUUID()
+    param('basketId').isUUID()
   ],
   validateRequest,
   predictionController.getPredictionExplanation
@@ -167,43 +192,14 @@ router.put(
   predictionController.updatePreferences
 );
 
-// Get prediction schedule
+// Get prediction statistics
 router.get(
-  '/schedule',
-  predictionController.getSchedule
-);
-
-// Update prediction schedule
-router.put(
-  '/schedule',
+  '/stats',
   [
-    body('enabled').isBoolean(),
-    body('dayOfWeek').isInt({ min: 0, max: 6 }),
-    body('timeOfDay').matches(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/)
+    query('period').optional().isIn(['week', 'month', 'year'])
   ],
   validateRequest,
-  predictionController.updateSchedule
-);
-
-
-// Get prediction history
-router.get(
-  '/history',
-  [
-    query('days').optional().isInt({ min: 1, max: 365 })
-  ],
-  validateRequest,
-  predictionController.getPredictionHistory
-);
-
-// Evaluate prediction accuracy
-router.get(
-  '/baskets/:basketId/evaluate',
-  [
-    param('basketId').isUUID()
-  ],
-  validateRequest,
-  predictionController.evaluatePrediction
+  predictionController.getPredictionStats
 );
 
 export default router;
