@@ -18,6 +18,8 @@ from models.schemas import (
     EvaluationRequest, EvaluationResponse,
     UserOrderHistory, DemoUserPrediction
 )
+from services.data_preprocessor import DataPreprocessor
+from services.keyset_generator import KeysetGenerator
 
 # Setup logging
 setup_logger()
@@ -43,30 +45,32 @@ data_loader = None
 prediction_service = None
 evaluation_service = None
 
+# Find the startup_event function and update it:
 @app.on_event("startup")
 async def startup_event():
-    """Initialize services on startup"""
+    """Initialize services on startup with preprocessing"""
     global data_loader, prediction_service, evaluation_service
     
-    logger.info("Starting ML Service...")
+    logger.info("Starting ML Service with TIFU-KNN...")
     
     # Initialize data loader
     data_loader = DataLoader()
     
-    # Load Instacart dataset
+    # Load Instacart dataset WITH PREPROCESSING
     dataset_path = os.getenv("RAW_DATA_PATH", "/app/dataset")
     try:
-        data_loader.load_instacart_data(dataset_path)
+        # This now triggers preprocessing automatically!
+        data_loader.load_instacart_data(dataset_path, preprocess=True)
         logger.info(f"Loaded data for {data_loader.get_user_count()} users")
+        
     except Exception as e:
         logger.error(f"Failed to load dataset: {e}")
-        # Continue anyway for development
     
     # Initialize services
     prediction_service = PredictionService(data_loader)
     evaluation_service = EvaluationService(data_loader, prediction_service)
     
-    logger.info("ML Service initialized successfully")
+    logger.info("ML Service with TIFU-KNN initialized successfully")
 
 @app.get("/health")
 async def health_check():

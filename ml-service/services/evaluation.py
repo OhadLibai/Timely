@@ -1,30 +1,36 @@
 # ml-service/services/evaluation.py
+"""
+Enhanced evaluation service with complete Next Basket Recommendation metrics
+Matches the reference implementation from A-Next-Basket-Recommendation-Reality-Check
+"""
+
 import numpy as np
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple, Set
 from loguru import logger
 import time
 from collections import defaultdict
+import random
 
 class EvaluationService:
     """
-    Service for evaluating TIFU-KNN model performance
+    Service for evaluating TIFU-KNN model performance with complete NBR metrics
     """
     
     def __init__(self, data_loader, prediction_service):
         self.data_loader = data_loader
         self.prediction_service = prediction_service
-    
-    def evaluate_model(self, sample_size: int = 100) -> Dict[str, Any]:
+        
+    def evaluate_model(self, sample_size: int = None) -> Dict[str, Any]:
         """
-        Evaluate model performance on a sample of users
+        Evaluate model performance with comprehensive NBR metrics
         
         Args:
-            sample_size: Number of users to evaluate
+            sample_size: Number of users to evaluate (None = all users)
             
         Returns:
-            Dictionary containing evaluation metrics
+            Dictionary containing all evaluation metrics
         """
-        logger.info(f"Starting model evaluation with sample_size={sample_size}")
+        logger.info(f"Starting comprehensive model evaluation...")
         start_time = time.time()
         
         # Get users with future baskets for evaluation
@@ -37,191 +43,202 @@ class EvaluationService:
             logger.error("No users with future baskets found for evaluation")
             return {"error": "No evaluation data available"}
         
-        # Sample users
-        if sample_size < len(eval_users):
-            import random
+        # Sample users if requested
+        if sample_size and sample_size < len(eval_users):
             random.seed(42)  # For reproducibility
             eval_users = random.sample(eval_users, sample_size)
         
         logger.info(f"Evaluating on {len(eval_users)} users")
         
         # Initialize metric collectors
-        recalls = defaultdict(list)  # recall@k for different k values
-        precisions = defaultdict(list)
-        f1_scores = defaultdict(list)
-        hit_rates = defaultdict(int)
+        all_metrics = defaultdict(list)
+        user_predictions = {}  # Store for personalization calculation
         
-        # User type analysis
-        repeat_recalls = []
-        explore_recalls = []
+        # Metrics at different k values
+        k_values = [5, 10, 20]
         
-        k_values = [5, 10, 20]  # Different basket sizes to evaluate
+        # User behavior analysis
+        repeat_users = []
+        explore_users = []
         
-        # Evaluate each user
+        # Progress tracking
         for idx, user_id in enumerate(eval_users):
-            if idx % 50 == 0:
+            if idx % 100 == 0:
                 logger.info(f"Progress: {idx}/{len(eval_users)} users evaluated")
             
             # Get actual next basket
             actual_basket = self.data_loader.get_user_future_basket(user_id)
             if not actual_basket:
                 continue
-            
-            actual_set = set(actual_basket)
-            
+                
             # Get user's historical items
-            user_baskets = self.data_loader.get_user_baskets(user_id)
-            historical_items = set(item for basket in user_baskets for item in basket)
+            user_history = set()
+            for basket in self.data_loader.get_user_baskets(user_id):
+                user_history.update(basket)
             
-            # Classify actual items as repeat or explore
-            repeat_items = actual_set.intersection(historical_items)
-            explore_items = actual_set - historical_items
+            # Classify user behavior
+            repeat_items = set(actual_basket) & user_history
+            explore_items = set(actual_basket) - user_history
             
-            # Get predictions for different k values
+            if len(repeat_items) > len(explore_items):
+                repeat_users.append(user_id)
+            else:
+                explore_users.append(user_id)
+            
+            # Generate predictions for different k values
             max_k = max(k_values)
-            predictions = self.prediction_service.predict_next_basket(
+            predicted_items = self.prediction_service.predict_next_basket(
                 user_id, k=max_k, exclude_last_order=True
             )
+            user_predictions[user_id] = predicted_items
             
             # Calculate metrics for each k
             for k in k_values:
-                pred_k = set(predictions[:k])
+                k_predictions = predicted_items[:k]
+                metrics = self._calculate_user_metrics(
+                    k_predictions, actual_basket, user_history
+                )
                 
-                # Intersection
-                correct = pred_k.intersection(actual_set)
-                
-                # Recall: what fraction of actual items were predicted
-                if actual_set:
-                    recall = len(correct) / len(actual_set)
-                    recalls[k].append(recall)
-                
-                # Precision: what fraction of predictions were correct
-                if pred_k:
-                    precision = len(correct) / len(pred_k)
-                    precisions[k].append(precision)
-                
-                # F1 score
-                if recall > 0 or precision > 0:
-                    f1 = 2 * (precision * recall) / (precision + recall)
-                    f1_scores[k].append(f1)
-                else:
-                    f1_scores[k].append(0)
-                
-                # Hit rate: was at least one item correct
-                if correct:
-                    hit_rates[k] += 1
+                for metric_name, value in metrics.items():
+                    all_metrics[f"{metric_name}@{k}"].append(value)
             
-            # Separate recall for repeat vs explore items
+            # Calculate behavior-specific metrics
             if repeat_items:
-                repeat_correct = pred_k.intersection(repeat_items)
-                repeat_recall = len(repeat_correct) / len(repeat_items)
-                repeat_recalls.append(repeat_recall)
-            
+                repeat_recall = len(set(predicted_items[:20]) & repeat_items) / len(repeat_items)
+                all_metrics['repeat_recall@20'].append(repeat_recall)
+                
             if explore_items:
-                explore_correct = pred_k.intersection(explore_items)
-                explore_recall = len(explore_correct) / len(explore_items)
-                explore_recalls.append(explore_recall)
+                explore_recall = len(set(predicted_items[:20]) & explore_items) / len(explore_items)
+                all_metrics['explore_recall@20'].append(explore_recall)
         
-        # Calculate average metrics
-        metrics = {
-            "sample_size": len(eval_users),
-            "evaluation_time_seconds": round(time.time() - start_time, 2)
-        }
+        # Aggregate metrics
+        aggregated_metrics = {}
+        for metric_name, values in all_metrics.items():
+            if values:
+                aggregated_metrics[metric_name] = np.mean(values)
         
-        # Add metrics for each k
-        for k in k_values:
-            if recalls[k]:
-                metrics[f"recall@{k}"] = round(np.mean(recalls[k]), 4)
-                metrics[f"precision@{k}"] = round(np.mean(precisions[k]), 4)
-                metrics[f"f1@{k}"] = round(np.mean(f1_scores[k]), 4)
-                metrics[f"hit_rate@{k}"] = round(hit_rates[k] / len(eval_users), 4)
+        # Calculate personalization score
+        personalization = self._calculate_personalization(user_predictions)
+        aggregated_metrics['personalization_score'] = personalization
         
-        # Add repeat vs explore analysis
-        if repeat_recalls:
-            metrics["repeat_recall@20"] = round(np.mean(repeat_recalls), 4)
-        if explore_recalls:
-            metrics["explore_recall@20"] = round(np.mean(explore_recalls), 4)
+        # Add user behavior breakdown
+        total_eval_users = len(eval_users)
+        aggregated_metrics['repeat_users_ratio'] = len(repeat_users) / total_eval_users
+        aggregated_metrics['explore_users_ratio'] = len(explore_users) / total_eval_users
         
-        # Add personalization metric
-        metrics["personalization_score"] = self._calculate_personalization(
-            eval_users[:min(100, len(eval_users))]
-        )
+        # Add evaluation metadata
+        aggregated_metrics['users_evaluated'] = len(eval_users)
+        aggregated_metrics['evaluation_time'] = time.time() - start_time
         
-        logger.info(f"Evaluation completed in {metrics['evaluation_time_seconds']}s")
-        logger.info(f"Recall@20: {metrics.get('recall@20', 'N/A')}")
-        
-        return metrics
+        logger.info(f"Evaluation complete in {aggregated_metrics['evaluation_time']:.2f} seconds")
+        return aggregated_metrics
     
-    def _calculate_personalization(self, users: List[int]) -> float:
+    def _calculate_user_metrics(self, 
+                               predicted: List[int], 
+                               actual: List[int],
+                               user_history: Set[int]) -> Dict[str, float]:
+        """
+        Calculate comprehensive metrics for a single user
+        """
+        predicted_set = set(predicted)
+        actual_set = set(actual)
+        
+        # Basic metrics
+        true_positives = len(predicted_set & actual_set)
+        
+        recall = true_positives / len(actual_set) if actual_set else 0.0
+        precision = true_positives / len(predicted_set) if predicted_set else 0.0
+        f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0.0
+        
+        # Hit rate (binary - did we get at least one item right?)
+        hit_rate = 1.0 if true_positives > 0 else 0.0
+        
+        # Coverage of actual basket
+        coverage = true_positives / len(actual_set) if actual_set else 0.0
+        
+        # Novelty (proportion of recommended items not in user history)
+        novel_items = predicted_set - user_history
+        novelty = len(novel_items) / len(predicted_set) if predicted_set else 0.0
+        
+        return {
+            'recall': recall,
+            'precision': precision,
+            'f1': f1,
+            'hit_rate': hit_rate,
+            'coverage': coverage,
+            'novelty': novelty
+        }
+    
+    def _calculate_personalization(self, user_predictions: Dict[int, List[int]]) -> float:
         """
         Calculate personalization score (how different recommendations are across users)
+        Based on the reference implementation
         """
-        if len(users) < 2:
+        if len(user_predictions) < 2:
             return 0.0
-        
-        user_recommendations = {}
-        for user_id in users:
-            recs = self.prediction_service.predict_next_basket(
-                user_id, k=20, exclude_last_order=True
-            )
-            user_recommendations[user_id] = set(recs)
-        
+            
         # Calculate pairwise differences
-        differences = []
-        user_list = list(user_recommendations.keys())
+        users = list(user_predictions.keys())
+        total_pairs = 0
+        total_difference = 0
         
-        for i in range(len(user_list)):
-            for j in range(i + 1, len(user_list)):
-                recs1 = user_recommendations[user_list[i]]
-                recs2 = user_recommendations[user_list[j]]
+        for i in range(len(users)):
+            for j in range(i + 1, len(users)):
+                set_i = set(user_predictions[users[i]])
+                set_j = set(user_predictions[users[j]])
                 
-                if recs1 or recs2:
+                if set_i or set_j:
                     # Jaccard distance
-                    intersection = len(recs1.intersection(recs2))
-                    union = len(recs1.union(recs2))
-                    if union > 0:
-                        similarity = intersection / union
-                        differences.append(1 - similarity)
+                    intersection = len(set_i & set_j)
+                    union = len(set_i | set_j)
+                    similarity = intersection / union if union > 0 else 0
+                    difference = 1 - similarity
+                    
+                    total_difference += difference
+                    total_pairs += 1
         
-        if differences:
-            return round(np.mean(differences), 4)
-        return 0.0
+        return total_difference / total_pairs if total_pairs > 0 else 0.0
     
     def evaluate_single_user(self, user_id: int) -> Dict[str, Any]:
         """
-        Detailed evaluation for a single user
+        Detailed evaluation for a single user (for demo purposes)
         """
+        # Get actual basket
         actual_basket = self.data_loader.get_user_future_basket(user_id)
         if not actual_basket:
-            return {"error": f"No future basket found for user {user_id}"}
+            return {"error": f"No future basket for user {user_id}"}
         
         # Get predictions
-        predictions = self.prediction_service.predict_next_basket(
+        predicted_basket = self.prediction_service.predict_next_basket(
             user_id, k=20, exclude_last_order=True
         )
         
-        # Calculate metrics
+        # Get user history for analysis
+        user_history = set()
+        for basket in self.data_loader.get_user_baskets(user_id):
+            user_history.update(basket)
+        
+        # Calculate detailed metrics
+        predicted_set = set(predicted_basket)
         actual_set = set(actual_basket)
-        pred_set = set(predictions[:len(actual_basket)])
-        correct = pred_set.intersection(actual_set)
         
-        # Get user history
-        user_baskets = self.data_loader.get_user_baskets(user_id)
-        historical_items = set(item for basket in user_baskets for item in basket)
-        
-        # Classify items
-        repeat_items = actual_set.intersection(historical_items)
-        explore_items = actual_set - historical_items
+        correct_items = predicted_set & actual_set
+        repeat_items = actual_set & user_history
+        explore_items = actual_set - user_history
         
         return {
             "user_id": user_id,
-            "actual_basket_size": len(actual_basket),
-            "predicted_basket_size": len(predictions),
-            "correct_predictions": len(correct),
-            "recall": round(len(correct) / len(actual_set) if actual_set else 0, 3),
-            "precision": round(len(correct) / len(pred_set) if pred_set else 0, 3),
-            "repeat_items_count": len(repeat_items),
-            "explore_items_count": len(explore_items),
-            "historical_basket_count": len(user_baskets),
-            "historical_unique_items": len(historical_items)
+            "predicted": predicted_basket,
+            "actual": list(actual_basket),
+            "correct_predictions": list(correct_items),
+            "metrics": {
+                "recall": len(correct_items) / len(actual_set) if actual_set else 0,
+                "precision": len(correct_items) / len(predicted_set) if predicted_set else 0,
+                "correct_items": len(correct_items),
+                "total_predicted": len(predicted_basket),
+                "total_actual": len(actual_basket),
+                "repeat_items_in_actual": len(repeat_items),
+                "explore_items_in_actual": len(explore_items),
+                "user_history_size": len(user_history)
+            }
         }

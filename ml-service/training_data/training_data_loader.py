@@ -1,4 +1,9 @@
 # ml-service/training_data/training_data_loader.py
+"""
+Updated DataLoader with preprocessing integration for TIFU-KNN
+Now includes JSON export functionality and keyset generation
+"""
+
 import os
 import pandas as pd
 import numpy as np
@@ -10,6 +15,7 @@ from collections import defaultdict
 class DataLoader:
     """
     Loads and manages Instacart dataset for TIFU-KNN predictions
+    Enhanced with preprocessing capabilities
     """
     
     def __init__(self):
@@ -19,10 +25,15 @@ class DataLoader:
         self.order_info = {}  # (user_id, order_idx) -> order temporal info
         self.user_ids = []
         self.is_loaded = False
+        self.preprocessed_data_paths = None
         
-    def load_instacart_data(self, data_path: str):
+    def load_instacart_data(self, data_path: str, preprocess: bool = True):
         """
-        Load Instacart dataset from CSV files
+        Load Instacart dataset from CSV files with optional preprocessing
+        
+        Args:
+            data_path: Path to directory containing CSV files
+            preprocess: Whether to preprocess data for TIFU-KNN after loading
         """
         logger.info(f"Loading Instacart data from {data_path}")
         
@@ -38,6 +49,10 @@ class DataLoader:
             
             self.is_loaded = True
             logger.info(f"Successfully loaded data for {len(self.user_baskets)} users")
+            
+            # Preprocess for TIFU-KNN if requested
+            if preprocess:
+                self.preprocess_for_tifuknn()
             
         except Exception as e:
             logger.error(f"Failed to load Instacart data: {e}")
@@ -60,10 +75,13 @@ class DataLoader:
             
             if os.path.exists(aisles_file):
                 aisles_df = pd.read_csv(aisles_file)
-                products_df = products_df.merge(aisles_df, on='aisle_id', how='left')
-            
             if os.path.exists(departments_file):
                 departments_df = pd.read_csv(departments_file)
+            
+            # Merge data
+            if aisles_df is not None:
+                products_df = products_df.merge(aisles_df, on='aisle_id', how='left')
+            if departments_df is not None:
                 products_df = products_df.merge(departments_df, on='department_id', how='left')
             
             # Store products
@@ -72,20 +90,20 @@ class DataLoader:
                     'product_name': row['product_name'],
                     'aisle': row.get('aisle', 'Unknown'),
                     'department': row.get('department', 'Unknown'),
-                    'aisle_id': row.get('aisle_id', -1),
-                    'department_id': row.get('department_id', -1)
+                    'aisle_id': row.get('aisle_id'),
+                    'department_id': row.get('department_id')
                 }
             
             logger.info(f"Loaded {len(self.products)} products")
         else:
-            logger.warning(f"Products file not found at {products_file}")
+            logger.warning(f"Products file not found: {products_file}")
     
     def _load_orders(self, data_path: str) -> pd.DataFrame:
-        """Load orders with temporal information"""
+        """Load orders data"""
         orders_file = os.path.join(data_path, "orders.csv")
         
         if not os.path.exists(orders_file):
-            raise FileNotFoundError(f"Orders file not found at {orders_file}")
+            raise FileNotFoundError(f"Orders file not found: {orders_file}")
         
         logger.info("Loading orders...")
         orders_df = pd.read_csv(orders_file)
@@ -93,98 +111,105 @@ class DataLoader:
         # Store temporal information for each order
         for _, row in orders_df.iterrows():
             user_id = row['user_id']
-            order_number = row['order_number'] - 1  # Convert to 0-based index
+            order_number = row['order_number'] - 1  # 0-indexed
             
-            if user_id not in self.order_info:
-                self.order_info[user_id] = {}
-            
-            self.order_info[user_id][order_number] = {
+            self.order_info[(user_id, order_number)] = {
                 'order_id': row['order_id'],
                 'order_dow': row.get('order_dow', 0),
                 'order_hour_of_day': row.get('order_hour_of_day', 10),
-                'days_since_prior_order': row.get('days_since_prior_order', None),
-                'eval_set': row['eval_set']
+                'days_since_prior_order': row.get('days_since_prior_order', np.nan)
             }
         
-        logger.info(f"Loaded {len(orders_df)} orders")
         return orders_df
     
     def _load_order_products(self, data_path: str, orders_df: pd.DataFrame):
-        """Load order products and organize into baskets"""
+        """Load order products for prior and train sets"""
         prior_file = os.path.join(data_path, "order_products__prior.csv")
         train_file = os.path.join(data_path, "order_products__train.csv")
         
-        # Create order_id to user_id mapping
-        order_to_user = dict(zip(orders_df['order_id'], orders_df['user_id']))
-        order_to_eval = dict(zip(orders_df['order_id'], orders_df['eval_set']))
+        # Get train orders (future baskets for evaluation)
+        train_orders = set(orders_df[orders_df['eval_set'] == 'train']['order_id'].values)
         
         # Load prior orders
         if os.path.exists(prior_file):
             logger.info("Loading prior order products...")
             prior_df = pd.read_csv(prior_file)
             
-            # Group by order and create baskets
-            for order_id, group in prior_df.groupby('order_id'):
-                if order_id in order_to_user:
-                    user_id = order_to_user[order_id]
-                    products = group['product_id'].tolist()
-                    
-                    if user_id not in self.user_baskets:
-                        self.user_baskets[user_id] = []
-                    
-                    self.user_baskets[user_id].append(products)
+            # Group by order
+            prior_grouped = prior_df.groupby('order_id')['product_id'].apply(list).to_dict()
+            
+            # Build user baskets
+            for _, order in orders_df[orders_df['eval_set'] == 'prior'].iterrows():
+                user_id = order['user_id']
+                order_id = order['order_id']
+                
+                if user_id not in self.user_baskets:
+                    self.user_baskets[user_id] = []
+                
+                if order_id in prior_grouped:
+                    self.user_baskets[user_id].append(prior_grouped[order_id])
         
-        # Load train orders (future baskets for evaluation)
+        # Load train orders (future baskets)
         if os.path.exists(train_file):
-            logger.info("Loading train order products...")
+            logger.info("Loading train order products (future baskets)...")
             train_df = pd.read_csv(train_file)
             
-            for order_id, group in train_df.groupby('order_id'):
-                if order_id in order_to_user:
-                    user_id = order_to_user[order_id]
-                    products = group['product_id'].tolist()
-                    
-                    # This is the future basket for evaluation
-                    self.user_future_baskets[user_id] = products
+            # Group by order
+            train_grouped = train_df.groupby('order_id')['product_id'].apply(list).to_dict()
+            
+            # Store as future baskets
+            for _, order in orders_df[orders_df['eval_set'] == 'train'].iterrows():
+                user_id = order['user_id']
+                order_id = order['order_id']
+                
+                if order_id in train_grouped:
+                    self.user_future_baskets[user_id] = train_grouped[order_id]
         
-        # Sort baskets by order for each user
-        for user_id in self.user_baskets:
-            # Ensure chronological order based on order_number
-            if user_id in self.order_info:
-                # Sort baskets based on order info
-                sorted_baskets = []
-                for order_idx in sorted(self.order_info[user_id].keys()):
-                    if order_idx < len(self.user_baskets[user_id]):
-                        sorted_baskets.append(self.user_baskets[user_id][order_idx])
-                self.user_baskets[user_id] = sorted_baskets
-        
-        # Store user IDs
+        # Update user list
         self.user_ids = list(self.user_baskets.keys())
-        
-        logger.info(f"Loaded baskets for {len(self.user_baskets)} users")
-        logger.info(f"Loaded future baskets for {len(self.user_future_baskets)} users")
+        logger.info(f"Loaded baskets for {len(self.user_ids)} users")
+        logger.info(f"Users with future baskets: {len(self.user_future_baskets)}")
     
+    def preprocess_for_tifuknn(self, output_dir: str = "/app/data"):
+        """
+        Preprocess data for TIFU-KNN algorithm
+        Creates JSON files and keyset
+        """
+        from services.data_preprocessor import DataPreprocessor
+        
+        logger.info("Preprocessing data for TIFU-KNN...")
+        
+        # Run preprocessing
+        self.preprocessed_data_paths = DataPreprocessor.preprocess_for_tifuknn(
+            self, output_dir
+        )
+        
+        logger.info("Preprocessing complete. Files created:")
+        for key, path in self.preprocessed_data_paths.items():
+            logger.info(f"  {key}: {path}")
+        
+        return self.preprocessed_data_paths
+    
+    # Getter methods remain the same
     def get_user_baskets(self, user_id: int) -> List[List[int]]:
         """Get all baskets for a user"""
         return self.user_baskets.get(user_id, [])
     
     def get_user_future_basket(self, user_id: int) -> Optional[List[int]]:
-        """Get future basket for a user (for evaluation)"""
-        return self.user_future_baskets.get(user_id, None)
+        """Get future basket for evaluation"""
+        return self.user_future_baskets.get(user_id)
     
     def get_product_info(self, product_id: int) -> Optional[Dict]:
         """Get product information"""
-        return self.products.get(product_id, None)
+        return self.products.get(product_id)
     
     def get_order_info(self, user_id: int, order_idx: int) -> Optional[Dict]:
-        """Get temporal information for a specific order"""
-        if user_id in self.order_info and order_idx in self.order_info[user_id]:
-            return self.order_info[user_id][order_idx]
-        return None
+        """Get order temporal information"""
+        return self.order_info.get((user_id, order_idx))
     
     def get_user_count(self) -> int:
         """Get total number of users"""
-        return len(self.user_baskets)
+        return len(self.user_ids)
     
     def get_product_count(self) -> int:
         """Get total number of products"""
@@ -197,60 +222,3 @@ class DataLoader:
     def get_future_basket_count(self) -> int:
         """Get number of users with future baskets"""
         return len(self.user_future_baskets)
-    
-    def get_available_user_ids(self, limit: int = 100) -> List[int]:
-        """Get list of available user IDs"""
-        # Return users that have both history and future baskets (for demo)
-        users_with_future = [
-            uid for uid in self.user_ids 
-            if uid in self.user_future_baskets
-        ]
-        return sorted(users_with_future)[:limit]
-    
-    def get_all_user_products(self, user_id: int) -> List[int]:
-        """Get all unique products ever purchased by a user"""
-        all_products = []
-        for basket in self.get_user_baskets(user_id):
-            all_products.extend(basket)
-        return list(set(all_products))
-    
-    def save_processed_data(self, output_path: str):
-        """Save processed data for faster loading"""
-        data = {
-            'user_baskets': self.user_baskets,
-            'user_future_baskets': self.user_future_baskets,
-            'products': self.products,
-            'order_info': self.order_info,
-            'user_ids': self.user_ids
-        }
-        
-        os.makedirs(output_path, exist_ok=True)
-        with open(os.path.join(output_path, 'processed_data.pkl'), 'wb') as f:
-            pickle.dump(data, f)
-        
-        logger.info(f"Saved processed data to {output_path}")
-    
-    def load_processed_data(self, input_path: str) -> bool:
-        """Load preprocessed data if available"""
-        pkl_file = os.path.join(input_path, 'processed_data.pkl')
-        
-        if os.path.exists(pkl_file):
-            logger.info(f"Loading processed data from {pkl_file}")
-            try:
-                with open(pkl_file, 'rb') as f:
-                    data = pickle.load(f)
-                
-                self.user_baskets = data['user_baskets']
-                self.user_future_baskets = data['user_future_baskets']
-                self.products = data['products']
-                self.order_info = data['order_info']
-                self.user_ids = data['user_ids']
-                self.is_loaded = True
-                
-                logger.info("Successfully loaded processed data")
-                return True
-            except Exception as e:
-                logger.error(f"Failed to load processed data: {e}")
-                return False
-        
-        return False

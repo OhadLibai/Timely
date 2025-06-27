@@ -1,3 +1,5 @@
+// frontend/src/components/admin/DateRangePicker.tsx
+
 import React, { useState } from 'react';
 import { Calendar } from 'lucide-react';
 

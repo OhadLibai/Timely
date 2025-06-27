@@ -125,34 +125,44 @@ async function seedUsers() {
   }
 }
 
-// Category and Product seeding function - FIXED with deterministic generation
+// database/init-database.ts - Updated product seeding
 async function populateFromCsv() {
-    logger.info("Populating categories and products from CSV with deterministic data...");
-
-    // Read category details from CSV
-    const categoryDetailsMap = new Map<string, { description: string, imageUrl: string }>();
-    await new Promise<void>((resolve, reject) => {
-        fs.createReadStream(path.join(__dirname, 'category_details.csv'))
+    const csvPath = path.join(__dirname, '../ml-service/training-data/products.csv');
+    const productsData: any[] = [];
+    
+    await new Promise((resolve, reject) => {
+        fs.createReadStream(csvPath)
             .pipe(csv())
             .on('data', (row) => {
-                categoryDetailsMap.set(row.department_name, { 
-                  description: row.description, 
-                  imageUrl: row.imageUrl 
+                const csvProductId = parseInt(row.product_id);
+                const departmentName = departments[row.department_id] || 'Other';
+                const categoryId = departmentCategories[departmentName];
+                
+                productsData.push({
+                    id: uuidv4(),
+                    name: row.product_name,
+                    sku: `INST-${csvProductId}`, // Clear format
+                    instacartProductId: csvProductId, // Direct mapping
+                    categoryId: categoryId,
+                    imageUrl: deterministicImageUrl(row.product_name, departmentName),
+                    price: deterministicPrice(row.product_name),
+                    isActive: true,
+                    stock: deterministicStock(row.product_name),
+                    metadata: { 
+                        aisle: row.aisle,
+                        department: departmentName
+                    }
                 });
             })
-            .on('end', () => {
-                logger.info(`Loaded details for ${categoryDetailsMap.size} categories from CSV.`);
-                resolve();
-            })
+            .on('end', resolve)
             .on('error', reject);
     });
     
-    // Default details for fallback
-    const defaultDetails = { 
-      description: "A variety of quality products.", 
-      imageUrl: "https://images.pexels.com/photos/264636/pexels-photo-264636.jpeg?auto=compress&cs=tinysrgb&w=400" 
-    };
-
+    await Product.bulkCreate(productsData, { 
+        ignoreDuplicates: true,
+        validate: true 
+    });
+}
     // Read and process departments.csv for categories
     const categoriesData: any[] = [];
     await new Promise<void>((resolve, reject) => {

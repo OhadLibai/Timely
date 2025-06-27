@@ -1,9 +1,0 @@
-Image Storage
-Images are NOT stored in the application.
-
-The database only stores a URL (a string of text like https://.../image.jpg)
-in the imageUrl column of your products and categories tables.
-
-The frontend (ProductCard.tsx or ProductImage.tsx) receives this URL from the backend
-and renders a standard HTML <img> tag. The src attribute of the image tag is set to this URL.
-The user's web browser then handles fetching the image from that external URL and displaying it on the screen.
