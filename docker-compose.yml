@@ -1,9 +1,9 @@
-# docker-compose.yml - OPTIMIZED VOLUMES CONFIGURATION
+# docker-compose.yml - DEV/TEST OPTIMIZED CONFIGURATION
 
 version: '3.8'
 
 services:
-  # Database Service
+  # Database Service (unchanged - works well for dev)
   database:
     image: postgres:14-alpine
     container_name: timely-db
@@ -19,7 +19,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./database/init-database.ts:/docker-entrypoint-initdb.d/02-init-database.ts
-      # ADDED: Mount dataset for database initialization
+      # Mount dataset for database initialization
       - ./ml-service/dataset:/app/dataset:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
@@ -29,62 +29,16 @@ services:
     networks:
       - timely-network
 
-  # ML Service - OPTIMIZED VOLUMES
-  ml-service:
-    build:
-      context: ./ml-service
-      dockerfile: Dockerfile
-    container_name: timely-ml-service
-    env_file:
-      - .env
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      DATASET_PATH: ${DATASET_PATH}
-      EVALUATION_SAMPLE_SIZE: ${EVALUATION_SAMPLE_SIZE}
-    ports:
-      - "${ML_SERVICE_PORT}:8000"
-    depends_on:
-      database:
-        condition: service_healthy
-    volumes:
-      # ========================================================================
-      # ESSENTIAL VOLUMES (KEEP THESE)
-      # ========================================================================
-      
-      # Dataset directory - CRITICAL for ML operations
-      - ./ml-service/dataset:/app/dataset:ro
-      
-      # ========================================================================
-      # OPTIONAL VOLUMES (CHOOSE BASED ON ENVIRONMENT)
-      # ========================================================================
-      
-      # Development code hot-reload (REMOVE for production)
-      - ./ml-service/app:/app/app:ro
-      
-      # ========================================================================
-      # QUESTIONABLE VOLUMES (RECOMMENDATIONS)
-      # ========================================================================
-      
-      # Cache volume - REMOVE if simplifying (we discussed this)
-      # - ml_cache_data:/app/data/cache
-      
-      # Generic data volume - NOT NEEDED (would conflict with cache)
-      # - ml_data_volume:/app/data
-      
-    networks:
-      - timely-network
-    restart: unless-stopped
-
-  # Backend API Service (unchanged)
+  # Backend - DEV/TEST OPTIMIZED
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev  # ✅ Use development Dockerfile
     container_name: timely-backend
     env_file:
       - .env
     environment:
-      NODE_ENV: ${NODE_ENV}
+      NODE_ENV: development       # ✅ Development mode
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
@@ -98,16 +52,24 @@ services:
       ml-service:
         condition: service_healthy
     volumes:
-      - ./backend/src:/app/src:ro  # Development only
+      # ✅ Hot reload for development
+      - ./backend/src:/app/src
+      # ✅ Package.json for dependency changes
+      - ./backend/package.json:/app/package.json
+      - ./backend/tsconfig.json:/app/tsconfig.json
+      # ✅ Exclude node_modules (use container's version)
+      - /app/node_modules
     networks:
       - timely-network
     restart: unless-stopped
+    # ✅ Development command override (if needed)
+    # command: ["npm", "run", "dev"]
 
-  # Frontend Service (unchanged)
+  # Frontend - DEV/TEST OPTIMIZED  
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev  # ✅ Use development Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL}
     container_name: timely-frontend
@@ -115,13 +77,57 @@ services:
       - .env
     environment:
       VITE_API_URL: ${VITE_API_URL}
+      NODE_ENV: development       # ✅ Development mode
     ports:
       - "${FRONTEND_PORT}:3000"
     depends_on:
       - backend
     volumes:
-      - ./frontend/src:/app/src:ro      # Development only
-      - ./frontend/public:/app/public:ro
+      # ✅ Hot reload for development
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      # ✅ Configuration files
+      - ./frontend/package.json:/app/package.json
+      - ./frontend/vite.config.ts:/app/vite.config.ts
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - ./frontend/tailwind.config.js:/app/tailwind.config.js
+      - ./frontend/postcss.config.js:/app/postcss.config.js
+      - ./frontend/index.html:/app/index.html
+      # ✅ Exclude node_modules (use container's version)
+      - /app/node_modules
+    networks:
+      - timely-network
+    restart: unless-stopped
+
+  # ML Service - CORRECTED DATA FLOW
+  ml-service:
+    build:
+      context: ./ml-service
+      dockerfile: Dockerfile      # ✅ Current Dockerfile is already dev-friendly
+    container_name: timely-ml-service
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      DATASET_PATH: ${DATASET_PATH}     # ✅ Raw CSV files
+      DATA_PATH: ${DATA_PATH}           # ✅ Processed JSON files (not cache mechanism)
+      LOG_LEVEL: ${LOG_LEVEL}
+      EVALUATION_SAMPLE_SIZE: ${EVALUATION_SAMPLE_SIZE}
+    ports:
+      - "${ML_SERVICE_PORT}:8000"
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      # ✅ Essential: Raw CSV data (read-only)
+      - ./ml-service/dataset:/app/dataset:ro
+      
+      # ✅ Essential: Processed data directory (read-write)
+      - ./ml-service/data:/app/data
+      
+      # ✅ Development: Hot reload (KEEP for dev/test)
+      - ./ml-service/app:/app/app:ro
+      
     networks:
       - timely-network
     restart: unless-stopped
@@ -131,39 +137,53 @@ networks:
   timely-network:
     driver: bridge
 
-# ============================================================================
-# VOLUMES SECTION - SIMPLIFIED
-# ============================================================================
+# Volumes - SIMPLIFIED
 volumes:
   postgres_data:
     name: timely-postgres-data
-  
-  # REMOVED: ml_cache_data (we decided cache complexity isn't needed for dev/test)
-  # REMOVED: ml_data_volume (redundant and conflicts with cache)
 
 # ============================================================================
-# VOLUME EXPLANATION COMMENTS
+# DEVELOPMENT OPTIMIZATIONS SUMMARY:
 # ============================================================================
 
-# ✅ KEEP: postgres_data
-#    - Purpose: Database persistence
-#    - Essential: Yes, without this you lose all data on restart
+# ✅ BACKEND CHANGES:
+# - Uses Dockerfile.dev (single-stage, faster builds)
+# - Hot reload with volume mounts
+# - Development dependencies included
+# - npm run dev command for auto-restart
 
-# ✅ KEEP: ./ml-service/dataset:/app/dataset:ro  
-#    - Purpose: CSV files for ML processing
-#    - Essential: Yes, this is your single source of truth
+# ✅ FRONTEND CHANGES:  
+# - Uses Dockerfile.dev (Vite dev server instead of nginx)
+# - Hot Module Replacement (HMR) enabled
+# - Development tools and source maps
+# - Fast startup time
 
-# ⚠️  OPTIONAL: ./ml-service/app:/app/app:ro
-#    - Purpose: Development hot-reload
-#    - Essential: No, only for development
-#    - Recommendation: Remove for production deployments
+# ✅ ML SERVICE:
+# - Existing Dockerfile is already development-friendly
+# - Added DATA_PATH environment and volume mount
+# - Hot reload capability maintained
 
-# ❌ REMOVE: ml_cache_data:/app/data/cache
-#    - Purpose: JSON cache files
-#    - Essential: No, adds complexity without significant benefit for dev/test
-#    - Recommendation: Remove based on our earlier discussion
+# ✅ VOLUME STRATEGY:
+# - Source code mounted for hot reload
+# - node_modules excluded (use container versions)
+# - Configuration files mounted for live changes
+# - Data persistence where needed
 
-# ❌ REMOVE: ml_data_volume:/app/data  
-#    - Purpose: Generic data storage
-#    - Essential: No, conflicts with cache path and adds confusion
-#    - Recommendation: Remove, use specific paths instead
+# ============================================================================
+# REQUIRED ACTIONS:
+# ============================================================================
+
+# 1. Create missing data directory:
+#    mkdir -p ml-service/data/cache
+
+# 2. Create development Dockerfiles:
+#    - backend/Dockerfile.dev (provided above)
+#    - frontend/Dockerfile.dev (provided above)
+
+# 3. Update package.json scripts (if needed):
+#    - Ensure "dev" scripts exist for hot reload
+
+# 4. First run:
+#    docker-compose down -v  # Clean slate
+#    docker-compose build    # Build with new Dockerfiles
+#    docker-compose up       # Start development environment

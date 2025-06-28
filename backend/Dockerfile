@@ -1,76 +1,62 @@
-# backend/Dockerfile - SANITIZED for API Gateway Architecture
+# backend/Dockerfile.dev - Development/Test Optimized
+# Single-stage build for faster development iteration
 
-# Build stage
-FROM node:18-alpine AS builder
+FROM node:18-alpine
 
-WORKDIR /app
-
-# Copy package files for dependency installation
-COPY package*.json ./
-COPY tsconfig.json ./
-
-# Install all dependencies (including devDependencies for build)
-RUN npm ci
-
-# Copy source code
-COPY src ./src
-
-# Build the TypeScript application
-RUN npm run build
-
-# ============================================================================
-# Production stage
-FROM node:18-alpine AS production
+# Install development tools
+RUN apk add --no-cache \
+    curl \
+    git \
+    bash
 
 WORKDIR /app
-
-# Install dumb-init for proper signal handling in containers
-RUN apk add --no-cache dumb-init curl
 
 # Copy package files
 COPY package*.json ./
+COPY tsconfig.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+# Install ALL dependencies (including devDependencies for development)
+RUN npm install
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+# Copy source code (will be overridden by volume mount in dev)
+COPY src ./src
 
-# Create non-root user for security
+# Create logs directory
+RUN mkdir -p logs
+
+# Create non-root user (but with more permissions for development)
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001 -G nodejs
-
-# Change ownership of application directory
-RUN chown -R nodejs:nodejs /app
+    adduser -S nodejs -u 1001 -G nodejs && \
+    chown -R nodejs:nodejs /app
 
 # Switch to non-root user
 USER nodejs
 
-# Expose the application port
+# Expose port
 EXPOSE 5000
 
-# Health check endpoint
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
-# Use dumb-init to handle signals properly in containers
-ENTRYPOINT ["dumb-init", "--"]
-
-# Start the application
-CMD ["node", "dist/server.js"]
+# Development command with hot reload
+CMD ["npm", "run", "dev"]
 
 # ============================================================================
-# REMOVED FEATURES:
-# - Upload directory creation (no file uploads)
-# - Complex volume configurations (simplified development)
-# - File processing tools (no image manipulation)
-# - Cron job schedulers (user-initiated actions only)
-# - Additional runtime dependencies (minimal footprint)
-#
-# OPTIMIZATIONS:
-# - Multi-stage build for smaller production image
-# - Non-root user for security
-# - Proper signal handling with dumb-init
-# - Health check for container orchestration
-# - Minimal production dependencies
+# DEVELOPMENT OPTIMIZATIONS:
+# 
+# ✅ Single-stage build (faster)
+# ✅ All dependencies installed (including dev tools)
+# ✅ npm run dev for hot reload
+# ✅ Development tools (git, bash) included
+# ✅ Simplified health check
+# ✅ Volume mounts expected for hot reload
+# ✅ Less restrictive user permissions
+# 
+# DIFFERENCES FROM PRODUCTION:
+# ❌ No multi-stage build
+# ❌ No production-only dependencies
+# ❌ No built artifacts (runs from source)
+# ❌ No signal handling optimization
+# ❌ More relaxed security (development focus)
 # ============================================================================
