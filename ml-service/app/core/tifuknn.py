@@ -17,6 +17,7 @@ from loguru import logger
 import time
 import random
 from app.config import config
+from app.core.generators import EvaluationSetsGenerator
 
 # Load root .env
 root_dir = Path(__file__).parent.parent.parent.parent
@@ -47,6 +48,7 @@ class TIFUKNNComplete:
         self.keyset = []
         self.all_items = set()
         self.user_profiles = {}
+        self.evaluation_generator = EvaluationSetsGenerator()
         
         logger.info(f"Initialized TIFU-KNN with parameters: "
                    f"neighbors={self.num_neighbors}, "
@@ -320,7 +322,7 @@ class TIFUKNNComplete:
         sorted_items = sorted(item_scores.items(), key=lambda x: x[1], reverse=True)
         return [item for item, _ in sorted_items[:k]]
     
-    def predict_from_baskets(self, 
+    def predict_using_basket_data(self, 
                            user_baskets: List[List[int]], 
                            k: int = 20,
                            temporal_metadata: Optional[Dict] = None) -> List[int]:
@@ -424,7 +426,9 @@ class TIFUKNNComplete:
         eval_users = [u for u in self.keyset if u in self.future]
         
         if sample_size and sample_size < len(eval_users):
-            eval_users = random.sample(eval_users, sample_size)
+            eval_users = self.evaluation_generator.stratified_user_sampling(
+                self.history, sample_size
+            )
         
         logger.info(f"Evaluating on {len(eval_users)} users")
         
@@ -469,31 +473,3 @@ class TIFUKNNComplete:
         return results
 
 
-# Utility functions for keyset generation
-class KeysetGenerator:
-    """Generate keysets for cross-validation as in reference implementation"""
-    
-    @staticmethod
-    def generate_random_keyset(user_ids: List[str], fold_number: int = 0, seed: int = 42) -> List[str]:
-        """Generate a random keyset for evaluation"""
-        random.seed(seed + fold_number)
-        shuffled = user_ids.copy()
-        random.shuffle(shuffled)
-        return shuffled
-    
-    @staticmethod
-    def generate_kfold_keysets(user_ids: List[str], n_folds: int = 5, seed: int = 42) -> List[List[str]]:
-        """Generate k-fold cross-validation keysets"""
-        random.seed(seed)
-        shuffled = user_ids.copy()
-        random.shuffle(shuffled)
-        
-        fold_size = len(shuffled) // n_folds
-        folds = []
-        
-        for i in range(n_folds):
-            start_idx = i * fold_size
-            end_idx = start_idx + fold_size if i < n_folds - 1 else len(shuffled)
-            folds.append(shuffled[start_idx:end_idx])
-        
-        return folds

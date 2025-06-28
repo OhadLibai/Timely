@@ -103,9 +103,9 @@ class DataPreprocessor:
         history = DataPreprocessor.create_history_json(data_loader.user_baskets)
         future = DataPreprocessor.create_future_json(data_loader.user_future_baskets)
         
-        # Generate keyset
-        from .keyset_generator import generate_instacart_keyset
-        keyset = generate_instacart_keyset(data_loader, output_dir)
+        # Generate frequency groups
+        from app.core.generators.frequency_groups import generate_instacart_frequency_groups
+        frequency_groups = generate_instacart_frequency_groups(data_loader, output_dir)
         
         # Save all files
         DataPreprocessor.save_json_files(history, future, output_dir=output_dir)
@@ -121,6 +121,6 @@ class DataPreprocessor:
         return {
             "history_path": os.path.join(output_dir, "instacart_history.json"),
             "future_path": os.path.join(output_dir, "instacart_future.json"),
-            "keyset_path": os.path.join(output_dir, "instacart_keyset_0.json"),
+            "frequency_groups_path": os.path.join(output_dir, "instacart_frequency_groups.json"),
             "merged_path": merged_path
         }

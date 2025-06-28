@@ -259,7 +259,8 @@ export class PredictionController {
   async getModelMetrics(req: Request, res: Response, next: NextFunction) {
     try {
       // Call ML service for latest metrics
-      const metrics = await mlService.triggerModelEvaluation(20); // Quick eval on 20 users
+      const { sampleSize } = req.body;
+      const metrics = await mlService.triggerModelEvaluation(sampleSize);
       
       res.json({
         metrics: {

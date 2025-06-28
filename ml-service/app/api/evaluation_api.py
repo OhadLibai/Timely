@@ -99,10 +99,6 @@ async def get_evaluation_status(
 ):
     """Check status of a running evaluation job"""
     if job_id not in evaluation_jobs:
-        # Try to fetch from database if implemented
-        stored_result = await service.get_stored_evaluation(job_id)
-        if stored_result:
-            return EvaluationResponse(**stored_result)
         raise HTTPException(status_code=404, detail="Evaluation job not found")
     
     job = evaluation_jobs[job_id]
@@ -244,93 +240,6 @@ async def get_metrics_for_visualization(
         raise HTTPException(status_code=500, detail="Failed to prepare visualization")
 
 # ============================================================================
-# PERFORMANCE ANALYSIS ENDPOINTS
-# ============================================================================
-
-@router.get("/metrics/by-user-segment")
-async def get_metrics_by_user_segment(
-    service: EvaluationService = Depends(get_evaluation_service)
-):
-    """
-    Get evaluation metrics broken down by user segments
-    
-    This helps understand where the model performs well or poorly.
-    """
-    try:
-        segments = await service.analyze_performance_by_segment()
-        
-        return {
-            "segments": segments,
-            "insights": {
-                "best_performing": max(segments, key=lambda x: x['recall']),
-                "worst_performing": min(segments, key=lambda x: x['recall']),
-                "most_users": max(segments, key=lambda x: x['user_count'])
-            }
-        }
-        
-    except Exception as e:
-        logger.error(f"Segment analysis failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to analyze segments")
-
-@router.get("/metrics/confidence-calibration")
-async def get_confidence_calibration(
-    service: EvaluationService = Depends(get_evaluation_service)
-):
-    """
-    Analyze how well calibrated the confidence scores are
-    
-    This shows if high confidence predictions are actually more accurate.
-    """
-    try:
-        calibration = await service.analyze_confidence_calibration()
-        
-        return {
-            "calibration_data": calibration,
-            "is_well_calibrated": calibration.get('calibration_score', 0) > 0.8,
-            "interpretation": "Higher confidence predictions should have higher accuracy"
-        }
-        
-    except Exception as e:
-        logger.error(f"Calibration analysis failed: {e}")
-        raise HTTPException(status_code=500, detail="Failed to analyze calibration")
-
-# ============================================================================
-# HISTORICAL METRICS ENDPOINTS
-# ============================================================================
-
-@router.get("/metrics/history")
-async def get_evaluation_history(
-    limit: int = Query(10, ge=1, le=100),
-    service: EvaluationService = Depends(get_evaluation_service)
-):
-    """Get history of evaluation runs"""
-    try:
-        history = await service.get_evaluation_history(limit)
-        
-        return {
-            "evaluations": history,
-            "total_count": len(history),
-            "latest": history[0] if history else None
-        }
-        
-    except Exception as e:
-        logger.error(f"Failed to get evaluation history: {e}")
-        raise HTTPException(status_code=500, detail="Failed to retrieve history")
-
-@router.delete("/metrics/history")
-async def clear_evaluation_history(
-    service: EvaluationService = Depends(get_evaluation_service)
-):
-    """Clear evaluation history"""
-    try:
-        await service.clear_history()
-        return {"message": "Evaluation history cleared successfully"}
-        
-    except Exception as e:
-        logger.error(f"Failed to clear history: {e}")
-        raise HTTPException(status_code=500, detail="Failed to clear history")
-
-# ============================================================================
 # HELPER FUNCTIONS
 # ============================================================================
 
@@ -361,9 +270,6 @@ async def run_evaluation_async(job_id: str, service: EvaluationService, sample_s
                 }
             }
         }
-        
-        # Optionally store in database
-        await service.store_evaluation_result(job_id, evaluation_jobs[job_id]["result"])
         
         logger.info(f"Evaluation job {job_id} completed successfully")
         

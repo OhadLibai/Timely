@@ -32,11 +32,14 @@ class Config:
         "group_decay_rate": float(os.getenv("TIFUKNN_GROUP_DECAY", "0.7")),
         "sequential_decay_rate": float(os.getenv("TIFUKNN_SEQUENTIAL_DECAY", "0.9")),
         "group_size": int(os.getenv("TIFUKNN_GROUP_SIZE", "3")),
-        "top_k": int(os.getenv("TIFUKNN_TOP_K", "20"))
+        "top_k": int(os.getenv("TIFUKNN_TOP_K", "20")),
+        # Enhanced options
+        "frequency_group_method": os.getenv("TIFUKNN_FREQ_METHOD", "equal_division"),  # kmeans, quantile
+        "enable_stratified_eval": os.getenv("TIFUKNN_STRATIFIED_EVAL", "true").lower() == "true"
     }
     
     # Evaluation Configuration
-    config.EVALUATION_RANDOM_SEED = int(os.getenv("EVALUATION_RANDOM_SEED"))
+    EVALUATION_RANDOM_SEED: int = int(os.getenv("EVALUATION_RANDOM_SEED", "42"))
     EVALUATION_SAMPLE_SIZE: Optional[int] = None
     if os.getenv("EVALUATION_SAMPLE_SIZE"):
         EVALUATION_SAMPLE_SIZE = int(os.getenv("EVALUATION_SAMPLE_SIZE"))

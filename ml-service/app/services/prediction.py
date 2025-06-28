@@ -10,9 +10,10 @@ from collections import defaultdict, Counter
 from loguru import logger
 import time
 from app.config import config
+from app.core.confidence_calculations import ConfidenceCalculator
 
 # Import the complete TIFU-KNN implementation
-from .tifuknn_complete import TIFUKNNComplete
+from .tifuknn import TIFUKNNComplete
 
 class PredictionService:
     """
@@ -108,7 +109,7 @@ class PredictionService:
             logger.error(f"Prediction failed for user {user_id}: {e}")
             raise
     
-    def predict_from_baskets(self, user_baskets: List[List[int]], k: int = 20, 
+    def predict_using_basket_data(self, user_baskets: List[List[int]], k: int = 20, 
                            temporal_metadata: Optional[Dict] = None) -> List[int]:
         """
         Generate prediction directly from basket data (for database integration)
@@ -125,7 +126,7 @@ class PredictionService:
             logger.info(f"Generating prediction from {len(user_baskets)} baskets")
             
             # Use TIFU-KNN's direct basket prediction
-            predicted_items = self.tifuknn.predict_from_baskets(
+            predicted_items = self.tifuknn.predict_using_basket_data(
                 user_baskets=user_baskets,
                 k=k,
                 temporal_metadata=temporal_metadata

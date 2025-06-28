@@ -11,6 +11,7 @@ import time
 from collections import defaultdict
 import random
 from app.config import config
+from app.core.generators import EvaluationSetsGenerator
 
 class EvaluationService:
     """
@@ -20,6 +21,7 @@ class EvaluationService:
     def __init__(self, data_loader, prediction_service):
         self.data_loader = data_loader
         self.prediction_service = prediction_service
+        self.evaluation_generator = EvaluationSetsGenerator()
         
     def evaluate_model(self, sample_size: int = None) -> Dict[str, Any]:
         """
@@ -46,8 +48,11 @@ class EvaluationService:
         
         # Sample users if requested
         if sample_size and sample_size < len(eval_users):
-            random.seed(config.EVALUATION_RANDOM_SEED)  # For reproducibility
-            eval_users = random.sample(eval_users, sample_size)
+            eval_users = self.evaluation_generator.stratified_user_sampling(
+                {str(uid): self.data_loader.get_user_baskets(uid) for uid in eval_users},
+                sample_size
+            )
+            eval_users = [int(uid) for uid in eval_users]  # Convert back to int
         
         logger.info(f"Evaluating on {len(eval_users)} users")
         
@@ -199,6 +204,40 @@ class EvaluationService:
                     total_pairs += 1
         
         return total_difference / total_pairs if total_pairs > 0 else 0.0
+    
+    async def cross_validate_model(self, n_folds: int = 5) -> Dict[str, Any]:
+        """Cross-validation using enhanced evaluation generators"""
+        all_users = [str(uid) for uid in self.data_loader.user_ids]
+        folds = self.evaluation_generator.generate_kfold_sets(all_users, n_folds)
+        
+        fold_results = []
+        for i, test_users in enumerate(folds):
+            logger.info(f"Running fold {i+1}/{n_folds}")
+            
+            fold_metrics = {}
+            for user_id in test_users[:100]:  # Limit for speed
+                user_metrics = self.evaluate_single_user(int(user_id))
+                if 'metrics' in user_metrics:
+                    for metric, value in user_metrics['metrics'].items():
+                        if metric not in fold_metrics:
+                            fold_metrics[metric] = []
+                        fold_metrics[metric].append(value)
+            
+            fold_avg = {metric: np.mean(values) for metric, values in fold_metrics.items()}
+            fold_results.append(fold_avg)
+        
+        # Calculate cross-validation metrics
+        cv_metrics = {}
+        for metric in fold_results[0].keys():
+            values = [fold[metric] for fold in fold_results]
+            cv_metrics[f'{metric}_mean'] = np.mean(values)
+            cv_metrics[f'{metric}_std'] = np.std(values)
+        
+        return {
+            "cv_metrics": cv_metrics,
+            "fold_results": fold_results,
+            "n_folds": n_folds
+        }
     
     def evaluate_single_user(self, user_id: int) -> Dict[str, Any]:
         """
