@@ -15,11 +15,10 @@ import uuid
 from app.models.schemas import (
     EvaluationRequest,
     EvaluationResponse,
-    EvaluationStatus,
     MetricsVisualization
 )
 from app.services.evaluation import EvaluationService
-from app.core.database import get_db_connection
+
 from app.main import app
 
 
@@ -118,34 +117,6 @@ async def get_evaluation_status(
     
     return EvaluationResponse(**job["result"])
 
-@router.post("/evaluate/quick")
-async def quick_evaluation(
-    user_count: int = Query(10, ge=1, le=100),
-    service: EvaluationService = Depends(get_evaluation_service)
-):
-    """
-    Run a quick evaluation on a small sample for testing
-    
-    This is useful for demos and quick sanity checks.
-    """
-    try:
-        logger.info(f"Running quick evaluation on {user_count} users")
-        
-        metrics = await service.evaluate_model(sample_size=user_count)
-        
-        # Simplified response for quick checks
-        return {
-            "recall_at_20": round(metrics['metrics'].get('recall@20', 0), 3),
-            "precision_at_20": round(metrics['metrics'].get('precision@20', 0), 3),
-            "hit_rate": round(metrics['metrics'].get('hit_rate@20', 0), 3),
-            "users_evaluated": user_count,
-            "evaluation_time_seconds": round(metrics['evaluation_time'], 2),
-            "summary": f"Model correctly predicted {metrics['metrics'].get('hit_rate@20', 0)*100:.1f}% of users' next baskets"
-        }
-        
-    except Exception as e:
-        logger.error(f"Quick evaluation failed: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 # ============================================================================
 # METRICS VISUALIZATION ENDPOINTS
@@ -251,13 +222,13 @@ async def run_evaluation_async(job_id: str, service: EvaluationService, sample_s
         # Run evaluation
         metrics = await service.evaluate_model(sample_size=sample_size)
         
-        # Store result
+        # Store result in memory only (not db)
         evaluation_jobs[job_id] = {
             "status": "completed",
             "result": {
                 "evaluation_id": job_id,
                 "status": "completed",
-                "metrics": metrics['metrics'],
+                "metrics": metrics,
                 "detailed_metrics": metrics.get('detailed_metrics', {}),
                 "sample_size": sample_size or "all",
                 "users_evaluated": metrics['users_evaluated'],

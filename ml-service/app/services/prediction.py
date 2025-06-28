@@ -10,7 +10,6 @@ from collections import defaultdict, Counter
 from loguru import logger
 import time
 from app.config import config
-from app.core.confidence_calculations import ConfidenceCalculator
 
 # Import the complete TIFU-KNN implementation
 from .tifuknn import TIFUKNNComplete

@@ -66,7 +66,6 @@ async def predict_from_csv(
             products=result['products'],
             algorithm="TIFU-KNN",
             source="csv",
-            confidence_metrics=result['confidence_metrics'],
             generated_at=datetime.utcnow()
         )
         
@@ -109,7 +108,6 @@ async def predict_from_database(
             "basketCount": result.get("basket_count", 0),
             "source": "database",
             "algorithm": "TIFU-KNN",
-            "confidenceMetrics": result['confidence_metrics'],
             "generatedAt": datetime.utcnow().isoformat()
         }
         
@@ -158,7 +156,6 @@ async def auto_generate_basket(
             "success": True,
             "products": result['products'],
             "source": "database" if order_count > 0 else "popular",
-            "confidenceMetrics": result.get('confidence_metrics', {}),
             "message": "Your personalized basket has been generated!"
         }
         
@@ -264,45 +261,3 @@ async def compare_prediction_with_ground_truth(
     except Exception as e:
         logger.error(f"Comparison failed: {e}")
         raise HTTPException(status_code=500, detail="Failed to compare prediction")
-
-# ============================================================================
-# UTILITY ENDPOINTS
-# ============================================================================
-
-@router.get("/algorithms")
-async def get_available_algorithms(
-    service: PredictionService = Depends(get_prediction_service)
-):
-    """Get information about available recommendation algorithms"""
-    return {
-        "algorithms": [
-            {
-                "id": "tifuknn",
-                "name": "TIFU-KNN",
-                "description": "Temporal-Item-Frequency-based User-KNN",
-                "version": "1.0",
-                "parameters": config.TIFUKNN_CONFIG,
-                "reference": "https://github.com/liming-7/A-Next-Basket-Recommendation-Reality-Check"
-            }
-        ],
-        "default": "tifuknn"
-    }
-
-@router.get("/sample-users")
-async def get_sample_users():
-    """Get sample Instacart user IDs for testing"""
-    return {
-        "sample_users": [
-            {"id": 1, "description": "Heavy grocery shopper", "order_count": 40},
-            {"id": 7, "description": "Frequent organic buyer", "order_count": 35},
-            {"id": 13, "description": "Family shopper", "order_count": 50},
-            {"id": 25, "description": "Health-conscious", "order_count": 30},
-            {"id": 31, "description": "Bulk shopper", "order_count": 25},
-            {"id": 42, "description": "Diverse preferences", "order_count": 45},
-            {"id": 55, "description": "Regular weekly shopper", "order_count": 20},
-            {"id": 60, "description": "Weekend shopper", "order_count": 55},
-            {"id": 78, "description": "Premium brands buyer", "order_count": 35},
-            {"id": 92, "description": "Convenience focused", "order_count": 30}
-        ],
-        "note": "These are real Instacart users with interesting purchase patterns"
-    }

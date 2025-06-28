@@ -10,7 +10,6 @@ class PredictionRequest(BaseModel):
 class ProductInfo(BaseModel):
     product_id: int
     name: str
-    confidence: float
     price: Optional[float] = None
     image_url: Optional[str] = None
 
