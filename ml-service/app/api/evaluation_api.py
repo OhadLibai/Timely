@@ -3,9 +3,6 @@
 Model evaluation API endpoints for TIFU-KNN performance metrics
 """
 
-import os
-from dotenv import load_dotenv
-from pathlib import Path
 from app.config import config
 
 from fastapi import APIRouter, Depends, HTTPException, Query, BackgroundTasks
@@ -23,10 +20,8 @@ from app.models.schemas import (
 )
 from app.services.evaluation import EvaluationService
 from app.core.database import get_db_connection
+from app.main import app
 
-# Load root .env
-root_dir = Path(__file__).parent.parent.parent.parent
-load_dotenv(root_dir / '.env')
 
 router = APIRouter()
 
@@ -35,7 +30,6 @@ evaluation_jobs: Dict[str, Dict[str, Any]] = {}
 
 def get_evaluation_service() -> EvaluationService:
     """Dependency to get evaluation service from app state"""
-    from app.main import app
     if not hasattr(app.state, 'evaluation_service'):
         raise HTTPException(status_code=503, detail="Evaluation service not initialized")
     return app.state.evaluation_service
