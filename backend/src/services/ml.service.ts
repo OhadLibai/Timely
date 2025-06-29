@@ -146,7 +146,6 @@ export const getNextBasketPrediction = async (internalUserId: string): Promise<a
       // You could return popular items here
       return {
         products: [],
-        confidence: 0,
         source: 'no_history',
         message: 'Please complete a few orders to get personalized predictions'
       };
@@ -160,7 +159,6 @@ export const getNextBasketPrediction = async (internalUserId: string): Promise<a
 
     return {
       products: response.data.predicted_products || [],
-      confidence: response.data.confidence_score || 0.5,
       source: 'tifu_knn',
       model_version: response.data.model_version
     };

@@ -52,7 +52,6 @@ export class PredictedBasketItem extends Model {
       max: 1
     }
   })
-  confidenceScore?: number;
 
   @Column({
     type: DataType.BOOLEAN,

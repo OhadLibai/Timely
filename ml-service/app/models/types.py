@@ -20,7 +20,6 @@ ItemScore = Tuple[ProductId, Score]
 class PredictionResult(TypedDict):
     items: List[ProductId]
     scores: Dict[ProductId, Score]
-    confidence: float
     metadata: Optional[Dict]
 
 class EvaluationMetrics(TypedDict):
@@ -35,8 +34,3 @@ class UserProfile(TypedDict):
     total_items: int
     unique_items: int
     frequency_map: Dict[ProductId, int]
-
-# Constants
-MAX_PREDICTION_ITEMS = 20
-MIN_BASKETS_FOR_PREDICTION = 1
-DEFAULT_CONFIDENCE = 0.75

@@ -31,7 +31,6 @@ export class PredictionController {
             items: [],
             totalItems: 0,
             totalValue: 0,
-            confidence: 0
           },
           source: mlResponse.source
         });
@@ -43,7 +42,6 @@ export class PredictionController {
         userId,
         weekOf: new Date(),
         status: 'generated',
-        confidenceScore: mlResponse.confidence || 0.75
       });
 
       // Add items to basket
@@ -56,7 +54,6 @@ export class PredictionController {
             basketId: basket.id,
             productId: product.id,
             quantity: 1,
-            confidenceScore: productData.confidence || 0.8,
             isAccepted: true
           });
           items.push({
@@ -79,7 +76,6 @@ export class PredictionController {
           items,
           totalItems,
           totalValue,
-          confidence: basket.confidenceScore,
           weekOf: basket.weekOf,
           status: basket.status
         },
@@ -158,7 +154,6 @@ export class PredictionController {
       userId,
       weekOf: new Date(),
       status: 'generated',
-      confidenceScore: 0.75
     });
 
     const items = [];
@@ -173,7 +168,6 @@ export class PredictionController {
           basketId: basket.id,
           productId: product.id,
           quantity: 1,
-          confidenceScore: 0.8,
           isAccepted: true
         });
 
@@ -446,7 +440,6 @@ export class PredictionController {
         basketId,
         productId,
         quantity,
-        confidenceScore: 0.5,
         isAccepted: true
       });
 
@@ -513,13 +506,11 @@ export class PredictionController {
       const { basketId } = req.params;
 
       res.json({
-        overallConfidence: 0.75,
         explanations: [
           {
             productId: '123',
             productName: 'Example Product',
             reasons: ['Frequently purchased', 'Similar to past purchases'],
-            confidence: 0.85
           }
         ]
       });
@@ -536,7 +527,6 @@ export class PredictionController {
         autoBasketEnabled: true,
         autoBasketDay: 0,
         autoBasketTime: '10:00',
-        minConfidenceThreshold: 0.7,
         excludeCategories: [],
         maxBasketSize: 20
       });
@@ -567,7 +557,6 @@ export class PredictionController {
       res.json({
         totalPredictions: 10,
         acceptanceRate: 0.7,
-        averageConfidence: 0.75,
         topPredictedCategories: [
           { category: 'Produce', count: 25 },
           { category: 'Dairy', count: 18 }
