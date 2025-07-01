@@ -4,12 +4,12 @@ import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Package, Clock, CheckCircle, XCircle, Truck,
-  Eye, RefreshCcw, Calendar, DollarSign
+  Eye, RefreshCcw, Calendar, DollarSign, Truck
 } from 'lucide-react';
 import { orderService } from '@/services/order.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
+import { StatusIndicator, getStatusIndicator } from '@/components/common/StatusIndicator';
 
 interface Order {
   id: string;
@@ -39,39 +39,7 @@ const Orders: React.FC = () => {
     }
   );
 
-  const getStatusIcon = (status: Order['status']) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="text-yellow-500" size={16} />;
-      case 'processing':
-        return <Package className="text-blue-500" size={16} />;
-      case 'shipped':
-        return <Truck className="text-indigo-500" size={16} />;
-      case 'delivered':
-        return <CheckCircle className="text-green-500" size={16} />;
-      case 'cancelled':
-        return <XCircle className="text-red-500" size={16} />;
-      default:
-        return <Clock className="text-gray-500" size={16} />;
-    }
-  };
-
-  const getStatusColor = (status: Order['status']) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'processing':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'shipped':
-        return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
-      case 'delivered':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'cancelled':
-        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
+  // Removed duplicate status logic - now using StatusIndicator component
 
   const filteredOrders = orders?.filter(order => 
     filter === 'all' || order.status === filter
@@ -188,10 +156,11 @@ const Orders: React.FC = () => {
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Order #{order.orderNumber}
                   </h3>
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                    {getStatusIcon(order.status)}
-                    <span className="capitalize">{order.status}</span>
-                  </div>
+                  <StatusIndicator 
+                    status={getStatusIndicator(order.status)} 
+                    variant="pill" 
+                    size="sm"
+                  />
                 </div>
                 <Link
                   to={`/orders/${order.id}`}

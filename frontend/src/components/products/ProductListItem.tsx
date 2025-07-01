@@ -7,9 +7,11 @@ import { ShoppingCart, Heart } from 'lucide-react';
 import { Product } from '@/services/product.service';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { favoriteService } from '@/services/favorite.service';
+import { useMutation } from 'react-query';
 import { toast } from 'react-hot-toast';
+import { useFavoriteToggle } from '@/hooks/api/useFavoriteToggle';
+import { useProductDisplay } from '@/hooks/ui/useProductDisplay';
+import { useAuthenticatedAction } from '@/hooks/auth/useAuthenticatedAction';
 
 interface ProductListItemProps {
   product: Product;
@@ -17,40 +19,11 @@ interface ProductListItemProps {
 
 const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
   const { addToCart } = useCartStore();
-  const { isAuthenticated } = useAuthStore();
-  const queryClient = useQueryClient();
-
-  // FIXED: Proper favorite status fetching like in ProductCard
-  const { data: isFavorite = false, isLoading: isFavoriteLoading } = useQuery(
-    ['isFavorite', product.id],
-    () => favoriteService.isProductFavorited(product.id),
-    {
-      enabled: isAuthenticated,
-      staleTime: Infinity,
-      refetchOnWindowFocus: false,
-    }
-  );
-
-  // FIXED: Proper toggle favorite mutation with explicit add/remove
-  const toggleFavoriteMutation = useMutation(
-    () => {
-      if (isFavorite) {
-        return favoriteService.removeFavorite(product.id);
-      } else {
-        return favoriteService.addFavorite(product.id);
-      }
-    },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['isFavorite', product.id]);
-        queryClient.invalidateQueries('favorites');
-        toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
-      },
-      onError: () => {
-        toast.error('Failed to update favorites');
-      }
-    }
-  );
+  const { withAuthCheck } = useAuthenticatedAction();
+  
+  // Use our new hooks
+  const { isFavorite, isFavoriteLoading, isToggling, handleToggleFavorite } = useFavoriteToggle(product.id);
+  const { pricing, stockStatus, availability } = useProductDisplay(product);
 
   const addToCartMutation = useMutation(
     () => addToCart(product.id),
@@ -64,31 +37,10 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
     }
   );
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to cart');
-      return;
-    }
-    
-    addToCartMutation.mutate();
-  };
-
-  const handleToggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    if (!isAuthenticated) {
-      toast.error('Please login to save favorites');
-      return;
-    }
-    
-    toggleFavoriteMutation.mutate();
-  };
-
-  const discount = product.compareAtPrice 
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
-    : 0;
+  const handleAddToCart = withAuthCheck(
+    () => addToCartMutation.mutate(),
+    'Please login to add items to cart'
+  );
 
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow">
@@ -123,16 +75,16 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
                 {/* Price */}
                 <div className="flex items-center gap-2 mt-2">
                   <span className="font-bold text-gray-900 dark:text-white">
-                    ${product.price.toFixed(2)}
+                    ${pricing.currentPrice}
                   </span>
-                  {product.compareAtPrice && (
+                  {pricing.originalPrice && (
                     <>
                       <span className="text-xs text-gray-500 line-through">
-                        ${product.compareAtPrice.toFixed(2)}
+                        ${pricing.originalPrice}
                       </span>
-                      {discount > 0 && (
+                      {pricing.hasDiscount && (
                         <span className="text-xs font-medium text-red-600 dark:text-red-400">
-                          -{discount}%
+                          -{pricing.discount}%
                         </span>
                       )}
                     </>
@@ -140,21 +92,15 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
                 </div>
 
                 {/* Stock Status */}
-                {product.trackInventory && (
+                {availability.trackInventory && (
                   <div className="mt-1">
-                    {product.stock === 0 ? (
-                      <span className="text-xs text-red-600 dark:text-red-400">
-                        Out of stock
-                      </span>
-                    ) : product.stock <= 5 ? (
-                      <span className="text-xs text-orange-600 dark:text-orange-400">
-                        Only {product.stock} left
-                      </span>
-                    ) : (
-                      <span className="text-xs text-green-600 dark:text-green-400">
-                        In stock
-                      </span>
-                    )}
+                    <span className={`text-xs ${
+                      stockStatus.color === 'red' ? 'text-red-600 dark:text-red-400' :
+                      stockStatus.color === 'orange' ? 'text-orange-600 dark:text-orange-400' :
+                      'text-green-600 dark:text-green-400'
+                    }`}>
+                      {stockStatus.message}
+                    </span>
                   </div>
                 )}
               </div>
@@ -164,7 +110,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
                 {/* FIXED: Proper favorite button */}
                 <button
                   onClick={handleToggleFavorite}
-                  disabled={toggleFavoriteMutation.isLoading || isFavoriteLoading}
+                  disabled={isToggling || isFavoriteLoading}
                   className={`p-2 rounded-full transition-all ${
                     isFavorite 
                       ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' 
@@ -177,14 +123,17 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
                 
                 {/* Add to Cart */}
                 <button
-                  onClick={handleAddToCart}
-                  disabled={addToCartMutation.isLoading || product.stock === 0}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleAddToCart();
+                  }}
+                  disabled={addToCartMutation.isLoading || !availability.canAddToCart}
                   className={`p-2 rounded-full transition-all ${
-                    product.stock === 0
+                    !availability.canAddToCart
                       ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
                       : 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-100 dark:hover:bg-indigo-900/30'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  title={product.stock === 0 ? 'Out of stock' : 'Add to cart'}
+                  title={!availability.canAddToCart ? 'Out of stock' : 'Add to cart'}
                 >
                   <ShoppingCart size={16} />
                 </button>

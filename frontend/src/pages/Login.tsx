@@ -1,12 +1,14 @@
 // frontend/src/pages/Login.tsx
-import React, { useState } from 'react';
+import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { Mail, Lock, Eye, EyeOff, ShoppingCart, Brain, Loader2 } from 'lucide-react';
+import { Mail, Lock, ShoppingCart, Brain } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
 import toast from 'react-hot-toast';
+import { FormInput } from '@/components/forms/FormInput';
+import { Button } from '@/components/common/Button';
 
 interface LoginFormData {
   email: string;
@@ -19,7 +21,6 @@ const Login: React.FC = () => {
   const location = useLocation();
   const { login, isLoading } = useAuthStore();
   const { fetchCart } = useCartStore();
-  const [showPassword, setShowPassword] = useState(false);
 
   const from = (location.state as any)?.from?.pathname || '/';
 
@@ -87,69 +88,36 @@ const Login: React.FC = () => {
         >
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             {/* Email Field */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  {...register('email', {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: 'Invalid email address'
-                    }
-                  })}
-                  type="email"
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
-                    errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                  placeholder="you@example.com"
-                />
-              </div>
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.email.message}
-                </p>
-              )}
-            </div>
+            <FormInput
+              label="Email Address"
+              icon={Mail}
+              type="email"
+              placeholder="you@example.com"
+              error={errors.email}
+              {...register('email', {
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Invalid email address'
+                }
+              })}
+            />
 
             {/* Password Field */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  {...register('password', {
-                    required: 'Password is required',
-                    minLength: {
-                      value: 6,
-                      message: 'Password must be at least 6 characters'
-                    }
-                  })}
-                  type={showPassword ? 'text' : 'password'}
-                  className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
-                    errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
-                  }`}
-                  placeholder="••••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                  {errors.password.message}
-                </p>
-              )}
-            </div>
+            <FormInput
+              label="Password"
+              icon={Lock}
+              placeholder="••••••••"
+              showPasswordToggle
+              error={errors.password}
+              {...register('password', {
+                required: 'Password is required',
+                minLength: {
+                  value: 6,
+                  message: 'Password must be at least 6 characters'
+                }
+              })}
+            />
 
             {/* Remember Me & Forgot Password */}
             <div className="flex items-center justify-between">
@@ -183,20 +151,14 @@ const Login: React.FC = () => {
             )}
 
             {/* Submit Button */}
-            <button
+            <Button
               type="submit"
-              disabled={isLoading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
+              loading={isLoading}
+              fullWidth
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform hover:scale-[1.02]"
             >
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Signing in...
-                </span>
-              ) : (
-                'Sign In'
-              )}
-            </button>
+              {isLoading ? 'Signing in...' : 'Sign In'}
+            </Button>
 
             {/* Divider */}
             <div className="relative">

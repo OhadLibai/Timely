@@ -7,11 +7,10 @@ import { motion } from 'framer-motion';
 import { ShoppingCart, Heart, Star, Package, Zap, Eye } from 'lucide-react';
 import { Product } from '@/services/product.service';
 import { useCartStore } from '@/stores/cart.store';
-import { useAuthStore } from '@/stores/auth.store';
-import { favoriteService } from '@/services/favorite.service';
 import ProductImage from '@/components/products/ProductImage';
-import toast from 'react-hot-toast';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useFavoriteToggle } from '@/hooks/api/useFavoriteToggle';
+import { useAuthenticatedAction } from '@/hooks/auth/useAuthenticatedAction';
+import { useProductDisplay } from '@/hooks/ui/useProductDisplay';
 
 interface ProductCardProps {
   product: Product;
@@ -20,75 +19,25 @@ interface ProductCardProps {
 
 const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const { isAuthenticated } = useAuthStore();
   const { addToCart, isProductInCart, isUpdating } = useCartStore();
-  const queryClient = useQueryClient();
-
-  // FIXED: Properly fetch favorite status from server
-  const { data: isFavorite = false, isLoading: isFavoriteLoading } = useQuery(
-    ['isFavorite', product.id],
-    () => favoriteService.isProductFavorited(product.id),
-    {
-      enabled: isAuthenticated, // Only run the query if the user is logged in
-      staleTime: Infinity, // The favorite status won't change unless the user clicks
-      refetchOnWindowFocus: false, // Don't refetch when window regains focus
-    }
-  );
+  const { withAuthCheck } = useAuthenticatedAction();
+  
+  // Use our new hooks
+  const { isFavorite, isFavoriteLoading, isToggling, handleToggleFavorite } = useFavoriteToggle(product.id);
+  const { pricing, stockStatus, badges, availability } = useProductDisplay(product);
 
   const isInCart = isProductInCart(product.id);
-  const discount = product.compareAtPrice 
-    ? Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100)
-    : 0;
 
-  const handleAddToCart = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to cart');
-      return;
-    }
-
-    try {
-      await addToCart(product.id);
-    } catch (error) {
-      console.error('Failed to add to cart:', error);
-    }
-  };
-
-  // FIXED: Properly toggle favorites with explicit add/remove calls
-  const toggleFavoriteMutation = useMutation(
-    () => {
-      // Decide which service method to call based on the current status
-      if (isFavorite) {
-        return favoriteService.removeFavorite(product.id);
-      } else {
-        return favoriteService.addFavorite(product.id);
+  const handleAddToCart = withAuthCheck(
+    async () => {
+      try {
+        await addToCart(product.id);
+      } catch (error) {
+        console.error('Failed to add to cart:', error);
       }
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['isFavorite', product.id]);
-        queryClient.invalidateQueries('favorites'); // Invalidate the main favorites list
-        toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
-      },
-      onError: () => {
-        toast.error('Failed to update favorites');
-      }
-    }
+    'Please login to add items to cart'
   );
-
-  const handleToggleFavorite = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (!isAuthenticated) {
-      toast.error('Please login to save favorites');
-      return;
-    }
-
-    toggleFavoriteMutation.mutate();
-  };
 
   return (
     <motion.div
@@ -111,21 +60,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
           
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {product.isOnSale && discount > 0 && (
-              <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                -{discount}%
+            {badges.map((badge) => (
+              <span key={badge.type} className={badge.className}>
+                {badge.text}
               </span>
-            )}
-            {product.isFeatured && (
-              <span className="px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">
-                Featured
-              </span>
-            )}
-            {product.stock <= 5 && product.trackInventory && (
-              <span className="px-2 py-1 bg-orange-500 text-white text-xs font-bold rounded-full">
-                Low Stock
-              </span>
-            )}
+            ))}
           </div>
 
           {/* Quick Actions */}
@@ -138,7 +77,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
             {/* FIXED: Proper favorite button with server sync */}
             <button
               onClick={handleToggleFavorite}
-              disabled={toggleFavoriteMutation.isLoading || isFavoriteLoading}
+              disabled={isToggling || isFavoriteLoading}
               className={`p-2 rounded-full backdrop-blur-sm transition-all ${
                 isFavorite 
                   ? 'bg-red-500 text-white' 
@@ -156,19 +95,16 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
           </motion.div>
 
           {/* Stock Indicator */}
-          {product.trackInventory && (
+          {availability.trackInventory && !availability.isAvailable && (
             <div className="absolute bottom-3 left-3">
-              {product.stock === 0 ? (
-                <span className="flex items-center gap-1 px-2 py-1 bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 text-xs rounded-full">
-                  <Package size={12} />
-                  Out of Stock
-                </span>
-              ) : product.stock <= 5 ? (
-                <span className="flex items-center gap-1 px-2 py-1 bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400 text-xs rounded-full">
-                  <Zap size={12} />
-                  Only {product.stock} left
-                </span>
-              ) : null}
+              <span className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+                stockStatus.color === 'red' 
+                  ? 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400'
+                  : 'bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400'
+              }`}>
+                {stockStatus.color === 'red' ? <Package size={12} /> : <Zap size={12} />}
+                {stockStatus.message}
+              </span>
             </div>
           )}
         </div>
@@ -220,29 +156,33 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <span className="text-lg font-bold text-gray-900 dark:text-white">
-                ${product.price.toFixed(2)}
+                ${pricing.currentPrice}
               </span>
-              {product.compareAtPrice && (
+              {pricing.originalPrice && (
                 <span className="text-sm text-gray-500 line-through">
-                  ${product.compareAtPrice.toFixed(2)}
+                  ${pricing.originalPrice}
                 </span>
               )}
             </div>
-            {discount > 0 && (
+            {pricing.hasDiscount && (
               <span className="text-xs font-medium text-red-600 dark:text-red-400">
-                Save {discount}%
+                Save {pricing.discount}%
               </span>
             )}
           </div>
 
           {/* Add to Cart Button */}
           <button
-            onClick={handleAddToCart}
-            disabled={isUpdating || product.stock === 0}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleAddToCart();
+            }}
+            disabled={isUpdating || !availability.canAddToCart}
             className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${
               isInCart
                 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                : product.stock === 0
+                : !availability.canAddToCart
                 ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
                 : 'bg-indigo-600 hover:bg-indigo-700 text-white'
             } disabled:opacity-50 disabled:cursor-not-allowed`}
@@ -252,7 +192,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
               'Adding...'
             ) : isInCart ? (
               'In Cart'
-            ) : product.stock === 0 ? (
+            ) : !availability.canAddToCart ? (
               'Out of Stock'
             ) : (
               'Add to Cart'

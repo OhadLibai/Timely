@@ -1,10 +1,10 @@
 // frontend/src/components/search/SearchModal.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Clock, TrendingUp, Package, ArrowRight } from 'lucide-react';
-import { useQuery } from 'react-query';
-import { productService } from '@/services/product.service';
 import { Link } from 'react-router-dom';
+import { useSearchWithHistory } from '@/hooks/search/useSearchWithHistory';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
 interface SearchModalProps {
   onClose: () => void;
@@ -25,13 +25,21 @@ interface SearchSuggestion {
 }
 
 const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [recentSearches, setRecentSearches] = useState<string[]>([
-    'organic bananas',
-    'whole wheat bread',
-    'greek yogurt'
-  ]);
   const inputRef = useRef<HTMLInputElement>(null);
+  
+  // Use the search with history hook
+  const {
+    searchTerm,
+    searchResults,
+    isLoading,
+    recentSearches,
+    setSearchTerm,
+    executeSearch,
+    quickSearch,
+    clearHistory,
+    hasResults,
+    isSearching,
+  } = useSearchWithHistory();
 
   // Mock popular searches and categories
   const popularSearches = [
@@ -51,16 +59,6 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
     'Frozen Foods'
   ];
 
-  // Search products
-  const { data: searchResults, isLoading } = useQuery<SearchResult[]>(
-    ['search', searchTerm],
-    () => productService.searchProducts(searchTerm),
-    {
-      enabled: searchTerm.length > 2,
-      staleTime: 30000, // 30 seconds
-    }
-  );
-
   useEffect(() => {
     // Focus input on mount
     if (inputRef.current) {
@@ -78,27 +76,22 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [onClose]);
 
-  const handleSearch = (term: string) => {
-    if (term.trim()) {
-      // Add to recent searches
-      setRecentSearches(prev => {
-        const filtered = prev.filter(item => item !== term);
-        return [term, ...filtered].slice(0, 5);
-      });
-      
+  const handleSearch = (term?: string) => {
+    const searchTerm = executeSearch(term);
+    if (searchTerm) {
       // Navigate to search results
       onClose();
-      window.location.href = `/products?search=${encodeURIComponent(term)}`;
+      window.location.href = `/products?search=${encodeURIComponent(searchTerm)}`;
     }
   };
 
   const handleQuickSearch = (term: string) => {
-    setSearchTerm(term);
-    handleSearch(term);
-  };
-
-  const clearRecentSearches = () => {
-    setRecentSearches([]);
+    const searchTerm = quickSearch(term);
+    if (searchTerm) {
+      // Navigate to search results
+      onClose();
+      window.location.href = `/products?search=${encodeURIComponent(searchTerm)}`;
+    }
   };
 
   return (
@@ -128,7 +121,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  handleSearch(searchTerm);
+                  handleSearch();
                 }
               }}
               placeholder="Search for products..."
@@ -145,14 +138,14 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
 
         {/* Search Results or Suggestions */}
         <div className="max-h-96 overflow-y-auto">
-          {searchTerm.length > 2 ? (
+          {isSearching ? (
             // Search Results
             <div className="p-4">
               {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                <div className="py-8">
+                  <LoadingSpinner size="medium" />
                 </div>
-              ) : searchResults && searchResults.length > 0 ? (
+              ) : hasResults ? (
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
                     Search Results ({searchResults.length})
@@ -184,9 +177,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                     </Link>
                   ))}
                   
-                  {searchResults.length > 6 && (
+                  {searchResults && searchResults.length > 6 && (
                     <button
-                      onClick={() => handleSearch(searchTerm)}
+                      onClick={() => handleSearch()}
                       className="w-full p-3 text-center text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
                     >
                       View all {searchResults.length} results
@@ -217,7 +210,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                       Recent Searches
                     </h3>
                     <button
-                      onClick={clearRecentSearches}
+                      onClick={clearHistory}
                       className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                     >
                       Clear
