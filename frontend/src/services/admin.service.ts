@@ -2,6 +2,10 @@
 // FIXED: Added data transformation function for snake_case to camelCase conversion
 
 import { api } from '@/services/api.client';
+  
+// ============================================================================
+// INTERFACES
+// ============================================================================
 
 export interface ModelMetrics {
   precisionAt10: number;

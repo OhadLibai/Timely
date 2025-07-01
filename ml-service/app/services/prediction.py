@@ -1,17 +1,16 @@
 # ml-service/app/services/prediction.py
 """
-SIMPLE & CLEAN: Single prediction interface with clear data source handling
+FIXED: Complete prediction service with all required methods
 """
 
 from typing import List, Dict, Any, Optional
 from loguru import logger
 from app.config import config
 from app.core.tifuknn import TIFUKNNEngine
+from app.core.database import get_db_connection
 
 class PredictionService:
-    """
-    CLEAN PREDICTION SERVICE: Single predict() method, smart data source detection
-    """
+    """CLEAN: Single prediction interface"""
     
     def __init__(self, data_loader=None):
         self.data_loader = data_loader
@@ -23,7 +22,6 @@ class PredictionService:
             group_size=config.TIFUKNN_CONFIG["group_size"]
         )
         
-        # Setup with data loader if available
         if data_loader and hasattr(data_loader, 'get_user_count') and data_loader.get_user_count() > 0:
             self._setup_engine_with_data()
     
@@ -45,28 +43,16 @@ class PredictionService:
         self.tifuknn_engine.fit()
     
     # ==================================================================================
-    # SINGLE PREDICTION INTERFACE - No confusion!
+    # SINGLE PREDICTION INTERFACE
     # ==================================================================================
     
     def predict(self, user_id: int, k: int = None, exclude_last: bool = False, 
                 data_source: str = "auto") -> Dict[str, Any]:
-        """
-        SINGLE PREDICTION METHOD: Smart data source detection
+        """SINGLE PREDICTION METHOD with smart data source detection"""
         
-        Args:
-            user_id: User to predict for
-            k: Number of items (uses config default if None)
-            exclude_last: Exclude last basket (for evaluation)
-            data_source: "auto", "csv", "database", or "baskets"
-            
-        Returns:
-            Dictionary with prediction results
-        """
         if k is None:
             k = config.TIFUKNN_CONFIG["top_k_default"]
         k = config.validate_k_parameter(k)
-        
-        logger.info(f"Prediction for user {user_id}, k={k}, source={data_source}")
         
         if data_source == "auto":
             data_source = self._detect_data_source(user_id)
@@ -82,7 +68,6 @@ class PredictionService:
         """Smart detection of best data source for user"""
         # Try database first (for seeded demo users)
         try:
-            from app.core.database import get_db_connection
             conn = get_db_connection()
             if conn:
                 cursor = conn.cursor()
@@ -123,13 +108,11 @@ class PredictionService:
     
     def _predict_from_db(self, user_id: int, k: int) -> Dict[str, Any]:
         """Internal: Database-based prediction"""
-        # Get user's order history from database
         user_baskets, temporal_metadata = self._get_user_db_orders(str(user_id))
         
         if not user_baskets:
             raise ValueError(f"No database orders for user {user_id}")
         
-        # Use engine's basket-based prediction
         predicted_items = self.tifuknn_engine.predict_from_baskets(
             user_baskets=user_baskets,
             k=k,
@@ -148,6 +131,235 @@ class PredictionService:
         }
     
     # ==================================================================================
+    # FIXED: All the missing methods that were referenced but not implemented
+    # ==================================================================================
+    
+    def _get_user_db_orders(self, user_id: str) -> tuple[List[List[int]], Dict]:
+        """
+        FIXED: Get user's order history from database
+        
+        Returns:
+            Tuple of (user_baskets, temporal_metadata)
+        """
+        try:
+            conn = get_db_connection()
+            if not conn:
+                raise ValueError("Database connection unavailable")
+            
+            cursor = conn.cursor()
+            
+            # Get orders with temporal features
+            cursor.execute("""
+                SELECT o.id, o.created_at, o.days_since_prior_order, 
+                       o.order_dow, o.order_hour_of_day,
+                       array_agg(oi.product_id ORDER BY oi.add_to_cart_order) as products
+                FROM orders o
+                JOIN order_items oi ON o.id = oi.order_id
+                WHERE o.user_id = %s
+                GROUP BY o.id, o.created_at, o.days_since_prior_order, o.order_dow, o.order_hour_of_day
+                ORDER BY o.created_at
+            """, (user_id,))
+            
+            orders = cursor.fetchall()
+            cursor.close()
+            conn.close()
+            
+            if not orders:
+                return [], {}
+            
+            # Build basket history and temporal metadata
+            user_baskets = []
+            temporal_metadata = {}
+            
+            for order in orders:
+                order_id, created_at, days_since_prior, order_dow, order_hour, products = order
+                
+                # Clean and convert products
+                basket = [int(p) for p in products if p is not None]
+                if basket:
+                    user_baskets.append(basket)
+                    
+                    # Build temporal metadata
+                    temporal_metadata[str(order_id)] = {
+                        'days_since_prior': days_since_prior,
+                        'order_dow': order_dow,
+                        'order_hour_of_day': order_hour,
+                        'created_at': created_at.isoformat() if created_at else None
+                    }
+            
+            return user_baskets, temporal_metadata
+            
+        except Exception as e:
+            logger.error(f"Failed to get user database orders: {e}")
+            return [], {}
+    
+    def _analyze_temporal_patterns(self, temporal_metadata: Dict) -> Dict[str, Any]:
+        """
+        FIXED: Analyze temporal patterns in user's order history
+        
+        This analyzes ordering patterns like:
+        - Weekly shopping (orders every 5-9 days)
+        - Weekend shopping preference 
+        - Morning vs evening shopping
+        - Monthly patterns
+        
+        Args:
+            temporal_metadata: Dict with order temporal data
+            
+        Returns:
+            Dictionary with detected patterns
+        """
+        if not temporal_metadata:
+            return {}
+        
+        patterns = {
+            'weekly_orders': 0,
+            'weekend_orders': 0,
+            'morning_orders': 0,
+            'evening_orders': 0,
+            'average_days_between': 0,
+            'most_common_day': None,
+            'most_common_hour': None,
+            'dominant_pattern': 'irregular'
+        }
+        
+        try:
+            days_between = []
+            days_of_week = []
+            hours = []
+            
+            for metadata in temporal_metadata.values():
+                # Days since prior order analysis
+                if metadata.get('days_since_prior') is not None:
+                    days_since = metadata['days_since_prior']
+                    if 5 <= days_since <= 9:  # Weekly pattern
+                        patterns['weekly_orders'] += 1
+                    days_between.append(days_since)
+                
+                # Day of week analysis
+                dow = metadata.get('order_dow')
+                if dow is not None:
+                    days_of_week.append(dow)
+                    if dow in [0, 6]:  # Sunday=0, Saturday=6
+                        patterns['weekend_orders'] += 1
+                
+                # Hour of day analysis
+                hour = metadata.get('order_hour_of_day')
+                if hour is not None:
+                    hours.append(hour)
+                    if 6 <= hour <= 11:  # Morning (6-11 AM)
+                        patterns['morning_orders'] += 1
+                    elif 17 <= hour <= 21:  # Evening (5-9 PM)
+                        patterns['evening_orders'] += 1
+            
+            # Calculate statistics
+            if days_between:
+                patterns['average_days_between'] = sum(days_between) / len(days_between)
+            
+            if days_of_week:
+                patterns['most_common_day'] = max(set(days_of_week), key=days_of_week.count)
+            
+            if hours:
+                patterns['most_common_hour'] = max(set(hours), key=hours.count)
+            
+            # Determine dominant pattern
+            total_orders = len(temporal_metadata)
+            if patterns['weekly_orders'] / total_orders >= 0.6:
+                patterns['dominant_pattern'] = 'weekly'
+            elif patterns['weekend_orders'] / total_orders >= 0.7:
+                patterns['dominant_pattern'] = 'weekend_shopper'
+            elif patterns['morning_orders'] / total_orders >= 0.6:
+                patterns['dominant_pattern'] = 'morning_shopper'
+            
+        except Exception as e:
+            logger.error(f"Temporal pattern analysis failed: {e}")
+        
+        return patterns
+    
+    def _get_product_info(self, product_ids: List[int]) -> List[Dict[str, Any]]:
+        """
+        FIXED: Get product information for given product IDs
+        
+        This method gets product details either from:
+        1. Data loader (fast, in-memory) - for ML predictions
+        2. Database (consistent, with pricing) - for web app display
+        """
+        try:
+            # First try data loader (faster for ML service)
+            if self.data_loader and hasattr(self.data_loader, 'products'):
+                products = []
+                for pid in product_ids:
+                    if pid in self.data_loader.products:
+                        product_data = self.data_loader.products[pid]
+                        products.append({
+                            'product_id': pid,
+                            'name': product_data.get('product_name', f'Product {pid}'),
+                            'price': product_data.get('price'),  # May be None from CSV
+                            'image_url': product_data.get('image_url')
+                        })
+                    else:
+                        products.append({
+                            'product_id': pid,
+                            'name': f'Product {pid}',
+                            'price': None,
+                            'image_url': None
+                        })
+                return products
+            
+            # Fallback to database lookup
+            return self._get_product_info_from_database(product_ids)
+            
+        except Exception as e:
+            logger.error(f"Failed to get product info: {e}")
+            # Final fallback
+            return [{'product_id': pid, 'name': f'Product {pid}', 'price': None, 'image_url': None} 
+                   for pid in product_ids]
+    
+    def _get_product_info_from_database(self, product_ids: List[int]) -> List[Dict[str, Any]]:
+        """Get product information from database"""
+        try:
+            conn = get_db_connection()
+            if not conn:
+                return [{'product_id': pid, 'name': f'Product {pid}'} for pid in product_ids]
+            
+            cursor = conn.cursor()
+            
+            placeholders = ','.join(['%s'] * len(product_ids))
+            cursor.execute(f"""
+                SELECT id, name, price, image_url
+                FROM products
+                WHERE id IN ({placeholders})
+            """, product_ids)
+            
+            products = []
+            db_products = {row[0]: row for row in cursor.fetchall()}
+            
+            for pid in product_ids:
+                if pid in db_products:
+                    row = db_products[pid]
+                    products.append({
+                        'product_id': pid,
+                        'name': row[1] or f'Product {pid}',
+                        'price': float(row[2]) if row[2] else None,
+                        'image_url': row[3]
+                    })
+                else:
+                    products.append({
+                        'product_id': pid,
+                        'name': f'Product {pid}',
+                        'price': None,
+                        'image_url': None
+                    })
+            
+            cursor.close()
+            conn.close()
+            return products
+            
+        except Exception as e:
+            logger.error(f"Database product lookup failed: {e}")
+            return [{'product_id': pid, 'name': f'Product {pid}'} for pid in product_ids]
+    
+    # ==================================================================================
     # EVALUATION INTERFACE - For evaluation.py
     # ==================================================================================
     
@@ -159,125 +371,3 @@ class PredictionService:
     def get_engine_for_evaluation(self) -> TIFUKNNEngine:
         """Provide engine for evaluation service"""
         return self.tifuknn_engine
-    
-    # Helper methods remain the same...
-    def _get_product_info(self, product_ids: List[int]) -> List[Dict[str, Any]]:
-        """
-        Get product information for given product IDs
-        
-        Args:
-            product_ids: List of product IDs
-            
-        Returns:
-            List of product information dictionaries
-        """
-        try:
-            conn = get_db_connection()
-            if not conn:
-                logger.warning("Database unavailable for product info")
-                return [{'product_id': pid, 'name': f'Product {pid}'} for pid in product_ids]
-            
-            cursor = conn.cursor()
-            
-            # Get product details
-            placeholders = ','.join(['%s'] * len(product_ids))
-            cursor.execute(f"""
-                SELECT id, name, price, image_url
-                FROM products
-                WHERE id IN ({placeholders})
-                ORDER BY CASE id {' '.join([f'WHEN %s THEN {i}' for i, _ in enumerate(product_ids)])} END
-            """, product_ids + product_ids)  # product_ids twice for CASE statement
-            
-            products = []
-            for row in cursor.fetchall():
-                products.append({
-                    'product_id': row[0],
-                    'name': row[1] or f'Product {row[0]}',
-                    'price': float(row[2]) if row[2] else None,
-                    'image_url': row[3]
-                })
-            
-            cursor.close()
-            conn.close()
-            
-            # Fill in missing products
-            found_ids = {p['product_id'] for p in products}
-            for pid in product_ids:
-                if pid not in found_ids:
-                    products.append({
-                        'product_id': pid,
-                        'name': f'Product {pid}',
-                        'price': None,
-                        'image_url': None
-                    })
-            
-            return products
-            
-        except Exception as e:
-            logger.error(f"Failed to get product info: {e}")
-            return [{'product_id': pid, 'name': f'Product {pid}'} for pid in product_ids]
-    
-    def _get_user_db_orders(self, user_id: str):
-        # Implementation stays the same  
-        pass
-    
-    def _analyze_temporal_patterns(self, temporal_metadata: Dict) -> Dict[str, Any]:
-        """
-        Analyze temporal patterns in user's order history
-        
-        Args:
-            temporal_metadata: Temporal data for orders
-            
-        Returns:
-            Dictionary with temporal pattern analysis
-        """
-        if not temporal_metadata:
-            return {}
-        
-        patterns = {
-            'weekly_orders': 0,
-            'weekend_orders': 0,
-            'morning_orders': 0,
-            'average_days_between': 0,
-            'most_common_day': None,
-            'most_common_hour': None
-        }
-        
-        try:
-            days_between = []
-            days_of_week = []
-            hours = []
-            
-            for metadata in temporal_metadata.values():
-                if metadata.get('days_since_prior') is not None:
-                    days_since = metadata['days_since_prior']
-                    if 5 <= days_since <= 9:  # Weekly pattern
-                        patterns['weekly_orders'] += 1
-                    days_between.append(days_since)
-                
-                dow = metadata.get('order_dow')
-                if dow is not None:
-                    days_of_week.append(dow)
-                    if dow in [0, 6]:  # Sunday or Saturday
-                        patterns['weekend_orders'] += 1
-                
-                hour = metadata.get('order_hour_of_day')
-                if hour is not None:
-                    hours.append(hour)
-                    if 6 <= hour <= 11:  # Morning
-                        patterns['morning_orders'] += 1
-            
-            # Calculate averages and patterns
-            if days_between:
-                patterns['average_days_between'] = sum(days_between) / len(days_between)
-            
-            if days_of_week:
-                patterns['most_common_day'] = max(set(days_of_week), key=days_of_week.count)
-            
-            if hours:
-                patterns['most_common_hour'] = max(set(hours), key=hours.count)
-                
-        except Exception as e:
-            logger.error(f"Temporal pattern analysis failed: {e}")
-        
-        return patterns

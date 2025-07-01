@@ -37,10 +37,7 @@ if (process.env.NODE_ENV === 'development') {
   // Performance debugging
   console.log('🔧 Development mode - Performance monitoring enabled');
   
-  // Hot reload indicator
-  if (module.hot) {
-    module.hot.accept();
-  }
+  // Parcel hot reload (automatic, no manual config needed)
 }
 
 // Theme detection and persistence

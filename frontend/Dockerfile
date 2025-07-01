@@ -1,5 +1,5 @@
 # frontend/Dockerfile.dev - Development/Test Optimized
-# Single-stage build using Vite dev server for hot reload
+# Single-stage build using Parcel dev server for hot reload
 
 FROM node:18-alpine
 
@@ -18,11 +18,10 @@ COPY package*.json ./
 RUN npm install
 
 # Copy configuration files
-COPY vite.config.ts ./
+COPY .parcelrc ./
+COPY .postcssrc ./
 COPY tsconfig.json ./
-COPY tsconfig.node.json ./
 COPY tailwind.config.js ./
-COPY postcss.config.js ./
 COPY index.html ./
 
 # Copy source code (will be overridden by volume mount in dev)
@@ -37,20 +36,20 @@ RUN addgroup -g 1001 -S nodejs && \
 # Switch to non-root user
 USER nodejs
 
-# Expose Vite dev server port
+# Expose Parcel dev server port
 EXPOSE 3000
 
-# Health check for Vite dev server
+# Health check for Parcel dev server
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:3000/ || exit 1
 
-# Run Vite development server with hot reload
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
+# Run Parcel development server with hot reload
+CMD ["npm", "run", "dev"]
 
 # ============================================================================
 # DEVELOPMENT OPTIMIZATIONS:
 # 
-# ✅ Vite dev server (hot reload, fast HMR)
+# ✅ Parcel dev server (hot reload, fast HMR)
 # ✅ All dependencies for development
 # ✅ Source maps enabled by default
 # ✅ Host 0.0.0.0 for Docker networking
@@ -59,7 +58,7 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "3000"]
 # ✅ Volume mounts expected for live editing
 # 
 # DIFFERENCES FROM PRODUCTION:
-# ❌ No nginx (uses Vite dev server)
+# ❌ No nginx (uses Parcel dev server)
 # ❌ No build step (serves from source)
 # ❌ No static file optimization
 # ❌ No production bundling

@@ -1,83 +1,73 @@
+# ml-service/app/models/schemas.py
+"""
+DEFINITIVE: Only schemas that are ACTUALLY used in the codebase
+Based on research of current API endpoints and evaluation_api.py
+"""
+
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 
+# ==================================================================================
+# CORE PREDICTION SCHEMAS - Used by prediction_api.py
+# ==================================================================================
+
 class PredictionRequest(BaseModel):
+    """Used by /predict endpoint"""
     user_id: int
-    k: Optional[int] = 20
+    k: Optional[int] = None
     exclude_last_order: Optional[bool] = False
 
 class ProductInfo(BaseModel):
+    """Used in all prediction responses"""
     product_id: int
     name: str
     price: Optional[float] = None
     image_url: Optional[str] = None
 
 class PredictionResponse(BaseModel):
+    """Used by /predict endpoint response"""
     user_id: int
     predicted_items: List[int]
     products: List[ProductInfo]
     algorithm: str = "TIFU-KNN"
-    source: str  # "csv" or "database"
-    k_used: int  # Actual K value used
+    source: str
+    k_used: int
     generated_at: datetime
 
+# ==================================================================================
+# EVALUATION SCHEMAS - Used by evaluation_api.py
+# ==================================================================================
+
 class EvaluationRequest(BaseModel):
+    """Used by /evaluate endpoint"""
     sample_size: Optional[int] = None
 
 class EvaluationResponse(BaseModel):
+    """Used by evaluation_api.py - CONFIRMED with actual endpoint"""
+    evaluation_id: Optional[str] = None  # For async jobs
+    status: Optional[str] = "completed"
     metrics: Dict[str, float]
-    sample_size: int
+    sample_size: Any  # Can be int or "all"
+    users_evaluated: int = 0
     evaluation_time: float
-    k_used: int
     timestamp: datetime
+    message: Optional[str] = None
 
-class UserEvaluationRequest(BaseModel):
-    """Request schema for single user evaluation"""
-    user_id: int
-    k: Optional[int] = None
-
-class UserEvaluationResponse(BaseModel):
-    """Response schema for single user evaluation"""
-    user_id: int
-    prediction_results: Dict[str, Any]
-    performance_metrics: Dict[str, float]
-    behavior_analysis: Dict[str, Any]
-    detailed_analysis: Dict[str, Any]
-    k_used: int
-
-class UserStatsResponse(BaseModel):
-    """User statistics response - NO confidence fields"""
-    user_id: int
-    total_orders: int
-    total_items: int
-    unique_items: int
-    avg_basket_size: float
-    temporal_patterns: Dict[str, Any]
-
-class DemoPredictionResponse(BaseModel):
-    """Demo prediction response for seeded users - NO confidence fields"""
-    user_id: str
-    instacart_user_id: Optional[int]
-    products: List[ProductInfo]
-    predicted_items: List[int]
-    basket_count: int
-    source: str
-    algorithm: str = "TIFU-KNN"
-    temporal_patterns_detected: Dict[str, Any]
-    k_used: int
+class MetricsVisualization(BaseModel):
+    """Used by evaluation_api.py /metrics/visualization endpoint"""
+    metric_type: str
+    chart_data: Dict[str, Any]
+    summary_stats: Dict[str, float]
     generated_at: datetime
 
-class ModelPerformanceResponse(BaseModel):
-    """Model performance evaluation response"""
-    evaluation_summary: Dict[str, Any]
-    performance_by_k: Dict[str, Dict[str, float]]
-    user_behavior_analysis: Dict[str, Any]
-    repeat_explore_analysis: Dict[str, Any]
 
-class PopularItemsResponse(BaseModel):
-    """Popular items fallback response - NO confidence fields"""
-    products: List[ProductInfo]
-    source: str = "global_popularity"
-    algorithm: str = "frequency_based"
-    
+# ==================================================================================
+# SCHEMAS WE CAN ELIMINATE (not used in current API endpoints):
+# ==================================================================================
+
+# ❌ UserEvaluationRequest/Response - /evaluate-user returns Dict directly
+# ❌ UserStatsResponse - not used in current endpoints
+# ❌ DemoPredictionResponse - same as PredictionResponse
+# ❌ ModelPerformanceResponse - evaluation returns Dict
+# ❌ PopularItemsResponse - same as PredictionResponse
