@@ -95,6 +95,7 @@ docker-compose.override.yml
 # Frontend specific
 /frontend/.vite/
 /frontend/storybook-static/
+.parcel-cache/
 
 # Backend specific  
 /backend/dist/
