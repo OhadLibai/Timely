@@ -33,12 +33,12 @@ services:
   backend:
     build:
       context: ./backend
-      dockerfile: Dockerfile.dev  # ✅ Use development Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: timely-backend
     env_file:
       - .env
     environment:
-      NODE_ENV: development       # ✅ Development mode
+      NODE_ENV: development
       DATABASE_URL: ${DATABASE_URL}
       JWT_SECRET: ${JWT_SECRET}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
@@ -62,22 +62,23 @@ services:
     networks:
       - timely-network
     restart: unless-stopped
-    # ✅ Development command override (if needed)
-    # command: ["npm", "run", "dev"]
 
-  # Frontend - DEV/TEST OPTIMIZED  
+  # Frontend - PARCEL DEV/TEST OPTIMIZED  
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev  # ✅ Use development Dockerfile
+      dockerfile: Dockerfile
       args:
-        VITE_API_URL: ${VITE_API_URL}
+        # ✅ FIXED: Use proper API URL for Parcel (not VITE_API_URL)
+        API_URL: ${BACKEND_URL}/api
     container_name: timely-frontend
     env_file:
       - .env
     environment:
-      VITE_API_URL: ${VITE_API_URL}
-      NODE_ENV: development       # ✅ Development mode
+      # ✅ FIXED: Environment variables for Parcel
+      NODE_ENV: development
+      API_URL: ${BACKEND_URL}/api
+      FRONTEND_URL: ${FRONTEND_URL}
     ports:
       - "${FRONTEND_PORT}:3000"
     depends_on:
@@ -86,12 +87,13 @@ services:
       # ✅ Hot reload for development
       - ./frontend/src:/app/src
       - ./frontend/public:/app/public
-      # ✅ Configuration files
+      # ✅ FIXED: Parcel configuration files only
       - ./frontend/package.json:/app/package.json
-      - ./frontend/vite.config.ts:/app/vite.config.ts
       - ./frontend/tsconfig.json:/app/tsconfig.json
       - ./frontend/tailwind.config.js:/app/tailwind.config.js
       - ./frontend/postcss.config.js:/app/postcss.config.js
+      - ./frontend/.parcelrc:/app/.parcelrc
+      - ./frontend/.postcssrc:/app/.postcssrc
       - ./frontend/index.html:/app/index.html
       # ✅ Exclude node_modules (use container's version)
       - /app/node_modules
@@ -103,87 +105,62 @@ services:
   ml-service:
     build:
       context: ./ml-service
-      dockerfile: Dockerfile      # ✅ Current Dockerfile is already dev-friendly
+      dockerfile: Dockerfile
     container_name: timely-ml-service
     env_file:
       - .env
     environment:
       DATABASE_URL: ${DATABASE_URL}
       DATASET_PATH: ${DATASET_PATH}     # ✅ Raw CSV files
-      DATA_PATH: ${DATA_PATH}           # ✅ Processed JSON files (not cache mechanism)
+      DATA_PATH: ${DATA_PATH}           # ✅ Processed JSON files
       LOG_LEVEL: ${LOG_LEVEL}
-      EVALUATION_SAMPLE_SIZE: ${EVALUATION_SAMPLE_SIZE}
+      EVALUATION_BATCH_SIZE: ${EVALUATION_BATCH_SIZE}
+      MODEL_TYPE: ${MODEL_TYPE}
+      KNN_K: ${KNN_K}
+      MIN_PURCHASE_HISTORY: ${MIN_PURCHASE_HISTORY}
+      CONFIDENCE_THRESHOLD: ${CONFIDENCE_THRESHOLD}
+      MAX_BASKET_SIZE: ${MAX_BASKET_SIZE}
     ports:
       - "${ML_SERVICE_PORT}:8000"
     depends_on:
       database:
         condition: service_healthy
     volumes:
-      # ✅ Essential: Raw CSV data (read-only)
+      # ✅ ML service code for development
+      - ./ml-service/app:/app/app
+      # ✅ Dataset files (read-only)
       - ./ml-service/dataset:/app/dataset:ro
-      
-      # ✅ Essential: Processed data directory (read-write)
+      # ✅ Data processing output
       - ./ml-service/data:/app/data
-      
-      # ✅ Development: Hot reload (KEEP for dev/test)
-      - ./ml-service/app:/app/app:ro
-      
+      # ✅ Model storage
+      - ./ml-service/models:/app/models
+      # ✅ Logs
+      - ./ml-service/logs:/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     networks:
       - timely-network
     restart: unless-stopped
 
-# Networks
+volumes:
+  postgres_data:
+    driver: local
+
 networks:
   timely-network:
     driver: bridge
 
-# Volumes - SIMPLIFIED
-volumes:
-  postgres_data:
-    name: timely-postgres-data
-
 # ============================================================================
 # DEVELOPMENT OPTIMIZATIONS SUMMARY:
+# 
+# ✅ FIXED: Removed all Vite references (vite.config.ts, postcss.config.js mismatch)
+# ✅ FIXED: Use proper environment variables for Parcel (API_URL vs VITE_API_URL)  
+# ✅ FIXED: Mount only Parcel-specific configuration files
+# ✅ Maintains hot reload for all services
+# ✅ Optimized for development and testing workflow
+# ✅ Proper service dependencies and health checks
+# ✅ Consistent volume mounting strategy
 # ============================================================================
-
-# ✅ BACKEND CHANGES:
-# - Uses Dockerfile.dev (single-stage, faster builds)
-# - Hot reload with volume mounts
-# - Development dependencies included
-# - npm run dev command for auto-restart
-
-# ✅ FRONTEND CHANGES:  
-# - Uses Dockerfile.dev (Vite dev server instead of nginx)
-# - Hot Module Replacement (HMR) enabled
-# - Development tools and source maps
-# - Fast startup time
-
-# ✅ ML SERVICE:
-# - Existing Dockerfile is already development-friendly
-# - Added DATA_PATH environment and volume mount
-# - Hot reload capability maintained
-
-# ✅ VOLUME STRATEGY:
-# - Source code mounted for hot reload
-# - node_modules excluded (use container versions)
-# - Configuration files mounted for live changes
-# - Data persistence where needed
-
-# ============================================================================
-# REQUIRED ACTIONS:
-# ============================================================================
-
-# 1. Create missing data directory:
-#    mkdir -p ml-service/data/cache
-
-# 2. Create development Dockerfiles:
-#    - backend/Dockerfile.dev (provided above)
-#    - frontend/Dockerfile.dev (provided above)
-
-# 3. Update package.json scripts (if needed):
-#    - Ensure "dev" scripts exist for hot reload
-
-# 4. First run:
-#    docker-compose down -v  # Clean slate
-#    docker-compose build    # Build with new Dockerfiles
-#    docker-compose up       # Start development environment
