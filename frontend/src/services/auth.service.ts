@@ -11,7 +11,6 @@ interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
-  phone?: string;
 }
 
 interface AuthResponse {
@@ -25,10 +24,8 @@ interface User {
   email: string;
   firstName: string;
   lastName: string;
-  role: 'user' | 'admin';
-  phone?: string;
+  role: 'customer' | 'admin';
   isActive: boolean;
-  lastLoginAt?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -142,32 +139,6 @@ class AuthService {
     localStorage.removeItem(this.ACCESS_TOKEN_KEY);
     localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_KEY);
-  }
-
-  // Decode JWT token (optional utility)
-  decodeToken(token: string): any {
-    try {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(
-        atob(base64)
-          .split('')
-          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-          .join('')
-      );
-      return JSON.parse(jsonPayload);
-    } catch (error) {
-      return null;
-    }
-  }
-
-  // Check if token is expired
-  isTokenExpired(token: string): boolean {
-    const decoded = this.decodeToken(token);
-    if (!decoded || !decoded.exp) return true;
-    
-    const expirationDate = new Date(decoded.exp * 1000);
-    return expirationDate < new Date();
   }
 }
 

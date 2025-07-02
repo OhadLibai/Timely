@@ -132,16 +132,7 @@ class ProductService {
   async getCategory(id: string): Promise<Category> {
     return api.get<Category>(`/products/categories/${id}`);
   }
-
-  // ============================================================================
-  // USER INTERACTION TRACKING
-  // ============================================================================
-
-  // Track product view
-  async trackProductView(productId: string): Promise<void> {
-    return api.post(`/products/${productId}/view`);
-  }
-
+  
   // ============================================================================
   // UTILITY FUNCTIONS
   // ============================================================================
