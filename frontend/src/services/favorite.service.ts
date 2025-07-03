@@ -57,32 +57,6 @@ class FavoriteService {
   async getFavoriteIds(): Promise<string[]> {
     return api.get<string[]>('/user/favorites/ids');
   }
-
-  // ============================================================================
-  // REMOVED COMPLEX FEATURES:
-  // - createFavoriteList
-  // - getFavoriteLists
-  // - updateFavoriteList
-  // - deleteFavoriteList
-  // - addToFavoriteList
-  // - removeFromFavoriteList
-  // - shareFavoriteList
-  // - importFavorites
-  // - exportFavorites
-  // - getFavoriteStats
-  // - getFavoriteRecommendations
-  // - searchFavorites
-  // - sortFavorites
-  // - getFavoriteCategories
-  // - bulkAddFavorites
-  // - bulkRemoveFavorites
-  // - moveFavorites
-  // - copyFavorites
-  // - mergeFavoriteLists
-  //
-  // These features added unnecessary complexity for a dev/test environment.
-  // Simple add/remove favorites is sufficient for demonstration purposes.
-  // ============================================================================
 }
 
 export const favoriteService = new FavoriteService();

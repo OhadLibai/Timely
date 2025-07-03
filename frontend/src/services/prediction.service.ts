@@ -224,21 +224,6 @@ class PredictionService {
   async schedulePrediction(weekOf: string): Promise<void> {
     return api.post('/predictions/schedule', { weekOf });
   }
-
-  /**
-   * Get prediction explanation
-   */
-  async getPredictionExplanation(basketId: string): Promise<{
-    overallConfidence: number;
-    explanations: Array<{
-      productId: string;
-      productName: string;
-      reasons: string[];
-      confidence: number;
-    }>;
-  }> {
-    return api.get(`/predictions/baskets/${basketId}/explanation`);
-  }
 }
 
 export const predictionService = new PredictionService();

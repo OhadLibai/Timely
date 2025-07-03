@@ -6,12 +6,13 @@ import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Eye, RefreshCcw, Calendar, DollarSign, Package, ShoppingCart
+  Eye, RefreshCcw, Calendar, DollarSign, Package, ShoppingCart, Filter
 } from 'lucide-react';
-import { orderService, Order } from '@/services/order.service';
+import { orderService } from '@/services/order.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
-import { StatusIndicator, getStatusIndicator } from '@/components/common/StatusIndicator';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Button } from '@/components/common/Button';
 
 const Orders: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled'>('all');
@@ -77,13 +78,14 @@ const Orders: React.FC = () => {
           <p className="text-gray-600 dark:text-gray-400 mb-6">
             Something went wrong while fetching your orders.
           </p>
-          <button
+          <Button
             onClick={() => refetch()}
-            className="flex items-center gap-2 mx-auto bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 transition-colors"
+            variant="primary"
+            icon={RefreshCcw}
+            className="mx-auto"
           >
-            <RefreshCcw size={20} />
             Try Again
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -107,15 +109,18 @@ const Orders: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-          Order History
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">
-          View your past orders and reorder your favorite items
-        </p>
-      </div>
+      <PageHeader
+        title="Order History"
+        description="View your past orders and reorder your favorite items"
+        icon={Package}
+        actions={
+          orders.length > 0 && (
+            <Button variant="outline" icon={Filter}>
+              Filter Orders
+            </Button>
+          )
+        }
+      />
 
       {/* Status Filter */}
       <div className="mb-6">
@@ -127,17 +132,14 @@ const Orders: React.FC = () => {
             { key: 'completed', label: 'Completed', count: statusCounts.completed || 0 },
             { key: 'cancelled', label: 'Cancelled', count: statusCounts.cancelled || 0 }
           ].map(({ key, label, count }) => (
-            <button
+            <Button
               key={key}
               onClick={() => setFilter(key as any)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filter === key
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-              }`}
+              variant={filter === key ? 'primary' : 'outline'}
+              size="sm"
             >
               {label} ({count})
-            </button>
+            </Button>
           ))}
         </div>
       </div>

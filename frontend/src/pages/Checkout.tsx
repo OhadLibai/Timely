@@ -15,6 +15,8 @@ import { useAuthStore } from '@/stores/auth.store';
 import { orderService } from '@/services/order.service';
 import ProductImage from '@/components/products/ProductImage';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Button } from '@/components/common/Button';
 import toast from 'react-hot-toast';
 
 interface CheckoutFormData {
@@ -122,46 +124,50 @@ const Checkout: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={() => navigate('/cart')}
-            className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 dark:hover:text-indigo-300 transition-colors mb-4"
-          >
-            <ArrowLeft size={16} />
-            Back to Cart
-          </button>
-          
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Checkout</h1>
-          
-          {/* Progress Steps */}
-          <div className="mt-6 flex items-center justify-center">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                  currentStep >= step.id 
-                    ? 'bg-indigo-600 text-white' 
-                    : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
-                }`}>
-                  <step.icon size={16} />
-                </div>
-                <span className={`ml-2 text-sm font-medium ${
-                  currentStep >= step.id 
-                    ? 'text-indigo-600 dark:text-indigo-400' 
-                    : 'text-gray-500 dark:text-gray-400'
-                }`}>
-                  {step.name}
-                </span>
-                {index < steps.length - 1 && (
-                  <div className={`mx-4 h-0.5 w-12 ${
-                    currentStep > step.id 
-                      ? 'bg-indigo-600' 
-                      : 'bg-gray-200 dark:bg-gray-700'
-                  }`} />
-                )}
+        <PageHeader
+          title="Checkout"
+          description="Complete your order with secure payment"
+          icon={CreditCard}
+          breadcrumb={
+            <Button
+              onClick={() => navigate('/cart')}
+              variant="ghost"
+              icon={ArrowLeft}
+              size="sm"
+              className="text-indigo-600 hover:text-indigo-500"
+            >
+              Back to Cart
+            </Button>
+          }
+        />
+
+        {/* Progress Steps */}
+        <div className="mb-8 flex items-center justify-center">
+          {steps.map((step, index) => (
+            <div key={step.id} className="flex items-center">
+              <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                currentStep >= step.id 
+                  ? 'bg-indigo-600 text-white' 
+                  : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+              }`}>
+                <step.icon size={16} />
               </div>
-            ))}
-          </div>
+              <span className={`ml-2 text-sm font-medium ${
+                currentStep >= step.id 
+                  ? 'text-indigo-600 dark:text-indigo-400' 
+                  : 'text-gray-500 dark:text-gray-400'
+              }`}>
+                {step.name}
+              </span>
+              {index < steps.length - 1 && (
+                <div className={`mx-4 h-0.5 w-12 ${
+                  currentStep > step.id 
+                    ? 'bg-indigo-600' 
+                    : 'bg-gray-200 dark:bg-gray-700'
+                }`} />
+              )}
+            </div>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -317,13 +323,13 @@ const Checkout: React.FC = () => {
                   </div>
                   
                   <div className="flex justify-end pt-6">
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                      variant="primary"
                     >
                       Continue to Payment
-                    </button>
+                    </Button>
                   </div>
                 </motion.div>
               )}
@@ -386,20 +392,20 @@ const Checkout: React.FC = () => {
                   </div>
                   
                   <div className="flex justify-between pt-6">
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-6 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                      variant="outline"
                     >
                       Back
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="button"
                       onClick={() => setCurrentStep(3)}
-                      className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+                      variant="primary"
                     >
                       Review Order
-                    </button>
+                    </Button>
                   </div>
                 </motion.div>
               )}
@@ -421,30 +427,22 @@ const Checkout: React.FC = () => {
                   </div>
                   
                   <div className="flex justify-between pt-6">
-                    <button
+                    <Button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-6 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                      variant="outline"
                     >
                       Back
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
                       disabled={isProcessing}
-                      className="bg-indigo-600 text-white px-8 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      variant="primary"
+                      loading={isProcessing}
+                      icon={isProcessing ? undefined : CheckCircle}
                     >
-                      {isProcessing ? (
-                        <>
-                          <LoadingSpinner size="small" />
-                          Processing...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle size={20} />
-                          Place Order
-                        </>
-                      )}
-                    </button>
+                      {isProcessing ? 'Processing...' : 'Place Order'}
+                    </Button>
                   </div>
                 </motion.div>
               )}

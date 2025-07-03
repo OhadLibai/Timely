@@ -12,6 +12,8 @@ import {
 import { useAuthStore } from '@/stores/auth.store';
 import { userService } from '@/services/user.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Button } from '@/components/common/Button';
 import toast from 'react-hot-toast';
 
 // REMOVED: PasswordFormData interface
@@ -77,13 +79,11 @@ const Profile: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">My Profile</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Manage your account information and preferences
-          </p>
-        </div>
+        <PageHeader
+          title="My Profile"
+          description="Manage your account information and preferences"
+          icon={User}
+        />
 
         <div className="space-y-8">
           
@@ -112,13 +112,13 @@ const Profile: React.FC = () => {
                 </div>
                 
                 {!isEditing && (
-                  <button
+                  <Button
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors"
+                    variant="primary"
+                    icon={Edit3}
                   >
-                    <Edit3 size={16} />
                     Edit Profile
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
@@ -216,31 +216,23 @@ const Profile: React.FC = () => {
                     exit={{ opacity: 0, height: 0 }}
                     className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700"
                   >
-                    <button
+                    <Button
                       type="button"
                       onClick={handleCancelEdit}
-                      className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      variant="outline"
+                      icon={X}
                     >
-                      <X size={16} />
                       Cancel
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       type="submit"
                       disabled={updateProfileMutation.isLoading}
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      variant="primary"
+                      loading={updateProfileMutation.isLoading}
+                      icon={updateProfileMutation.isLoading ? undefined : Save}
                     >
-                      {updateProfileMutation.isLoading ? (
-                        <>
-                          <LoadingSpinner size="small" />
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save size={16} />
-                          Save Changes
-                        </>
-                      )}
-                    </button>
+                      {updateProfileMutation.isLoading ? 'Saving...' : 'Save Changes'}
+                    </Button>
                   </motion.div>
                 )}
               </AnimatePresence>

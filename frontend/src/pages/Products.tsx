@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, X, Grid, List } from 'lucide-react';
+import { Search, Filter, X, Grid, List, Package } from 'lucide-react';
 import { useQuery } from 'react-query';
 import { productService } from '@/services/product.service';
 import ProductCard from '@/components/products/ProductCard';
@@ -15,6 +15,8 @@ import CategoryFilter from '@/components/products/CategoryFilter';
 import SortDropdown, { SortOption, parseSortOption } from '@/components/products/SortDropdown';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Pagination from '@/components/common/Pagination';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Button } from '@/components/common/Button';
 
 // CLEANED: Removed priceRange from FilterState
 interface FilterState {
@@ -104,15 +106,11 @@ const Products: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Products
-          </h1>
-          <p className="text-gray-600 dark:text-gray-300">
-            Discover our collection of fresh groceries and everyday essentials
-          </p>
-        </div>
+        <PageHeader
+          title="Products"
+          description="Discover our collection of fresh groceries and everyday essentials"
+          icon={Package}
+        />
 
         {/* Search and Controls */}
         <div className="mb-8 space-y-4">
@@ -127,38 +125,39 @@ const Products: React.FC = () => {
                 className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
               />
             </div>
-            <button
+            <Button
               type="submit"
-              className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+              variant="primary"
+              icon={Search}
             >
               Search
-            </button>
+            </Button>
           </form>
           
           {/* Filter Controls */}
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <button
+              <Button
                 onClick={() => setShowFilters(!showFilters)}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                variant="outline"
+                icon={Filter}
               >
-                <Filter size={16} />
-                <span>Filters</span>
+                Filters
                 {activeFilterCount > 0 && (
-                  <span className="bg-indigo-600 text-white text-xs px-2 py-1 rounded-full">
+                  <span className="bg-indigo-600 text-white text-xs px-2 py-1 rounded-full ml-2">
                     {activeFilterCount}
                   </span>
                 )}
-              </button>
+              </Button>
               
               {activeFilterCount > 0 && (
-                <button
+                <Button
                   onClick={clearFilters}
-                  className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
+                  variant="ghost"
+                  icon={X}
                 >
-                  <X size={16} />
-                  <span>Clear Filters</span>
-                </button>
+                  Clear Filters
+                </Button>
               )}
             </div>
             
@@ -297,7 +296,7 @@ const Products: React.FC = () => {
                       className="space-y-4"
                     >
                       {products.map((product) => (
-                        <ProductListItem key={product.id} product={product} />
+                        <ProductListItem key={product.id} product={product} variant="compact" showRating={false} />
                       ))}
                     </motion.div>
                   )}

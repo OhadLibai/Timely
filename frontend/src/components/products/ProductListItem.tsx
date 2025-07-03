@@ -1,26 +1,43 @@
 // frontend/src/components/products/ProductListItem.tsx
-// CLEANED: Removed all discount, sale, and compareAtPrice display logic
-// FOCUSED: Clean product list display for ML prediction demonstrations
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Heart, Star, Package, Zap } from 'lucide-react';
 import { Product } from '@/services/product.service';
-import { useCartStore } from '@/stores/cart.store';
 import ProductImage from '@/components/products/ProductImage';
+import { useCartOperations } from '@/hooks/api/useCartOperations';
 import { useFavoriteToggle } from '@/hooks/api/useFavoriteToggle';
-import { useAuthenticatedAction } from '@/hooks/auth/useAuthenticatedAction';
 import { useProductDisplay } from '@/hooks/ui/useProductDisplay';
 import { formatPrice } from '@/utils/formatters';
+import { Button } from '@/components/common/Button';
 
 interface ProductListItemProps {
   product: Product;
+  variant?: 'default' | 'compact';
+  showRating?: boolean;
+  className?: string;
 }
 
-const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
-  const { addItem, cart, isUpdating } = useCartStore();
-  
+const ProductListItem: React.FC<ProductListItemProps> = ({ 
+  product, 
+  variant = 'default',
+  showRating = true,
+  className = ''
+}) => {
+  // Use our custom hooks for all operations
+  const {
+    handleAddToCart,
+    isAdding,
+    isUpdating
+  } = useCartOperations();
+
+  const {
+    isFavorite,
+    isToggling,
+    handleToggleFavorite
+  } = useFavoriteToggle(product.id);
+
   const {
     pricing,
     stockStatus,
@@ -32,110 +49,85 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
     isLowStock
   } = useProductDisplay(product);
 
-  const {
-    isFavorite,
-    isLoading: isFavoriteLoading,
-    toggle: toggleFavorite
-  } = useFavoriteToggle(product.id);
-
-  const executeAuthenticatedAction = useAuthenticatedAction();
-
-  // Check if product is in cart
-  const isInCart = cart ? cart.items.some(item => item.productId === product.id) : false;
-
-  const handleAddToCart = async () => {
-    if (isOutOfStock || isUpdating) return;
-    
-    try {
-      await executeAuthenticatedAction(async () => {
-        await addItem(product.id, 1);
-      });
-    } catch (error) {
-      console.error('Error adding to cart:', error);
+  const handleAddToCartClick = () => {
+    if (!isOutOfStock && !isUpdating) {
+      handleAddToCart(product.id);
     }
   };
 
-  const handleToggleFavorite = async () => {
-    if (isFavoriteLoading) return;
-    
-    try {
-      await executeAuthenticatedAction(async () => {
-        await toggleFavorite();
-      });
-    } catch (error) {
-      console.error('Error toggling favorite:', error);
-    }
-  };
+  const isCompact = variant === 'compact';
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-4"
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ${
+        isCompact ? 'p-3' : 'p-4'
+      } ${className}`}
     >
-      <div className="flex items-center gap-4">
+      <div className={`flex items-center ${isCompact ? 'gap-3' : 'gap-4'}`}>
         {/* Product Image */}
         <Link to={`/products/${product.id}`} className="flex-shrink-0">
-          <div className="w-20 h-20 rounded-lg overflow-hidden">
+          <div className={`relative ${isCompact ? 'w-16 h-16' : 'w-20 h-20'} rounded-lg overflow-hidden`}>
             <ProductImage
               src={product.imageUrl}
               alt={product.name}
-              className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-cover"
             />
+            {isOutOfStock && (
+              <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                <span className="text-white text-xs font-medium">Out of Stock</span>
+              </div>
+            )}
           </div>
         </Link>
 
-        {/* Product Info */}
+        {/* Product Details */}
         <div className="flex-1 min-w-0">
-          <Link to={`/products/${product.id}`}>
-            <h3 className="font-semibold text-gray-900 dark:text-white mb-1 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors line-clamp-1">
+          <Link to={`/products/${product.id}`} className="block">
+            <h3 className={`font-semibold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${
+              isCompact ? 'text-sm' : 'text-base'
+            } line-clamp-2`}>
               {product.name}
             </h3>
+            
+            {product.description && !isCompact && (
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-1">
+                {product.description}
+              </p>
+            )}
           </Link>
-          
-          {product.brand && product.category && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-              {product.brand} • {product.category?.name}
-            </p>
-          )}
-          
-          {product.description && (
-            <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mb-2">
-              {product.description}
-            </p>
-          )}
-          
-          {/* Rating */}
-          {product.rating && (
-            <div className="flex items-center gap-1 mb-2">
-              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
-                {product.rating.toFixed(1)}
+
+          {/* Price and Rating */}
+          <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-2">
+              <span className={`font-bold text-gray-900 dark:text-white ${
+                isCompact ? 'text-sm' : 'text-base'
+              }`}>
+                {formatPrice(displayPrice)}
               </span>
-              {product.reviewCount && (
-                <span className="text-sm text-gray-500 dark:text-gray-400">
-                  ({product.reviewCount})
+              {pricing.originalPrice && pricing.originalPrice > displayPrice && (
+                <span className="text-xs text-gray-500 dark:text-gray-400 line-through">
+                  {formatPrice(pricing.originalPrice)}
                 </span>
               )}
             </div>
-          )}
-          
-          {/* Price - Clean, single price display */}
-          <div className="flex items-center gap-2 mt-2">
-            <span className="font-bold text-gray-900 dark:text-white">
-              {formatPrice(product.price)}
-            </span>
+
+            {showRating && product.rating && (
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {product.rating.toFixed(1)}
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Stock Status */}
-          {availability.trackInventory && (
-            <div className="mt-1">
-              <span className={`text-xs ${
-                stockColor === 'red' ? 'text-red-600 dark:text-red-400' :
-                stockColor === 'orange' ? 'text-orange-600 dark:text-orange-400' :
-                'text-green-600 dark:text-green-400'
-              }`}>
+          {stockMessage && (
+            <div className={`mt-2 ${isCompact ? 'text-xs' : 'text-sm'}`}>
+              <span className={`font-medium ${stockColor}`}>
                 {stockMessage}
               </span>
             </div>
@@ -143,54 +135,38 @@ const ProductListItem: React.FC<ProductListItemProps> = ({ product }) => {
         </div>
         
         {/* Actions */}
-        <div className="flex flex-col gap-2 ml-4">
+        <div className={`flex ${isCompact ? 'gap-1' : 'gap-2'} ${isCompact ? 'flex-row' : 'flex-col'}`}>
           {/* Favorite Button */}
-          <button
+          <Button
+            variant="ghost"
+            size={isCompact ? 'sm' : 'md'}
             onClick={handleToggleFavorite}
-            disabled={isFavoriteLoading}
-            className={`p-2 rounded-full transition-all ${
+            loading={isToggling}
+            icon={Heart}
+            className={`${
               isFavorite 
-                ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' 
-                : 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                ? 'text-red-600 dark:text-red-400' 
+                : 'text-gray-400 hover:text-red-600 dark:hover:text-red-400'
+            }`}
             title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-          >
-            <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
-          </button>
+          />
 
           {/* Add to Cart Button */}
-          <button
-            onClick={handleAddToCart}
-            disabled={isOutOfStock || isUpdating}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-              isInCart
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                : isOutOfStock
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-md'
-            }`}
+          <Button
+            variant={isOutOfStock ? 'ghost' : 'primary'}
+            size={isCompact ? 'sm' : 'md'}
+            onClick={handleAddToCartClick}
+            loading={isAdding || isUpdating}
+            disabled={isOutOfStock}
+            icon={isOutOfStock ? Package : ShoppingCart}
+            className={isCompact ? 'px-2' : undefined}
           >
-            {isUpdating ? (
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              >
-                <Package size={16} />
-              </motion.div>
-            ) : isInCart ? (
-              <>
-                <Zap size={16} />
-                <span className="hidden sm:inline">In Cart</span>
-              </>
-            ) : isOutOfStock ? (
-              <span className="hidden sm:inline">Out of Stock</span>
-            ) : (
-              <>
-                <ShoppingCart size={16} />
-                <span className="hidden sm:inline">Add to Cart</span>
-              </>
+            {!isCompact && (
+              <span className="hidden sm:inline">
+                {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
+              </span>
             )}
-          </button>
+          </Button>
         </div>
       </div>
     </motion.div>

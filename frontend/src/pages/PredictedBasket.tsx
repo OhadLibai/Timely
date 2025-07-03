@@ -17,7 +17,6 @@ import { useCartStore } from '@/stores/cart.store';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ProductImage from '@/components/products/ProductImage';
 import ConfidenceIndicator from '@/components/predictions/ConfidenceIndicator';
-import PredictionExplanation from '@/components/predictions/PredictionExplanation';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,7 +25,6 @@ const PredictedBasket: React.FC = () => {
   const queryClient = useQueryClient();
   const { syncWithPredictedBasket } = useCartStore();
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
-  const [showExplanations, setShowExplanations] = useState(false);
 
   // Fetch current predicted basket
   const { data: basket, isLoading, error, refetch } = useQuery(
@@ -173,13 +171,6 @@ const PredictedBasket: React.FC = () => {
             </div>
             <div className="flex gap-3">
               <button
-                onClick={() => setShowExplanations(!showExplanations)}
-                className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                <Info size={16} className="inline mr-2" />
-                {showExplanations ? 'Hide' : 'Show'} Explanations
-              </button>
-              <button
                 onClick={() => generateMutation.mutate()}
                 disabled={generateMutation.isLoading}
                 className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
@@ -308,21 +299,6 @@ const PredictedBasket: React.FC = () => {
                           </button>
                         </div>
                       </div>
-
-                      {/* Explanation (if enabled) */}
-                      {showExplanations && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
-                          className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700"
-                        >
-                          <PredictionExplanation
-                            reasoning={item.reasoning}
-                            features={item.features}
-                            compact
-                          />
-                        </motion.div>
-                      )}
                     </div>
                   </div>
                 </div>

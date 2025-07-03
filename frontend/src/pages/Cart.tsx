@@ -13,6 +13,8 @@ import { useAuthStore } from '@/stores/auth.store';
 import ProductImage from '@/components/products/ProductImage';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
+import { PageHeader } from '@/components/common/PageHeader';
+import { Button } from '@/components/common/Button';
 import toast from 'react-hot-toast';
 
 const Cart: React.FC = () => {
@@ -90,12 +92,11 @@ const Cart: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Shopping Cart</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            {cart.items.length} {cart.items.length === 1 ? 'item' : 'items'} in your cart
-          </p>
-        </div>
+        <PageHeader
+          title="Shopping Cart"
+          description={`${cart.items.length} ${cart.items.length === 1 ? 'item' : 'items'} in your cart`}
+          icon={ShoppingCart}
+        />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
@@ -106,14 +107,16 @@ const Cart: React.FC = () => {
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Items in your cart
                   </h2>
-                  <button
+                  <Button
                     onClick={handleClearCart}
                     disabled={isUpdating}
-                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium flex items-center gap-1 disabled:opacity-50"
+                    variant="ghost"
+                    size="sm"
+                    icon={Trash2}
+                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                   >
-                    <Trash2 size={14} />
                     Clear cart
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -242,14 +245,17 @@ const Cart: React.FC = () => {
               </div>
 
               {/* Checkout Button */}
-              <button
+              <Button
                 onClick={handleCheckout}
                 disabled={isUpdating || cart.items.length === 0}
-                className="w-full mt-6 bg-indigo-600 text-white py-3 px-4 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                variant="primary"
+                size="lg"
+                icon={ArrowRight}
+                fullWidth
+                className="mt-6"
               >
                 Proceed to Checkout
-                <ArrowRight size={16} />
-              </button>
+              </Button>
 
               {/* Security Notice */}
               <div className="mt-4 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
