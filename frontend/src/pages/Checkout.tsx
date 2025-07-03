@@ -1,5 +1,6 @@
 // frontend/src/pages/Checkout.tsx
-// FIXED: Simplified CheckoutFormData interface to match actual usage - removed unused fields
+// CLEANED: Removed savings calculation and display logic
+// FOCUSED: Clean checkout flow for ML prediction demonstrations
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -16,7 +17,6 @@ import ProductImage from '@/components/products/ProductImage';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import toast from 'react-hot-toast';
 
-// FIXED: Simplified form data interface - removed unused fields to match actual usage
 interface CheckoutFormData {
   // Contact Information
   firstName: string;
@@ -38,7 +38,7 @@ interface CheckoutFormData {
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { cart, getSubtotal, getSavings, clearCart } = useCartStore();
+  const { cart, getSubtotal, clearCart } = useCartStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -71,11 +71,9 @@ const Checkout: React.FC = () => {
   }
 
   const subtotal = getSubtotal();
-  const savings = getSavings();
   const deliveryFee = subtotal > 50 ? 0 : 5.99;
-  const total = subtotal + deliveryFee - savings;
+  const total = subtotal + deliveryFee;
 
-  // FIXED: Simplified onSubmit - only using fields the backend actually expects
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
     
@@ -149,13 +147,13 @@ const Checkout: React.FC = () => {
                 </div>
                 <span className={`ml-2 text-sm font-medium ${
                   currentStep >= step.id 
-                    ? 'text-gray-900 dark:text-white' 
+                    ? 'text-indigo-600 dark:text-indigo-400' 
                     : 'text-gray-500 dark:text-gray-400'
                 }`}>
                   {step.name}
                 </span>
                 {index < steps.length - 1 && (
-                  <div className={`mx-6 h-0.5 w-12 ${
+                  <div className={`mx-4 h-0.5 w-12 ${
                     currentStep > step.id 
                       ? 'bg-indigo-600' 
                       : 'bg-gray-200 dark:bg-gray-700'
@@ -167,160 +165,162 @@ const Checkout: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Checkout Form */}
+          {/* Main Form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
               
-              {/* Step 1: Contact & Shipping Information */}
-              {currentStep === 1 && (
+              {/* Contact & Shipping Information */}
+              {currentStep >= 1 && (
                 <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
                 >
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
-                    Contact Information
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <User size={20} />
+                    Contact & Shipping Information
                   </h2>
+                  
+                  {/* Contact Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        First Name
+                      </label>
+                      <input
+                        {...register('firstName', { required: 'First name is required' })}
+                        type="text"
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      {errors.firstName && (
+                        <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>
+                      )}
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        Last Name
+                      </label>
+                      <input
+                        {...register('lastName', { required: 'Last name is required' })}
+                        type="text"
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      />
+                      {errors.lastName && (
+                        <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
+                      )}
+                    </div>
+                  </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        First Name *
+                        Email
                       </label>
                       <input
-                        type="text"
-                        {...register('firstName', { required: 'First name is required' })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                      {errors.firstName && (
-                        <p className="text-red-500 text-sm mt-1">{errors.firstName.message}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Last Name *
-                      </label>
-                      <input
-                        type="text"
-                        {...register('lastName', { required: 'Last name is required' })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                      />
-                      {errors.lastName && (
-                        <p className="text-red-500 text-sm mt-1">{errors.lastName.message}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Email *
-                      </label>
-                      <input
-                        type="email"
                         {...register('email', { 
                           required: 'Email is required',
                           pattern: {
-                            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                            value: /^\S+@\S+$/i,
                             message: 'Invalid email address'
                           }
                         })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        type="email"
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       {errors.email && (
-                        <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>
+                        <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
                       )}
                     </div>
-
+                    
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Phone *
+                        Phone
                       </label>
                       <input
-                        type="tel"
                         {...register('phone', { required: 'Phone number is required' })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="(555) 123-4567"
+                        type="tel"
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       {errors.phone && (
-                        <p className="text-red-500 text-sm mt-1">{errors.phone.message}</p>
+                        <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
                       )}
                     </div>
                   </div>
-
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Shipping Address
-                  </h3>
-
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Address *
-                      </label>
-                      <input
-                        type="text"
-                        {...register('address', { required: 'Address is required' })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="123 Main Street"
-                      />
-                      {errors.address && (
-                        <p className="text-red-500 text-sm mt-1">{errors.address.message}</p>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  
+                  {/* Shipping Address */}
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                      <MapPin size={16} />
+                      Shipping Address
+                    </h3>
+                    
+                    <div className="space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          City *
+                          Address
                         </label>
                         <input
+                          {...register('address', { required: 'Address is required' })}
                           type="text"
-                          {...register('city', { required: 'City is required' })}
-                          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
-                        {errors.city && (
-                          <p className="text-red-500 text-sm mt-1">{errors.city.message}</p>
+                        {errors.address && (
+                          <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
                         )}
                       </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          State *
-                        </label>
-                        <input
-                          type="text"
-                          {...register('state', { required: 'State is required' })}
-                          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          placeholder="CA"
-                        />
-                        {errors.state && (
-                          <p className="text-red-500 text-sm mt-1">{errors.state.message}</p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          ZIP Code *
-                        </label>
-                        <input
-                          type="text"
-                          {...register('zipCode', { required: 'ZIP code is required' })}
-                          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          placeholder="12345"
-                        />
-                        {errors.zipCode && (
-                          <p className="text-red-500 text-sm mt-1">{errors.zipCode.message}</p>
-                        )}
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            City
+                          </label>
+                          <input
+                            {...register('city', { required: 'City is required' })}
+                            type="text"
+                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                          {errors.city && (
+                            <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            State
+                          </label>
+                          <input
+                            {...register('state', { required: 'State is required' })}
+                            type="text"
+                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                          {errors.state && (
+                            <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            ZIP Code
+                          </label>
+                          <input
+                            {...register('zipCode', { required: 'ZIP code is required' })}
+                            type="text"
+                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                          {errors.zipCode && (
+                            <p className="text-red-500 text-xs mt-1">{errors.zipCode.message}</p>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
-
-                  <div className="mt-8 flex justify-end">
+                  
+                  <div className="flex justify-end pt-6">
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="bg-indigo-600 text-white px-8 py-3 rounded-md hover:bg-indigo-700 transition-colors"
+                      className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
                     >
                       Continue to Payment
                     </button>
@@ -328,63 +328,75 @@ const Checkout: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Step 2: Payment Information */}
-              {currentStep === 2 && (
+              {/* Payment Information */}
+              {currentStep >= 2 && (
                 <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
                 >
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <CreditCard size={20} />
                     Payment Information
                   </h2>
-
+                  
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Card Number *
+                        Card Number
                       </label>
                       <input
-                        type="text"
                         {...register('cardNumber', { required: 'Card number is required' })}
-                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        type="text"
                         placeholder="1234 5678 9012 3456"
+                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       {errors.cardNumber && (
-                        <p className="text-red-500 text-sm mt-1">{errors.cardNumber.message}</p>
+                        <p className="text-red-500 text-xs mt-1">{errors.cardNumber.message}</p>
                       )}
                     </div>
-
+                    
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Expiry Date *
+                          Expiry Date
+                        </label>
+                        <input
+                          {...register('expiryDate', { required: 'Expiry date is required' })}
+                          type="text"
+                          placeholder="MM/YY"
+                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        />
+                        {errors.expiryDate && (
+                          <p className="text-red-500 text-xs mt-1">{errors.expiryDate.message}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          CVV
                         </label>
                         <input
                           type="text"
-                          {...register('expiryDate', { required: 'Expiry date is required' })}
-                          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          placeholder="MM/YY"
+                          placeholder="123"
+                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
-                        {errors.expiryDate && (
-                          <p className="text-red-500 text-sm mt-1">{errors.expiryDate.message}</p>
-                        )}
                       </div>
                     </div>
                   </div>
-
-                  <div className="mt-8 flex justify-between">
+                  
+                  <div className="flex justify-between pt-6">
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-6 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                     >
                       Back
                     </button>
                     <button
                       type="button"
                       onClick={() => setCurrentStep(3)}
-                      className="bg-indigo-600 text-white px-8 py-3 rounded-md hover:bg-indigo-700 transition-colors"
+                      className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
                     >
                       Review Order
                     </button>
@@ -392,58 +404,34 @@ const Checkout: React.FC = () => {
                 </motion.div>
               )}
 
-              {/* Step 3: Order Review */}
-              {currentStep === 3 && (
+              {/* Order Review */}
+              {currentStep >= 3 && (
                 <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
                   className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
                 >
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                    <CheckCircle size={20} />
                     Review Your Order
                   </h2>
-
-                  <div className="space-y-6">
-                    {/* Contact Information Summary */}
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">Contact Information</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {watch('firstName')} {watch('lastName')}<br />
-                        {watch('email')}<br />
-                        {watch('phone')}
-                      </p>
-                    </div>
-
-                    {/* Shipping Address Summary */}
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">Shipping Address</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {watch('address')}<br />
-                        {watch('city')}, {watch('state')} {watch('zipCode')}
-                      </p>
-                    </div>
-
-                    {/* Payment Method Summary */}
-                    <div>
-                      <h3 className="font-medium text-gray-900 dark:text-white mb-2">Payment Method</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Credit Card ending in {watch('cardNumber')?.slice(-4) || '****'}
-                      </p>
-                    </div>
+                  
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                    Please review your order details before placing your order.
                   </div>
-
-                  <div className="mt-8 flex justify-between">
+                  
+                  <div className="flex justify-between pt-6">
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      className="bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 px-6 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
                     >
                       Back
                     </button>
                     <button
                       type="submit"
                       disabled={isProcessing}
-                      className="bg-green-600 text-white px-8 py-3 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="bg-indigo-600 text-white px-8 py-2 rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isProcessing ? (
                         <>
@@ -504,25 +492,26 @@ const Checkout: React.FC = () => {
                   <span className="text-gray-900 dark:text-white">${subtotal.toFixed(2)}</span>
                 </div>
                 
-                {savings > 0 && (
-                  <div className="flex justify-between text-green-600 dark:text-green-400">
-                    <span>Savings</span>
-                    <span>-${savings.toFixed(2)}</span>
-                  </div>
-                )}
-                
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Delivery</span>
-                  <span className={deliveryFee === 0 ? "text-green-600 dark:text-green-400" : "text-gray-900 dark:text-white"}>
+                  <span className={deliveryFee === 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}>
                     {deliveryFee === 0 ? 'FREE' : `$${deliveryFee.toFixed(2)}`}
                   </span>
                 </div>
                 
-                <div className="flex justify-between font-semibold text-lg pt-2 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex justify-between text-lg font-semibold border-t border-gray-200 dark:border-gray-700 pt-2">
                   <span className="text-gray-900 dark:text-white">Total</span>
                   <span className="text-gray-900 dark:text-white">${total.toFixed(2)}</span>
                 </div>
               </div>
+              
+              {deliveryFee === 0 && (
+                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    🎉 You qualify for free delivery!
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

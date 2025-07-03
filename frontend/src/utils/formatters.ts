@@ -1,6 +1,4 @@
 // frontend/src/utils/formatters.ts
-// MOVED: Product and price formatting utilities from product.service.ts
-// REASON: Presentation logic belongs in utilities, not API services
 
 /**
  * Format price for display with currency
@@ -10,21 +8,6 @@ export const formatPrice = (price: number): string => {
     style: 'currency',
     currency: 'USD'
   }).format(price);
-};
-
-/**
- * Calculate discount percentage between two prices
- */
-export const calculateDiscount = (price: number, compareAtPrice?: number): number => {
-  if (!compareAtPrice || compareAtPrice <= price) return 0;
-  return Math.round(((compareAtPrice - price) / compareAtPrice) * 100);
-};
-
-/**
- * Format discount percentage for display
- */
-export const formatDiscount = (discount: number): string => {
-  return `${discount}% off`;
 };
 
 /**
@@ -79,14 +62,6 @@ export const getProductBadges = (product: {
   isOrganic?: boolean;
 }): Array<{ type: string; text: string; className: string }> => {
   const badges = [];
-
-  if (product.isOnSale && product.discount) {
-    badges.push({
-      type: 'sale',
-      text: `${product.discount}% OFF`,
-      className: 'bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold'
-    });
-  }
 
   if (product.isNew) {
     badges.push({

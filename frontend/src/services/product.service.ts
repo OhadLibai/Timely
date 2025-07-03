@@ -48,7 +48,6 @@ class ProductService {
     if (filters.minPrice !== undefined) params.append('minPrice', filters.minPrice.toString());
     if (filters.maxPrice !== undefined) params.append('maxPrice', filters.maxPrice.toString());
     if (filters.inStock) params.append('inStock', 'true');
-    if (filters.onSale) params.append('onSale', 'true');
 
     return api.get<ProductsResponse>(`/products?${params.toString()}`);
   }
@@ -79,25 +78,3 @@ class ProductService {
 }
 
 export const productService = new ProductService();
-
-// ============================================================================
-// REMOVED DEAD CODE:
-// 
-// DELETED ADMIN METHODS:
-// - createProduct(data: Partial<Product>): Promise<Product>
-// - updateProduct(id: string, data: Partial<Product>): Promise<Product>
-// - deleteProduct(id: string): Promise<void>
-//
-// REASON FOR REMOVAL:
-// The backend product controller is read-only and doesn't implement these CRUD
-// operations. Products are managed solely through database seeding scripts.
-// Keeping these methods would result in 404 errors when called.
-//
-// ALIGNMENT WITH BACKEND:
-// This service now perfectly aligns with the backend's read-only product API,
-// providing all necessary functionality for:
-// - Demand 1: Product browsing for seeded users
-// - Demand 4: Good shopping user experience
-// 
-// While eliminating dead endpoints that would cause runtime errors.
-// ============================================================================

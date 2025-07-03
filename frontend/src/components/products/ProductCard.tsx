@@ -1,6 +1,4 @@
 // frontend/src/components/products/ProductCard.tsx
-// UPDATED: Uses new formatters utility instead of service methods
-// IMPROVED: Better separation of concerns
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -12,7 +10,6 @@ import ProductImage from '@/components/products/ProductImage';
 import { useFavoriteToggle } from '@/hooks/api/useFavoriteToggle';
 import { useAuthenticatedAction } from '@/hooks/auth/useAuthenticatedAction';
 import { useProductDisplay } from '@/hooks/ui/useProductDisplay';
-// NEW: Import formatters from utility instead of service
 import { formatPrice, getProductBadges } from '@/utils/formatters';
 
 interface ProductCardProps {
@@ -154,11 +151,6 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
           <span className="text-lg font-bold text-gray-900 dark:text-white">
             {formatPrice(product.price)}
           </span>
-          {product.compareAtPrice && product.compareAtPrice > product.price && (
-            <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
-              {formatPrice(product.compareAtPrice)}
-            </span>
-          )}
         </div>
 
         {/* Size/Unit */}

@@ -143,9 +143,9 @@ export const useCartStore = create<CartState>()(
       },
 
       // Computed values
-      getItemCount: () => {
+       getItemCount: () => {
         const { cart } = get();
-        return cart?.itemCount || 0;
+        return cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
       },
 
       getSubtotal: () => {
@@ -168,7 +168,7 @@ export const useCartStore = create<CartState>()(
       getCartItem: (productId) => {
         const { cart } = get();
         if (!cart) return undefined;
-        return cartService.getCartItem(cart, productId);
+        return cart.items.find(item => item.productId === productId);
       }
     })),
     {

@@ -1,12 +1,9 @@
+// frontend/src/hooks/ui/useProductDisplay.ts
+
 import { useMemo } from 'react';
 import { Product } from '@/services/product.service';
 
 export const useProductDisplay = (product: Product) => {
-  const discount = useMemo(() => {
-    if (!product.compareAtPrice) return 0;
-    return Math.round(((product.compareAtPrice - product.price) / product.compareAtPrice) * 100);
-  }, [product.compareAtPrice, product.price]);
-
   const stockStatus = useMemo(() => {
     if (!product.trackInventory) {
       return { status: 'available', message: 'In stock', color: 'green' };
@@ -29,11 +26,7 @@ export const useProductDisplay = (product: Product) => {
 
   const pricing = useMemo(() => ({
     currentPrice: product.price.toFixed(2),
-    originalPrice: product.compareAtPrice?.toFixed(2),
-    hasDiscount: discount > 0,
-    discount,
-    savings: product.compareAtPrice ? (product.compareAtPrice - product.price).toFixed(2) : null,
-  }), [product.price, product.compareAtPrice, discount]);
+  }), [product.price]);
 
   const badges = useMemo(() => {
     const badgeList = [];
@@ -61,11 +54,8 @@ export const useProductDisplay = (product: Product) => {
     stockStatus,
     badges,
     availability,
-    discount,
     // Computed display values
     displayPrice: pricing.currentPrice,
-    displayOriginalPrice: pricing.originalPrice,
-    showDiscount: pricing.hasDiscount,
     stockMessage: stockStatus.message,
     stockColor: stockStatus.color,
     isOutOfStock: stockStatus.status === 'out-of-stock',
