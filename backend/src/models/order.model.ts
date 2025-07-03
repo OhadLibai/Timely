@@ -4,9 +4,98 @@
 import { DataType, Column, Model, Table, HasMany, ForeignKey, BelongsTo, HasOne } from 'sequelize-typescript';
 import { User } from '@/models/user.model';
 import { OrderItem } from '@/models/orderItem.model';
-import { Delivery } from '@/models/delivery.model';
 
-// [Previous Order model code remains the same...]
+export enum OrderStatus {
+  PENDING = 'pending',
+  CONFIRMED = 'confirmed',
+  PROCESSING = 'processing',
+  SHIPPED = 'shipped',
+  DELIVERED = 'delivered',
+  CANCELLED = 'cancelled'
+}
+
+export enum PaymentStatus {
+  PENDING = 'pending',
+  PAID = 'paid',
+  FAILED = 'failed',
+  REFUNDED = 'refunded'
+}
+
+@Table({
+  tableName: 'orders',
+  timestamps: true
+})
+export class Order extends Model {
+  @Column({
+    type: DataType.UUID,
+    defaultValue: DataType.UUIDV4,
+    primaryKey: true
+  })
+  id!: string;
+
+  @ForeignKey(() => User)
+  @Column({
+    type: DataType.UUID,
+    allowNull: false
+  })
+  userId!: string;
+
+  @BelongsTo(() => User)
+  user!: User;
+
+  @Column({
+    type: DataType.DECIMAL(10, 2),
+    allowNull: false
+  })
+  totalAmount!: number;
+
+  @Column({
+    type: DataType.ENUM(...Object.values(OrderStatus)),
+    defaultValue: OrderStatus.PENDING
+  })
+  status!: OrderStatus;
+
+  @Column({
+    type: DataType.ENUM(...Object.values(PaymentStatus)),
+    defaultValue: PaymentStatus.PENDING
+  })
+  paymentStatus!: PaymentStatus;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: true
+  })
+  daysSincePriorOrder!: number | null;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false
+  })
+  orderDow!: number;
+
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false
+  })
+  orderHourOfDay!: number;
+
+  @HasMany(() => OrderItem)
+  orderItems!: OrderItem[];
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: false,
+    defaultValue: DataType.NOW
+  })
+  createdAt!: Date;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: false,
+    defaultValue: DataType.NOW
+  })
+  updatedAt!: Date;
+}
 
 /**
  * VERIFIED: Order temporal calculator matching Instacart training data format exactly

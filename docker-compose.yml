@@ -1,8 +1,6 @@
-# docker-compose.yml - UNIFIED for ML Demo Focus
 version: '3.8'
 
 services:
-  # PostgreSQL Database
   db:
     container_name: timely-db
     image: postgres:13
@@ -23,15 +21,11 @@ services:
     networks:
       - timely-network
 
-  # Database Initialization Service
   init-db:
     container_name: timely-init-db
     build:
-      context: ./database
+      context: ./init-db
       dockerfile: Dockerfile
-    volumes:
-      - ./ml-service/training-data:/app/training-data:ro
-      - ./backend/src:/app/backend/src:ro # Mount backend models for type consistency
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - NODE_ENV=${NODE_ENV}
@@ -42,7 +36,6 @@ services:
     networks:
       - timely-network
 
-  # Node.js Backend API (Single Gateway)
   backend:
     build:
       context: ./backend
@@ -70,13 +63,7 @@ services:
     restart: unless-stopped
     networks:
       - timely-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  # Python ML Service
   ml-service:
     container_name: timely-ml-service
     build:
@@ -85,10 +72,6 @@ services:
     environment:
       - DATABASE_URL=${DATABASE_URL}
       - PYTHONPATH=/app
-      - MODEL_PATH_BASE=${MODEL_PATH_BASE}
-      - PROCESSED_DATA_PATH=${PROCESSED_DATA_PATH}
-      - RAW_DATA_PATH=${RAW_DATA_PATH}
-      - EVALUATION_SAMPLE_SIZE=${EVALUATION_SAMPLE_SIZE}
     ports:
       - "${ML_SERVICE_PORT}:${ML_SERVICE_PORT}"
     depends_on:
@@ -98,17 +81,10 @@ services:
         condition: service_completed_successfully
     volumes:
       - ./ml-service:/app
-      - ./ml-service/models:/app/models:ro
     restart: unless-stopped
     networks:
       - timely-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${ML_SERVICE_PORT}/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  # React Frontend (served by Nginx)
   frontend:
     build:
       context: ./frontend
@@ -124,11 +100,6 @@ services:
     restart: unless-stopped
     networks:
       - timely-network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
 volumes:
   postgres_data:

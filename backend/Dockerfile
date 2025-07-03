@@ -1,40 +1,20 @@
-# backend/Dockerfile - SANITIZED for API Gateway Architecture
-
-# Build stage
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-
-# Copy package files for dependency installation
-COPY package*.json ./
-COPY tsconfig.json ./
-
-# Install all dependencies (including devDependencies for build)
-RUN npm ci
-
-# Copy source code
-COPY src ./src
-
-# Build the TypeScript application
-RUN npm run build
-
-# ============================================================================
-# Production stage
-FROM node:18-alpine AS production
+# backend/Dockerfile - Development Mode
+FROM node:18-alpine
 
 WORKDIR /app
 
 # Install dumb-init for proper signal handling in containers
 RUN apk add --no-cache dumb-init curl
 
-# Copy package files
+# Copy package files for dependency installation
 COPY package*.json ./
+COPY tsconfig.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production && npm cache clean --force
+# Install all dependencies (including devDependencies for ts-node)
+RUN npm install
 
-# Copy built application from builder stage
-COPY --from=builder /app/dist ./dist
+# Copy source code
+COPY src ./src
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
@@ -56,8 +36,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
 # Use dumb-init to handle signals properly in containers
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application
-CMD ["node", "dist/server.js"]
+# Start the application in development mode with ts-node
+CMD ["npm", "run", "dev"]
 
 # ============================================================================
 # REMOVED FEATURES:
