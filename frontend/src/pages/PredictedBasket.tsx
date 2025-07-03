@@ -1,4 +1,8 @@
 // frontend/src/pages/PredictedBasket.tsx
+// CLEANED: Removed model metrics query (belongs in admin pages)
+// CLEANED: Removed all sale-related functionality (salePrice, compareAtPrice, sale badges)
+// FOCUSED: Core user experience for predicted basket management
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -34,14 +38,7 @@ const PredictedBasket: React.FC = () => {
     }
   );
 
-  // Fetch model metrics
-  const { data: modelMetrics } = useQuery(
-    'model-metrics',
-    predictionService.getModelMetrics,
-    {
-      staleTime: 30 * 60 * 1000
-    }
-  );
+  // REMOVED: Model metrics query - belongs in admin pages, not user experience
 
   // Generate new prediction mutation
   const generateMutation = useMutation(
@@ -94,12 +91,12 @@ const PredictedBasket: React.FC = () => {
     }
   );
 
-  // Calculate statistics
+  // Calculate statistics - CLEANED: Using regular price instead of salePrice
   const stats = basket ? {
     totalItems: basket.items.filter(item => item.isAccepted).length,
     totalValue: basket.items
       .filter(item => item.isAccepted)
-      .reduce((sum, item) => sum + (item.product.salePrice * item.quantity), 0),
+      .reduce((sum, item) => sum + (item.product.price * item.quantity), 0), // FIXED: price instead of salePrice
     avgConfidence: basket.items.length > 0
       ? basket.items.reduce((sum, item) => sum + item.confidenceScore, 0) / basket.items.length
       : 0,
@@ -158,165 +155,98 @@ const PredictedBasket: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-7xl mx-auto px-4">
-        {/* Header */}
-        <div className="mb-8">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Header Section */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg">
-                <Brain className="w-8 h-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                  Your AI-Predicted Basket
-                </h1>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Week of {new Date(basket.weekOf).toLocaleDateString()}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                Your Predicted Basket
+              </h1>
+              <p className="text-gray-600 dark:text-gray-300 mt-1">
+                AI-powered recommendations based on your shopping patterns
+              </p>
             </div>
-            
             <div className="flex gap-3">
               <button
                 onClick={() => setShowExplanations(!showExplanations)}
-                className="flex items-center gap-2 px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
               >
-                <Info size={20} />
+                <Info size={16} className="inline mr-2" />
                 {showExplanations ? 'Hide' : 'Show'} Explanations
               </button>
               <button
                 onClick={() => generateMutation.mutate()}
                 disabled={generateMutation.isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
               >
-                <RefreshCw size={20} className={generateMutation.isLoading ? 'animate-spin' : ''} />
-                Regenerate
+                <RefreshCw size={16} className={`inline mr-2 ${generateMutation.isLoading ? 'animate-spin' : ''}`} />
+                Generate New
               </button>
             </div>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Selected Items</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats?.totalItems || 0}
-                  </p>
+          {/* Prediction Statistics */}
+          {stats && (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {stats.totalItems}
                 </div>
-                <ShoppingCart className="w-8 h-8 text-indigo-500" />
+                <div className="text-sm text-gray-600 dark:text-gray-400">Items Selected</div>
               </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Value</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    ${stats?.totalValue.toFixed(2) || '0.00'}
-                  </p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  ${stats.totalValue.toFixed(2)}
                 </div>
-                <TrendingUp className="w-8 h-8 text-green-500" />
+                <div className="text-sm text-gray-600 dark:text-gray-400">Total Value</div>
               </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Confidence</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {((stats?.avgConfidence || 0) * 100).toFixed(0)}%
-                  </p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {(stats.avgConfidence * 100).toFixed(0)}%
                 </div>
-                <Sparkles className="w-8 h-8 text-purple-500" />
+                <div className="text-sm text-gray-600 dark:text-gray-400">Avg Confidence</div>
               </div>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Accuracy</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {stats?.acceptanceRate.toFixed(0) || 0}%
-                  </p>
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {stats.acceptanceRate.toFixed(0)}%
                 </div>
-                <Brain className="w-8 h-8 text-pink-500" />
+                <div className="text-sm text-gray-600 dark:text-gray-400">Acceptance Rate</div>
               </div>
-            </motion.div>
-          </div>
-
-          {/* Model Performance Alert */}
-          {modelMetrics && modelMetrics.precisionAt10 > 0.4 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-6"
-            >
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500 rounded-full">
-                  <Check className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <p className="font-semibold text-green-900 dark:text-green-100">
-                    High Accuracy Predictions
-                  </p>
-                  <p className="text-sm text-green-700 dark:text-green-300">
-                    Our model is performing well with {(modelMetrics.precisionAt10 * 100).toFixed(0)}% precision
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+            </div>
           )}
-        </div>
+        </motion.div>
 
-        {/* Items Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        {/* Predicted Items */}
+        <div className="space-y-4 mb-8">
           <AnimatePresence>
             {basket.items.map((item, index) => (
               <motion.div
                 key={item.id}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ delay: index * 0.05 }}
-                className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden ${
-                  !item.isAccepted ? 'opacity-60' : ''
-                }`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ delay: index * 0.1 }}
+                className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border-2 transition-all duration-300 ${
+                  item.isAccepted
+                    ? 'border-green-200 dark:border-green-800'
+                    : 'border-gray-200 dark:border-gray-700'
+                } ${!item.isAccepted ? 'opacity-60' : ''}`}
               >
                 <div className="p-4">
                   <div className="flex gap-4">
-                    {/* Product Image */}
+                    {/* Product Image - CLEANED: Removed sale badge */}
                     <div className="relative">
                       <ProductImage
                         src={item.product.imageUrl}
                         alt={item.product.name}
                         className="w-24 h-24 object-cover rounded-lg"
                       />
-                      {item.product.isOnSale && (
-                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
-                          -{item.product.salePercentage}%
-                        </span>
-                      )}
+                      {/* REMOVED: Sale badge logic */}
                     </div>
 
                     {/* Product Details */}
@@ -344,13 +274,9 @@ const PredictedBasket: React.FC = () => {
 
                       <div className="flex items-center justify-between">
                         <div>
+                          {/* CLEANED: Using regular price, removed compareAtPrice */}
                           <p className="text-lg font-bold text-gray-900 dark:text-white">
-                            ${item.product.salePrice.toFixed(2)}
-                            {item.product.compareAtPrice && (
-                              <span className="ml-2 text-sm text-gray-500 line-through">
-                                ${item.product.compareAtPrice.toFixed(2)}
-                              </span>
-                            )}
+                            ${item.product.price.toFixed(2)}
                           </p>
                           <ConfidenceIndicator score={item.confidenceScore} compact />
                         </div>
@@ -388,12 +314,11 @@ const PredictedBasket: React.FC = () => {
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700"
+                          className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700"
                         >
                           <PredictionExplanation
-                            basketId={basket.id}
-                            productId={item.productId}
+                            reasoning={item.reasoning}
+                            features={item.features}
                             compact
                           />
                         </motion.div>
@@ -407,56 +332,28 @@ const PredictedBasket: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            onClick={() => acceptBasketMutation.mutate()}
-            disabled={acceptBasketMutation.isLoading || stats?.totalItems === 0}
-            className="flex items-center justify-center gap-2 px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-full hover:from-indigo-700 hover:to-purple-700 transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+        {basket.items.some(item => item.isAccepted) && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white dark:bg-gray-800 rounded-lg p-6 text-center"
           >
-            {acceptBasketMutation.isLoading ? (
-              <>
-                <LoadingSpinner size="small" className="text-white" />
-                Processing...
-              </>
-            ) : (
-              <>
-                <ShoppingCart size={20} />
-                Accept & Add to Cart
-                <ChevronRight size={20} />
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={() => navigate('/products')}
-            className="px-8 py-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-bold rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-all"
-          >
-            Browse More Products
-          </button>
-        </div>
-
-        {/* Info Box */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="mt-12 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6"
-        >
-          <div className="flex gap-4">
-            <AlertCircle className="w-6 h-6 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-            <div className="space-y-2">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100">
-                How it works
-              </h3>
-              <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1">
-                <li>• Our AI analyzes your purchase history to predict what you'll need</li>
-                <li>• Review and customize the suggestions to match your preferences</li>
-                <li>• Accept the basket to add all selected items to your cart at once</li>
-                <li>• The more you shop, the better our predictions become!</li>
-              </ul>
-            </div>
-          </div>
-        </motion.div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Ready to shop?
+            </h3>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Add your selected items to cart and continue shopping
+            </p>
+            <button
+              onClick={() => acceptBasketMutation.mutate()}
+              disabled={acceptBasketMutation.isLoading}
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 font-semibold"
+            >
+              <ShoppingCart size={20} className="inline mr-2" />
+              {acceptBasketMutation.isLoading ? 'Adding to Cart...' : 'Accept & Add to Cart'}
+            </button>
+          </motion.div>
+        )}
       </div>
     </div>
   );

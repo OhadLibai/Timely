@@ -1,5 +1,6 @@
 // frontend/src/pages/Products.tsx
 // CLEANED: Removed "On Sale" filter and sale-related query parameters
+// CLEANED: Removed price range filtering - no price filters needed
 // FOCUSED: Core product browsing for ML prediction demonstrations
 
 import React, { useState, useEffect } from 'react';
@@ -11,14 +12,13 @@ import { productService } from '@/services/product.service';
 import ProductCard from '@/components/products/ProductCard';
 import ProductListItem from '@/components/products/ProductListItem';
 import CategoryFilter from '@/components/products/CategoryFilter';
-import PriceRangeFilter from '@/components/products/PriceRangeFilter';
 import SortDropdown, { SortOption, parseSortOption } from '@/components/products/SortDropdown';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Pagination from '@/components/common/Pagination';
 
+// CLEANED: Removed priceRange from FilterState
 interface FilterState {
   categories: string[];
-  priceRange: [number, number];
   inStock: boolean;
 }
 
@@ -31,9 +31,9 @@ const Products: React.FC = () => {
   
   const [sortOption, setSortOption] = useState<SortOption>('popularity-desc');
   
+  // CLEANED: Removed priceRange from filters state
   const [filters, setFilters] = useState<FilterState>({
     categories: [],
-    priceRange: [0, 100],
     inStock: false,
   });
 
@@ -42,7 +42,7 @@ const Products: React.FC = () => {
   // Parse sort option for API call
   const { sortBy, sortOrder } = parseSortOption(sortOption);
 
-  // Fetch products with clean parameters (no sale filtering)
+  // CLEANED: Removed minPrice/maxPrice from API call
   const { data, isLoading, error } = useQuery<any>(
     ['products', currentPage, sortBy, sortOrder, filters, searchQuery],
     () => productService.getProducts({
@@ -52,8 +52,6 @@ const Products: React.FC = () => {
       order: sortOrder,
       search: searchQuery,
       categories: filters.categories,
-      minPrice: filters.priceRange[0],
-      maxPrice: filters.priceRange[1],
       inStock: filters.inStock,
     }),
     { 
@@ -82,69 +80,51 @@ const Products: React.FC = () => {
     setCurrentPage(1);
   };
 
+  // CLEANED: Simplified active filter count (no price range)
+  const activeFilterCount = filters.categories.length + (filters.inStock ? 1 : 0);
+
   // Clear all filters
   const clearFilters = () => {
     setFilters({
       categories: [],
-      priceRange: [0, 100],
       inStock: false,
     });
     setCurrentPage(1);
+    setSearchParams({});
   };
 
-  // Update URL when search changes
+  // Reset to first page when sort changes
   useEffect(() => {
-    const currentSearch = searchParams.get('q') || '';
-    if (currentSearch !== searchQuery) {
-      setSearchQuery(currentSearch);
-    }
-  }, [searchParams]);
+    setCurrentPage(1);
+  }, [sortOption]);
 
   const products = data?.products || [];
-  const totalProducts = data?.total || 0;
-  const totalPages = Math.ceil(totalProducts / itemsPerPage);
-
-  // Calculate active filter count (excluding sale filter)
-  const activeFilterCount = 
-    filters.categories.length + 
-    (filters.inStock ? 1 : 0) + 
-    (filters.priceRange[0] > 0 || filters.priceRange[1] < 100 ? 1 : 0);
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Error Loading Products
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Please try again later.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const pagination = data?.pagination || {};
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+      <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Products
           </h1>
-          
-          {/* Search Bar */}
-          <form onSubmit={handleSearch} className="flex gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+          <p className="text-gray-600 dark:text-gray-300">
+            Discover our collection of fresh groceries and everyday essentials
+          </p>
+        </div>
+
+        {/* Search and Controls */}
+        <div className="mb-8 space-y-4">
+          {/* Search Form */}
+          <form onSubmit={handleSearch} className="flex gap-4">
+            <div className="flex-1">
               <input
                 type="text"
-                placeholder="Search products..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Search for products..."
+                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
               />
             </div>
             <button
@@ -216,7 +196,7 @@ const Products: React.FC = () => {
         </div>
 
         <div className="flex gap-8">
-          {/* Filters Sidebar */}
+          {/* Filters Sidebar - CLEANED: Removed PriceRangeFilter */}
           <AnimatePresence>
             {showFilters && (
               <motion.div
@@ -236,18 +216,9 @@ const Products: React.FC = () => {
                     }
                   />
                   
-                  {/* Price Range Filter */}
-                  <PriceRangeFilter
-                    minPrice={filters.priceRange[0]}
-                    maxPrice={filters.priceRange[1]}
-                    onPriceChange={(min, max) => 
-                      handleFilterChange({ priceRange: [min, max] })
-                    }
-                  />
-                  
                   {/* Stock Filter */}
-                  <div className="bg-white border border-gray-200 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-700 mb-3">Availability</h3>
+                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-3">Availability</h3>
                     <label className="flex items-center">
                       <input
                         type="checkbox"
@@ -257,7 +228,7 @@ const Products: React.FC = () => {
                         }
                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                       />
-                      <span className="ml-2 text-sm text-gray-600">
+                      <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                         In Stock Only
                       </span>
                     </label>
@@ -273,38 +244,71 @@ const Products: React.FC = () => {
               <div className="flex justify-center py-12">
                 <LoadingSpinner size="large" />
               </div>
+            ) : error ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400">
+                  Error loading products. Please try again.
+                </p>
+              </div>
             ) : products.length === 0 ? (
               <div className="text-center py-12">
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                  No products found
-                </h3>
-                <p className="text-gray-500 dark:text-gray-400">
-                  Try adjusting your search or filters.
+                <p className="text-gray-500 dark:text-gray-400 text-lg">
+                  No products found matching your criteria.
                 </p>
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 px-4 py-2 text-indigo-600 hover:text-indigo-700 transition-colors"
+                >
+                  Clear filters to see all products
+                </button>
               </div>
             ) : (
               <>
-                {/* Products Grid/List */}
-                {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {products.map((product: any) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {products.map((product: any) => (
-                      <ProductListItem key={product.id} product={product} />
-                    ))}
-                  </div>
-                )}
+                {/* Results Summary */}
+                <div className="mb-6 flex items-center justify-between">
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {pagination.total} products found
+                    {searchQuery && (
+                      <span className="ml-1">for "{searchQuery}"</span>
+                    )}
+                  </p>
+                </div>
+
+                {/* Product Grid/List */}
+                <AnimatePresence mode="wait">
+                  {viewMode === 'grid' ? (
+                    <motion.div
+                      key="grid"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                    >
+                      {products.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key="list"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="space-y-4"
+                    >
+                      {products.map((product) => (
+                        <ProductListItem key={product.id} product={product} />
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-8 flex justify-center">
+                {pagination.totalPages > 1 && (
+                  <div className="mt-12 flex justify-center">
                     <Pagination
                       currentPage={currentPage}
-                      totalPages={totalPages}
+                      totalPages={pagination.totalPages}
                       onPageChange={setCurrentPage}
                     />
                   </div>
