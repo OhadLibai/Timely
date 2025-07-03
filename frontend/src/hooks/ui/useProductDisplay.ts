@@ -37,15 +37,7 @@ export const useProductDisplay = (product: Product) => {
 
   const badges = useMemo(() => {
     const badgeList = [];
-
-    if (product.isOnSale && discount > 0) {
-      badgeList.push({
-        type: 'sale',
-        text: `-${discount}%`,
-        className: 'px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full'
-      });
-    }
-
+    
     if (stockStatus.status === 'low-stock') {
       badgeList.push({
         type: 'low-stock',
@@ -55,7 +47,7 @@ export const useProductDisplay = (product: Product) => {
     }
 
     return badgeList;
-  }, [product.isOnSale, product.isFeatured, discount, stockStatus.status]);
+  }, [stockStatus.status]);
 
   const availability = useMemo(() => ({
     isAvailable: product.stock > 0 || !product.trackInventory,

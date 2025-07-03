@@ -40,8 +40,6 @@ const PredictedBasket = lazy(() => import('@/pages/PredictedBasket'));
 // Auth pages
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
-const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 
 // Admin pages - ONLY the 4 core demo demands
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
@@ -93,8 +91,6 @@ const App: React.FC = () => {
                 <Route path="/auth" element={<AuthLayout />}>
                   <Route path="login" element={<Login />} />
                   <Route path="register" element={<Register />} />
-                  <Route path="forgot-password" element={<ForgotPassword />} />
-                  <Route path="reset-password" element={<ResetPassword />} />
                 </Route>
 
                 {/* ================================================================ */}

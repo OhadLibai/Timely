@@ -108,16 +108,3 @@ CREATE INDEX IF NOT EXISTS idx_products_instacart_id ON products(instacart_produ
 CREATE INDEX IF NOT EXISTS idx_users_instacart_id ON users(instacart_user_id);
 CREATE INDEX IF NOT EXISTS idx_orders_temporal ON orders(order_dow, order_hour_of_day);
 CREATE INDEX IF NOT EXISTS idx_orders_sequence ON orders(user_id, order_sequence);
-
--- Default admin user ONLY (no sample data)
-INSERT INTO users (id, email, password, first_name, last_name, role, is_active, email_verified)
-VALUES (
-    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-    'admin@timely.demo',
-    '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYpfQYyhaANBnNa',
-    'Admin',
-    'User',
-    'admin',
-    true,
-    true
-) ON CONFLICT (email) DO NOTHING;

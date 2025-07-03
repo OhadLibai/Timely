@@ -96,14 +96,6 @@ export const getProductBadges = (product: {
     });
   }
 
-  if (product.isFeatured) {
-    badges.push({
-      type: 'featured',
-      text: 'FEATURED',
-      className: 'bg-purple-500 text-white text-xs px-2 py-1 rounded-full font-semibold'
-    });
-  }
-
   if (product.isOrganic) {
     badges.push({
       type: 'organic',

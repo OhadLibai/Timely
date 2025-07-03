@@ -119,7 +119,7 @@ const Login: React.FC = () => {
               })}
             />
 
-            {/* Remember Me & Forgot Password */}
+            {/* Remember Me */}
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
@@ -129,12 +129,6 @@ const Login: React.FC = () => {
                 />
                 <span className="text-sm text-gray-700 dark:text-gray-300">Remember me</span>
               </label>
-              <Link
-                to="/forgot-password"
-                className="text-sm text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300"
-              >
-                Forgot password?
-              </Link>
             </div>
 
             {/* Error Message */}

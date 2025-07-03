@@ -84,21 +84,6 @@ class AuthService {
     return response.user;
   }
 
-  // Forgot password
-  async forgotPassword(email: string): Promise<void> {
-    await api.post('/auth/forgot-password', { email });
-  }
-
-  // Reset password
-  async resetPassword(token: string, password: string): Promise<void> {
-    await api.post('/auth/reset-password', { token, password });
-  }
-
-  // Change password
-  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    await api.put('/auth/change-password', { currentPassword, newPassword });
-  }
-
   // Token management
   getAccessToken(): string | null {
     return localStorage.getItem(this.ACCESS_TOKEN_KEY);

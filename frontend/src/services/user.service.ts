@@ -16,11 +16,6 @@ interface UpdateProfileData {
   address?: string;
 }
 
-interface ChangePasswordData {
-  currentPassword: string;
-  newPassword: string;
-}
-
 export const userService = {
   async getProfile(): Promise<UserProfile> {
     const response = await apiClient.get('/user/profile');
@@ -30,10 +25,6 @@ export const userService = {
   async updateProfile(data: UpdateProfileData): Promise<UserProfile> {
     const response = await apiClient.put('/user/profile', data);
     return response.data;
-  },
-
-  async changePassword(data: ChangePasswordData): Promise<void> {
-    await apiClient.put('/user/change-password', data);
   },
 
   async deleteAccount(): Promise<void> {

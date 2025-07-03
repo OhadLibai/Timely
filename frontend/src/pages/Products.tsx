@@ -19,7 +19,6 @@ interface FilterState {
   categories: string[];
   priceRange: [number, number];
   inStock: boolean;
-  onSale: boolean;
 }
 
 const Products: React.FC = () => {
@@ -36,7 +35,6 @@ const Products: React.FC = () => {
     categories: [],
     priceRange: [0, 100],
     inStock: false,
-    onSale: false
   });
 
   const itemsPerPage = 24;
@@ -57,7 +55,6 @@ const Products: React.FC = () => {
       minPrice: filters.priceRange[0],
       maxPrice: filters.priceRange[1],
       inStock: filters.inStock,
-      onSale: filters.onSale
     }),
     { 
       keepPreviousData: true,
@@ -91,7 +88,6 @@ const Products: React.FC = () => {
       categories: [],
       priceRange: [0, 100],
       inStock: false,
-      onSale: false
     });
     setCurrentPage(1);
   };
@@ -112,7 +108,6 @@ const Products: React.FC = () => {
   const activeFilterCount = 
     filters.categories.length + 
     (filters.inStock ? 1 : 0) + 
-    (filters.onSale ? 1 : 0) +
     (filters.priceRange[0] > 0 || filters.priceRange[1] < 100 ? 1 : 0);
 
   return (
@@ -230,18 +225,6 @@ const Products: React.FC = () => {
                         />
                         <span className="text-sm text-gray-700 dark:text-gray-300">
                           In Stock Only
-                        </span>
-                      </label>
-
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={filters.onSale}
-                          onChange={(e) => handleFilterChange({ onSale: e.target.checked })}
-                          className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                        />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                          On Sale
                         </span>
                       </label>
                     </div>
