@@ -1,4 +1,6 @@
 // frontend/src/services/order.service.ts
+// CLEANED: Removed all tracking/delivery functionality - Focus on ML basket prediction
+
 import { api } from '@/services/api.client';
 import { Product } from '@/services/product.service';
 
@@ -11,39 +13,19 @@ export interface OrderItem {
   price: number;
   total: number;
   createdAt: string;
-}
-
-export interface Delivery {
-  id: string;
-  orderId: string;
-  type: 'standard' | 'express' | 'scheduled';
-  status: 'pending' | 'scheduled' | 'in_transit' | 'delivered' | 'failed';
-  addressLine1: string;
-  addressLine2?: string;
-  city: string;
-  state: string;
-  zipCode: string;
-  country: string;
-  scheduledDate?: string;
-  scheduledTimeStart?: string;
-  scheduledTimeEnd?: string;
-  deliveredAt?: string;
-  deliveryNotes?: string;
-  trackingNumber?: string;
-  createdAt: string;
-  updatedAt: string;
+  // ML fields
+  addToCartOrder?: number;
+  reordered?: boolean;
 }
 
 export interface Order {
   id: string;
   orderNumber: string;
   userId: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled'; // Simplified statuses
   items: OrderItem[];
-  delivery?: Delivery;
   subtotal: number;
   tax: number;
-  deliveryFee: number;
   discount: number;
   total: number;
   paymentMethod: string;
@@ -52,18 +34,17 @@ export interface Order {
   metadata: Record<string, any>;
   createdAt: string;
   updatedAt: string;
+  // ML fields for Instacart compatibility
+  orderSequence?: number;
+  daysSincePriorOrder?: number;
+  orderDow?: number;
+  orderHourOfDay?: number;
+  instacartOrderId?: number;
 }
 
-// FIXED: Added cartId to match Checkout.tsx implementation
+// Simplified order creation - no delivery address needed
 export interface CreateOrderData {
-  cartId: string; // ADDED: Required by backend when creating order from cart
-  deliveryAddress: {
-    street: string;     // FIXED: Changed from addressLine1 to match backend expectations
-    city: string;
-    state: string;
-    zipCode: string;
-    country: string;
-  };
+  cartId: string;
   paymentMethod: string;
   notes?: string;
 }
@@ -85,31 +66,13 @@ export interface OrderFilters {
   sort?: string;
 }
 
-export interface OrderStatusUpdate {
-  status: Order['status'];
-  reason?: string;
-}
-
-export interface TrackingInfo {
-  carrier: string;
-  trackingNumber: string;
-  estimatedDelivery: string;
-  currentLocation?: string;
-  events: Array<{
-    date: string;
-    location: string;
-    status: string;
-    description: string;
-  }>;
-}
-
 class OrderService {
-  // Create a new order
+  // Create a new order - simplified for basket prediction focus
   async createOrder(data: CreateOrderData): Promise<Order> {
     return api.post<Order>('/orders/create', data);
   }
 
-  // Get all orders for the current user
+  // Get all orders for the current user - ESSENTIAL for showing populated order history
   async getOrders(filters: OrderFilters = {}): Promise<OrdersResponse> {
     const params = new URLSearchParams();
     
@@ -123,90 +86,18 @@ class OrderService {
     return api.get<OrdersResponse>(`/orders?${params.toString()}`);
   }
 
-  // Get a single order by ID
+  // Get a single order by ID - ESSENTIAL for order details
   async getOrder(orderId: string): Promise<Order> {
     return api.get<Order>(`/orders/${orderId}`);
   }
 
-  // Cancel an order
-  async cancelOrder(orderId: string, reason?: string): Promise<Order> {
-    return api.post<Order>(`/orders/${orderId}/cancel`, { reason });
-  }
-
-  // Request refund
-  async requestRefund(orderId: string, reason: string, items?: string[]): Promise<Order> {
-    return api.post<Order>(`/orders/${orderId}/refund`, { reason, items });
-  }
-
-  // Reorder items from a previous order
-  async reorder(orderId: string): Promise<{ cartId: string }> {
-    return api.post<{ cartId: string }>(`/orders/${orderId}/reorder`);
-  }
-
-  // Get order tracking information
-  async getTracking(orderId: string): Promise<TrackingInfo> {
-    return api.get<TrackingInfo>(`/orders/${orderId}/tracking`);
-  }
-
-  // Download order invoice
-  async downloadInvoice(orderId: string): Promise<Blob> {
-    const response = await api.get(`/orders/${orderId}/invoice`, {
-      responseType: 'blob'
-    });
-    return response as Blob;
-  }
-
-  // Get order statistics
-  async getOrderStats(): Promise<{
-    totalOrders: number;
-    totalSpent: number;
-    averageOrderValue: number;
-    favoriteProducts: Array<{ product: Product; count: number }>;
-    orderFrequency: string;
-  }> {
-    return api.get('/orders/stats');
-  }
-
-  // Update delivery instructions
-  async updateDeliveryInstructions(orderId: string, instructions: string): Promise<Order> {
-    return api.put<Order>(`/orders/${orderId}/delivery-instructions`, { instructions });
-  }
-
-  // Rate order
-  async rateOrder(orderId: string, rating: number, comment?: string): Promise<void> {
-    return api.post(`/orders/${orderId}/rate`, { rating, comment });
-  }
-
-  // Admin functions
-  async getAllOrders(filters: OrderFilters & { userId?: string } = {}): Promise<OrdersResponse> {
-    const params = new URLSearchParams();
-    
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value !== undefined) {
-        params.append(key, value.toString());
-      }
-    });
-
-    return api.get<OrdersResponse>(`/admin/orders?${params.toString()}`);
-  }
-
-  async updateOrderStatus(orderId: string, update: OrderStatusUpdate): Promise<Order> {
-    return api.put<Order>(`/admin/orders/${orderId}/status`, update);
-  }
-
-  async updateTracking(orderId: string, trackingNumber: string, carrier: string): Promise<Order> {
-    return api.put<Order>(`/admin/orders/${orderId}/tracking`, { trackingNumber, carrier });
-  }
-
-  // Utility functions
+  // Utility functions for UI display
   getStatusColor(status: Order['status']): string {
     const colors = {
       pending: 'yellow',
-      processing: 'blue',
-      shipped: 'indigo',
-      delivered: 'green',
-      cancelled: 'gray',
-      refunded: 'red'
+      confirmed: 'blue',
+      completed: 'green',
+      cancelled: 'gray'
     };
     return colors[status] || 'gray';
   }
@@ -214,11 +105,9 @@ class OrderService {
   getStatusIcon(status: Order['status']): string {
     const icons = {
       pending: 'clock',
-      processing: 'loader',
-      shipped: 'truck',
-      delivered: 'check-circle',
-      cancelled: 'x-circle',
-      refunded: 'rotate-ccw'
+      confirmed: 'check-circle',
+      completed: 'package-check',
+      cancelled: 'x-circle'
     };
     return icons[status] || 'package';
   }
@@ -228,12 +117,7 @@ class OrderService {
   }
 
   canCancel(order: Order): boolean {
-    return ['pending', 'processing'].includes(order.status);
-  }
-
-  canRequestRefund(order: Order): boolean {
-    return order.status === 'delivered' && 
-           new Date(order.createdAt).getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000; // 30 days
+    return ['pending'].includes(order.status);
   }
 }
 

@@ -22,7 +22,6 @@ interface CartState {
   // Computed values
   getItemCount: () => number;
   getSubtotal: () => number;
-  getSavings: () => number;
   isProductInCart: (productId: string) => boolean;
   getCartItem: (productId: string) => CartItem | undefined;
 }
@@ -151,12 +150,6 @@ export const useCartStore = create<CartState>()(
       getSubtotal: () => {
         const { cart } = get();
         return cart?.subtotal || 0;
-      },
-
-      getSavings: () => {
-        const { cart } = get();
-        if (!cart) return 0;
-        return cartService.calculateSavings(cart);
       },
 
       isProductInCart: (productId) => {

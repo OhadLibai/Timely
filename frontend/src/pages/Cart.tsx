@@ -27,7 +27,6 @@ const Cart: React.FC = () => {
     removeItem, 
     clearCart,
     getSubtotal,
-    getSavings
   } = useCartStore();
 
   useEffect(() => {
@@ -86,9 +85,7 @@ const Cart: React.FC = () => {
   }
 
   const subtotal = getSubtotal();
-  const savings = getSavings();
-  const deliveryFee = subtotal > 50 ? 0 : 5.99; // Free delivery over $50
-  const total = subtotal + deliveryFee - savings;
+  const total = subtotal
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -236,20 +233,6 @@ const Cart: React.FC = () => {
                   <span className="text-gray-900 dark:text-white">${subtotal.toFixed(2)}</span>
                 </div>
                 
-                {savings > 0 && (
-                  <div className="flex justify-between text-green-600 dark:text-green-400">
-                    <span>Savings</span>
-                    <span>-${savings.toFixed(2)}</span>
-                  </div>
-                )}
-                
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>
-                  <span className={deliveryFee === 0 ? "text-green-600 dark:text-green-400" : "text-gray-900 dark:text-white"}>
-                    {deliveryFee === 0 ? 'FREE' : `$${deliveryFee.toFixed(2)}`}
-                  </span>
-                </div>
-                
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                   <div className="flex justify-between font-semibold text-lg">
                     <span className="text-gray-900 dark:text-white">Total</span>
@@ -257,20 +240,6 @@ const Cart: React.FC = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Free Delivery Notice */}
-              {deliveryFee > 0 && (
-                <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                  <div className="flex items-start gap-2">
-                    <Truck className="text-blue-600 dark:text-blue-400 mt-0.5" size={16} />
-                    <div className="text-sm">
-                      <p className="text-blue-800 dark:text-blue-200 font-medium">
-                        Add ${(50 - subtotal).toFixed(2)} more for free delivery!
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Checkout Button */}
               <button
