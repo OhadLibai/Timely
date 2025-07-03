@@ -1,5 +1,6 @@
 // frontend/src/App.tsx
-// UPDATED: Added UserSeeding page routing and cleaned up imports
+// STREAMLINED: Complete routing focused on 4 core ML demo demands
+// REMOVED: Unnecessary admin CRUD pages, settings, etc.
 
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
@@ -20,7 +21,11 @@ import AdminRoute from '@/components/auth/AdminRoute';
 // Loading component
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 
-// Lazy load pages
+// ============================================================================
+// LAZY LOADED PAGES - Optimized for demo requirements
+// ============================================================================
+
+// Customer-facing pages (Demand 4: Good UX)
 const Home = lazy(() => import('@/pages/Home'));
 const Products = lazy(() => import('@/pages/Products'));
 const ProductDetail = lazy(() => import('@/pages/ProductDetail'));
@@ -31,22 +36,23 @@ const OrderDetail = lazy(() => import('@/pages/OrderDetail'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Favorites = lazy(() => import('@/pages/Favorites'));
 const PredictedBasket = lazy(() => import('@/pages/PredictedBasket'));
+
+// Auth pages
 const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const ForgotPassword = lazy(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazy(() => import('@/pages/ResetPassword'));
 
-// Admin pages
+// Admin pages - ONLY the 4 core demo demands
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
-const AdminProducts = lazy(() => import('@/pages/admin/Products'));
-const AdminOrders = lazy(() => import('@/pages/admin/Orders'));
-const AdminUsers = lazy(() => import('@/pages/admin/Users'));
-const AdminMetrics = lazy(() => import('@/pages/admin/Metrics'));
-const AdminSettings = lazy(() => import('@/pages/admin/Settings'));
 const UserSeeding = lazy(() => import('@/pages/admin/UserSeeding'));
+const AdminMetrics = lazy(() => import('@/pages/admin/Metrics'));
 const DemoPredictionPage = lazy(() => import('@/pages/admin/DemoPredictionPage'));
 
-// Create React Query client with optimized settings
+// ============================================================================
+// REACT QUERY CONFIGURATION
+// ============================================================================
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -60,6 +66,10 @@ const queryClient = new QueryClient({
   },
 });
 
+// ============================================================================
+// MAIN APP COMPONENT
+// ============================================================================
+
 const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
@@ -68,14 +78,18 @@ const App: React.FC = () => {
           <AnimatePresence mode="wait">
             <Suspense fallback={<LoadingSpinner fullScreen />}>
               <Routes>
-                {/* Public Routes */}
+                {/* ================================================================ */}
+                {/* PUBLIC ROUTES - Customer Experience (Demand 4) */}
+                {/* ================================================================ */}
                 <Route path="/" element={<MainLayout />}>
                   <Route index element={<Home />} />
                   <Route path="products" element={<Products />} />
                   <Route path="products/:id" element={<ProductDetail />} />
                 </Route>
 
-                {/* Auth Routes */}
+                {/* ================================================================ */}
+                {/* AUTH ROUTES */}
+                {/* ================================================================ */}
                 <Route path="/auth" element={<AuthLayout />}>
                   <Route path="login" element={<Login />} />
                   <Route path="register" element={<Register />} />
@@ -83,12 +97,10 @@ const App: React.FC = () => {
                   <Route path="reset-password" element={<ResetPassword />} />
                 </Route>
 
-                {/* Protected User Routes */}
-                <Route path="/" element={
-                  <ProtectedRoute>
-                    <MainLayout />
-                  </ProtectedRoute>
-                }>
+                {/* ================================================================ */}
+                {/* PROTECTED USER ROUTES - Customer Experience (Demand 4) */}
+                {/* ================================================================ */}
+                <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
                   <Route path="cart" element={<Cart />} />
                   <Route path="checkout" element={<Checkout />} />
                   <Route path="orders" element={<Orders />} />
@@ -98,41 +110,45 @@ const App: React.FC = () => {
                   <Route path="predicted-basket" element={<PredictedBasket />} />
                 </Route>
 
-                {/* Admin Routes */}
-                <Route path="/admin" element={
-                  <AdminRoute>
-                    <AdminLayout />
-                  </AdminRoute>
-                }>
-                  <Route index element={<AdminDashboard />} />
+                {/* ================================================================ */}
+                {/* ADMIN ROUTES - 4 Core ML Demo Demands Only */}
+                {/* ================================================================ */}
+                <Route 
+                  path="/admin" 
+                  element={
+                    <AdminRoute>
+                      <AdminLayout />
+                    </AdminRoute>
+                  }
+                >
+                  {/* Demo Overview */}
+                  <Route index element={<Navigate to="/admin/dashboard" replace />} />
                   <Route path="dashboard" element={<AdminDashboard />} />
-                  <Route path="products" element={<AdminProducts />} />
-                  <Route path="orders" element={<AdminOrders />} />
-                  <Route path="users" element={<AdminUsers />} />
-                  <Route path="metrics" element={<AdminMetrics />} />
-                  <Route path="settings" element={<AdminSettings />} />
-                  
-                  {/* NEW: Demo functionality routes */}
+
+                  {/* DEMAND 1: User Seeding */}
                   <Route path="user-seeding" element={<UserSeeding />} />
+
+                  {/* DEMAND 2: Model Performance Stats */}
+                  <Route path="metrics" element={<AdminMetrics />} />
+
+                  {/* DEMAND 3: Individual User Prediction Performance */}
                   <Route path="demo-prediction" element={<DemoPredictionPage />} />
-                  
+
                   {/* Legacy route redirects */}
-                  <Route path="demo" element={<Navigate to="/admin/demo-prediction" replace />} />
-                  <Route path="seed-users" element={<Navigate to="/admin/user-seeding" replace />} />
+                  <Route path="evaluation" element={<Navigate to="/admin/metrics" replace />} />
+                  <Route path="model-performance" element={<Navigate to="/admin/metrics" replace />} />
                 </Route>
 
-                {/* Auth redirects */}
-                <Route path="/login" element={<Navigate to="/auth/login" replace />} />
-                <Route path="/register" element={<Navigate to="/auth/register" replace />} />
-
-                {/* 404 fallback */}
+                {/* ================================================================ */}
+                {/* FALLBACK ROUTES */}
+                {/* ================================================================ */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Suspense>
           </AnimatePresence>
 
-          {/* Global notifications */}
-          <Toaster
+          {/* Global Components */}
+          <Toaster 
             position="top-right"
             toastOptions={{
               duration: 4000,
@@ -143,33 +159,23 @@ const App: React.FC = () => {
               success: {
                 duration: 3000,
                 iconTheme: {
-                  primary: '#10b981',
+                  primary: '#4ade80',
                   secondary: '#fff',
                 },
               },
               error: {
-                duration: 6000,
+                duration: 5000,
                 iconTheme: {
                   primary: '#ef4444',
-                  secondary: '#fff',
-                },
-              },
-              loading: {
-                duration: 0,
-                iconTheme: {
-                  primary: '#6366f1',
                   secondary: '#fff',
                 },
               },
             }}
           />
 
-          {/* React Query DevTools (development only) */}
+          {/* React Query DevTools - Development Only */}
           {process.env.NODE_ENV === 'development' && (
-            <ReactQueryDevtools 
-              initialIsOpen={false} 
-              position="bottom-right"
-            />
+            <ReactQueryDevtools initialIsOpen={false} />
           )}
         </div>
       </Router>

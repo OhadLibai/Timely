@@ -45,7 +45,7 @@ const Products: React.FC = () => {
   const { sortBy, sortOrder } = parseSortOption(sortOption);
 
   // Fetch products with corrected sort parameters
-  const { data, isLoading, error } = useQuery(
+  const { data, isLoading, error } = useQuery<any>(
     ['products', currentPage, sortBy, sortOrder, filters, searchQuery],
     () => productService.getProducts({
       page: currentPage,
@@ -342,22 +342,3 @@ const Products: React.FC = () => {
 };
 
 export default Products;
-
-// ============================================================================
-// SORTING FIX APPLIED:
-// 
-// FIXED:
-// - Updated sortOption state to use proper backend-compatible values
-// - Added parseSortOption utility to convert dropdown values to API parameters
-// - Updated API call to use separate 'sort' and 'order' parameters
-// - All sort options now correctly map to backend expectations
-// 
-// BACKEND COMPATIBILITY:
-// - 'name-asc' → sort: 'name', order: 'asc'
-// - 'price-desc' → sort: 'price', order: 'desc'
-// - 'createdAt-desc' → sort: 'createdAt', order: 'desc'
-// - etc.
-// 
-// This eliminates the mismatch between frontend sorting options and
-// backend API expectations, ensuring proper product sorting functionality.
-// ============================================================================

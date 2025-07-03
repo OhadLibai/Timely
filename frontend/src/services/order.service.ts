@@ -177,11 +177,6 @@ class OrderService {
     return api.post(`/orders/${orderId}/rate`, { rating, comment });
   }
 
-  // Get recommended products based on order history
-  async getRecommendedProducts(limit: number = 10): Promise<Product[]> {
-    return api.get<Product[]>(`/orders/recommendations?limit=${limit}`);
-  }
-
   // Admin functions
   async getAllOrders(filters: OrderFilters & { userId?: string } = {}): Promise<OrdersResponse> {
     const params = new URLSearchParams();

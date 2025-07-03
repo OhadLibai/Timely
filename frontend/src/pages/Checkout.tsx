@@ -72,9 +72,8 @@ const Checkout: React.FC = () => {
 
   const subtotal = getSubtotal();
   const savings = getSavings();
-  const estimatedTax = subtotal * 0.08;
   const deliveryFee = subtotal > 50 ? 0 : 5.99;
-  const total = subtotal + estimatedTax + deliveryFee - savings;
+  const total = subtotal + deliveryFee - savings;
 
   // FIXED: Simplified onSubmit - only using fields the backend actually expects
   const onSubmit = async (data: CheckoutFormData) => {
@@ -511,11 +510,6 @@ const Checkout: React.FC = () => {
                     <span>-${savings.toFixed(2)}</span>
                   </div>
                 )}
-                
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Tax</span>
-                  <span className="text-gray-900 dark:text-white">${estimatedTax.toFixed(2)}</span>
-                </div>
                 
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Delivery</span>

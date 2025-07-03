@@ -87,9 +87,8 @@ const Cart: React.FC = () => {
 
   const subtotal = getSubtotal();
   const savings = getSavings();
-  const estimatedTax = subtotal * 0.08; // 8% tax
   const deliveryFee = subtotal > 50 ? 0 : 5.99; // Free delivery over $50
-  const total = subtotal + estimatedTax + deliveryFee - savings;
+  const total = subtotal + deliveryFee - savings;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -243,11 +242,6 @@ const Cart: React.FC = () => {
                     <span>-${savings.toFixed(2)}</span>
                   </div>
                 )}
-                
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Estimated Tax</span>
-                  <span className="text-gray-900 dark:text-white">${estimatedTax.toFixed(2)}</span>
-                </div>
                 
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Delivery Fee</span>

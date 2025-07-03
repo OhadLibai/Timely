@@ -1,5 +1,6 @@
 // frontend/src/components/products/ProductCard.tsx
-// FIXED: Proper favorite status sync with server
+// UPDATED: Uses new formatters utility instead of service methods
+// IMPROVED: Better separation of concerns
 
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -11,6 +12,8 @@ import ProductImage from '@/components/products/ProductImage';
 import { useFavoriteToggle } from '@/hooks/api/useFavoriteToggle';
 import { useAuthenticatedAction } from '@/hooks/auth/useAuthenticatedAction';
 import { useProductDisplay } from '@/hooks/ui/useProductDisplay';
+// NEW: Import formatters from utility instead of service
+import { formatPrice, getProductBadges } from '@/utils/formatters';
 
 interface ProductCardProps {
   product: Product;
@@ -22,11 +25,17 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
   const { addToCart, isProductInCart, isUpdating } = useCartStore();
   const { withAuthCheck } = useAuthenticatedAction();
   
-  // Use our new hooks
+  // Use our hooks for state management
   const { isFavorite, isFavoriteLoading, isToggling, handleToggleFavorite } = useFavoriteToggle(product.id);
-  const { pricing, stockStatus, badges, availability } = useProductDisplay(product);
+  const { pricing, stockStatus, availability } = useProductDisplay(product);
 
   const isInCart = isProductInCart(product.id);
+
+  // UPDATED: Use utility functions for formatting
+  const badges = getProductBadges({
+    isNew: false, // This would come from product data
+    isOrganic: product.isOrganic
+  });
 
   const handleAddToCart = withAuthCheck(
     async () => {
@@ -58,7 +67,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
           />
           
-          {/* Badges */}
+          {/* Badges - Using utility function */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
             {badges.map((badge) => (
               <span key={badge.type} className={badge.className}>
@@ -74,132 +83,125 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
             transition={{ duration: 0.2 }}
             className="absolute top-3 right-3 flex flex-col gap-2"
           >
-            {/* FIXED: Proper favorite button with server sync */}
             <button
-              onClick={handleToggleFavorite}
-              disabled={isToggling || isFavoriteLoading}
+              onClick={(e) => {
+                e.preventDefault();
+                handleToggleFavorite();
+              }}
+              disabled={isToggling}
               className={`p-2 rounded-full backdrop-blur-sm transition-all ${
-                isFavorite 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-white/80 dark:bg-gray-800/80 text-gray-700 dark:text-gray-300 hover:bg-red-500 hover:text-white'
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+                isFavorite
+                  ? 'bg-red-500 text-white'
+                  : 'bg-white/80 text-gray-600 hover:bg-red-50 hover:text-red-500'
+              }`}
             >
-              <Heart size={18} fill={isFavorite ? 'currentColor' : 'none'} />
+              <Heart size={16} className={isFavorite ? 'fill-current' : ''} />
             </button>
-            <Link
-              to={`/products/${product.id}`}
-              className="p-2 bg-white/80 dark:bg-gray-800/80 rounded-full backdrop-blur-sm text-gray-700 dark:text-gray-300 hover:bg-indigo-500 hover:text-white transition-all"
+            
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                // Quick view functionality could go here
+              }}
+              className="p-2 rounded-full bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-blue-50 hover:text-blue-500 transition-all"
             >
-              <Eye size={18} />
-            </Link>
+              <Eye size={16} />
+            </button>
           </motion.div>
 
-          {/* Stock Indicator */}
-          {availability.trackInventory && !availability.isAvailable && (
-            <div className="absolute bottom-3 left-3">
-              <span className={`flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
-                stockStatus.color === 'red' 
-                  ? 'bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400'
-                  : 'bg-orange-100 dark:bg-orange-900/50 text-orange-600 dark:text-orange-400'
-              }`}>
-                {stockStatus.color === 'red' ? <Package size={12} /> : <Zap size={12} />}
-                {stockStatus.message}
+          {/* Stock Status Overlay */}
+          {product.stock === 0 && (
+            <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
+              <span className="bg-white px-3 py-1 rounded-full text-sm font-medium text-gray-900">
+                Out of Stock
               </span>
             </div>
           )}
-        </div>
-
-        {/* Content */}
-        <div className="p-4">
-          {/* Category & Brand */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {product.category?.name}
-            </span>
-            {product.brand && (
-              <>
-                <span className="text-xs text-gray-400">•</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {product.brand}
-                </span>
-              </>
-            )}
-          </div>
-
-          {/* Product Name */}
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-            {product.name}
-          </h3>
-
-          {/* Rating */}
-          {product.reviewCount > 0 && (
-            <div className="flex items-center gap-1 mb-3">
-              <div className="flex">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={14}
-                    className={i < Math.floor(product.avgRating) 
-                      ? 'text-yellow-400 fill-current' 
-                      : 'text-gray-300 dark:text-gray-600'
-                    }
-                  />
-                ))}
-              </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
-                ({product.reviewCount})
-              </span>
-            </div>
-          )}
-
-          {/* Price Section */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
-                ${pricing.currentPrice}
-              </span>
-              {pricing.originalPrice && (
-                <span className="text-sm text-gray-500 line-through">
-                  ${pricing.originalPrice}
-                </span>
-              )}
-            </div>
-            {pricing.hasDiscount && (
-              <span className="text-xs font-medium text-red-600 dark:text-red-400">
-                Save {pricing.discount}%
-              </span>
-            )}
-          </div>
-
-          {/* Add to Cart Button */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              handleAddToCart();
-            }}
-            disabled={isUpdating || !availability.canAddToCart}
-            className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all ${
-              isInCart
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                : !availability.canAddToCart
-                ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
-          >
-            <ShoppingCart size={18} />
-            {isUpdating ? (
-              'Adding...'
-            ) : isInCart ? (
-              'In Cart'
-            ) : !availability.canAddToCart ? (
-              'Out of Stock'
-            ) : (
-              'Add to Cart'
-            )}
-          </button>
         </div>
       </Link>
+
+      {/* Product Info */}
+      <div className="p-4">
+        <Link to={`/products/${product.id}`}>
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            {product.name}
+          </h3>
+        </Link>
+        
+        {product.brand && (
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            {product.brand}
+          </p>
+        )}
+
+        {/* Rating */}
+        {product.rating && (
+          <div className="flex items-center gap-1 mb-2">
+            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+            <span className="text-sm font-medium text-gray-900 dark:text-white">
+              {product.rating.toFixed(1)}
+            </span>
+            {product.reviewCount && (
+              <span className="text-sm text-gray-500 dark:text-gray-400">
+                ({product.reviewCount})
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Price - Using utility function */}
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-lg font-bold text-gray-900 dark:text-white">
+            {formatPrice(product.price)}
+          </span>
+          {product.compareAtPrice && product.compareAtPrice > product.price && (
+            <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+              {formatPrice(product.compareAtPrice)}
+            </span>
+          )}
+        </div>
+
+        {/* Size/Unit */}
+        {(product.size || product.unit) && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {product.size} {product.unit}
+          </p>
+        )}
+
+        {/* Add to Cart Button */}
+        <button
+          onClick={handleAddToCart}
+          disabled={product.stock === 0 || isUpdating}
+          className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-medium transition-all ${
+            isInCart
+              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              : product.stock === 0
+              ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-md'
+          }`}
+        >
+          {isUpdating ? (
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+            >
+              <Package size={16} />
+            </motion.div>
+          ) : isInCart ? (
+            <>
+              <Zap size={16} />
+              <span>In Cart</span>
+            </>
+          ) : product.stock === 0 ? (
+            <span>Out of Stock</span>
+          ) : (
+            <>
+              <ShoppingCart size={16} />
+              <span>Add to Cart</span>
+            </>
+          )}
+        </button>
+      </div>
     </motion.div>
   );
 };

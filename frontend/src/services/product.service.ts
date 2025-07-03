@@ -9,31 +9,13 @@ export interface Product {
   name: string;
   description: string;
   price: number;
-  compareAtPrice?: number;
-  unit?: string;
-  unitValue?: number;
   brand?: string;
-  tags: string[];
   imageUrl?: string;
-  additionalImages: string[];
   categoryId: string;
   category?: Category;
   stock: number;
-  trackInventory: boolean;
   isActive: boolean;
-  isFeatured: boolean;
-  isOnSale: boolean;
-  salePercentage: number;
-  salePrice: number;
-  inStock: boolean;
-  nutritionalInfo: Record<string, any>;
   metadata: Record<string, any>;
-  viewCount: number;
-  purchaseCount: number;
-  avgRating: number;
-  reviewCount: number;
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface Category {
@@ -41,30 +23,9 @@ export interface Category {
   name: string;
   description?: string;
   imageUrl?: string;
-  parentId?: string;
-  isActive: boolean;
-  productCount?: number;
-}
-
-export interface ProductsResponse {
-  products: Product[];
-  total: number;
-  page: number;
-  totalPages: number;
-  hasMore: boolean;
-}
-
-export interface ProductFilters {
-  page?: number;
-  limit?: number;
-  sort?: string;
-  search?: string;
-  categories?: string[];
-  minPrice?: number;
-  maxPrice?: number;
-  inStock?: boolean;
-  onSale?: boolean;
-  featured?: boolean;
+  // parentId?: string;
+  // isActive: boolean;
+  // productCount?: number;
 }
 
 class ProductService {
@@ -74,7 +35,7 @@ class ProductService {
   // ============================================================================
 
   // Get all products with filters
-  async getProducts(filters: ProductFilters = {}): Promise<ProductsResponse> {
+  async getProducts(filters: any = {}): Promise<any> {
     const params = new URLSearchParams();
     
     if (filters.page) params.append('page', filters.page.toString());
@@ -88,7 +49,6 @@ class ProductService {
     if (filters.maxPrice !== undefined) params.append('maxPrice', filters.maxPrice.toString());
     if (filters.inStock) params.append('inStock', 'true');
     if (filters.onSale) params.append('onSale', 'true');
-    if (filters.featured) params.append('featured', 'true');
 
     return api.get<ProductsResponse>(`/products?${params.toString()}`);
   }
@@ -96,12 +56,6 @@ class ProductService {
   // Get single product
   async getProduct(id: string): Promise<Product> {
     return api.get<Product>(`/products/${id}`);
-  }
-
-  // Get featured products
-  async getFeaturedProducts(limit: number = 8): Promise<Product[]> {
-    const response = await this.getProducts({ featured: true, limit });
-    return response.products;
   }
 
   // Get products by category
@@ -114,11 +68,6 @@ class ProductService {
     return this.getProducts({ ...filters, search: query });
   }
 
-  // Get product recommendations
-  async getRecommendations(productId: string, limit: number = 4): Promise<Product[]> {
-    return api.get<Product[]>(`/products/${productId}/recommendations?limit=${limit}`);
-  }
-
   // ============================================================================
   // CATEGORY OPERATIONS (Read-only)
   // ============================================================================
@@ -126,34 +75,6 @@ class ProductService {
   // Get categories
   async getCategories(): Promise<Category[]> {
     return api.get<Category[]>('/products/categories');
-  }
-
-  // Get category by ID
-  async getCategory(id: string): Promise<Category> {
-    return api.get<Category>(`/products/categories/${id}`);
-  }
-  
-  // ============================================================================
-  // UTILITY FUNCTIONS
-  // ============================================================================
-
-  // Get price range for filters
-  async getPriceRange(): Promise<{ min: number; max: number }> {
-    return api.get<{ min: number; max: number }>('/products/price-range');
-  }
-
-  // Format price for display
-  formatPrice(price: number): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(price);
-  }
-
-  // Calculate discount percentage
-  calculateDiscount(price: number, compareAtPrice?: number): number {
-    if (!compareAtPrice || compareAtPrice <= price) return 0;
-    return Math.round(((compareAtPrice - price) / compareAtPrice) * 100);
   }
 }
 

@@ -186,32 +186,3 @@ const Favorites: React.FC = () => {
 };
 
 export default Favorites;
-
-// ============================================================================
-// REMOVED FUNCTIONALITY:
-// 
-// DELETED "CLEAR ALL" FEATURE:
-// - clearAllFavoritesMutation (useMutation calling favoriteService.clearFavorites)
-// - handleClearAll function
-// - "Clear All" button in the header
-//
-// REASON FOR REMOVAL:
-// The backend doesn't provide a bulk "clear all favorites" endpoint. The 
-// favoriteService.clearFavorites() method would result in a 404 error.
-// Individual remove functionality is maintained through the existing
-// removeFavorite endpoint.
-//
-// ENHANCED USER EXPERIENCE:
-// - Added custom action overlay on each product card
-// - Quick add to cart functionality from favorites
-// - Improved visual feedback with animations
-// - Better empty states and error handling
-//
-// ALIGNMENT WITH BACKEND:
-// This component now only uses implemented backend endpoints:
-// - GET /user/favorites (getFavorites)
-// - DELETE /user/favorites/:productId (removeFavorite)
-// - POST /cart/add (addToCart via cart service)
-//
-// All functionality is fully working and supports the user experience goals.
-// ============================================================================

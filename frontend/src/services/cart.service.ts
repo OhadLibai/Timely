@@ -12,8 +12,8 @@ export interface CartItem {
   quantity: number;
   price: number;
   total: number;
-  createdAt: string;
-  updatedAt: string;
+  // createdAt: string;
+  // updatedAt: string;
 }
 
 export interface Cart {
@@ -22,11 +22,9 @@ export interface Cart {
   items: CartItem[];
   itemCount: number;
   subtotal: number;
-  estimatedTax: number;
-  estimatedTotal: number;
   isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  // createdAt: string;
+  // updatedAt: string;
 }
 
 export interface AddToCartData {

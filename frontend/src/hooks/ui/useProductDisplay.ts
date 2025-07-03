@@ -46,14 +46,6 @@ export const useProductDisplay = (product: Product) => {
       });
     }
 
-    if (product.isFeatured) {
-      badgeList.push({
-        type: 'featured',
-        text: 'Featured',
-        className: 'px-2 py-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full'
-      });
-    }
-
     if (stockStatus.status === 'low-stock') {
       badgeList.push({
         type: 'low-stock',
