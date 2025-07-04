@@ -15,6 +15,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
 import toast from 'react-hot-toast';
+import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 
 // REMOVED: PasswordFormData interface
 
@@ -124,7 +125,7 @@ const Profile: React.FC = () => {
             </div>
 
             <form onSubmit={handleSubmitProfile(onSubmitProfile)} className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ResponsiveGrid cols={{ sm: 1, md: 2 }} gap={6}>
                 
                 {/* First Name */}
                 <div>
@@ -244,7 +245,7 @@ const Profile: React.FC = () => {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Account Information
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ResponsiveGrid cols={{ sm: 1, md: 2 }} gap={6}>
               <div>
                 <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Account Type</p>
                 <div className="flex items-center gap-2 mt-1">

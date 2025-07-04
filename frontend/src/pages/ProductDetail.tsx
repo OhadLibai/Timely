@@ -1,18 +1,18 @@
 // frontend/src/pages/ProductDetail.tsx
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from 'react-query';
 import { motion } from 'framer-motion';
 import {
   ShoppingCart, Heart, Star, Plus, Minus, ArrowLeft,
   Package, Truck, Shield, Info
 } from 'lucide-react';
-import { productService } from '@/services/product.service';
+import { useProduct } from '@/hooks';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ProductImage from '@/components/products/ProductImage';
 import toast from 'react-hot-toast';
+import { formatPrice } from '@/utils/formatters';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,13 +22,7 @@ const ProductDetail: React.FC = () => {
   const [quantity, setQuantity] = useState(1);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
-  const { data: product, isLoading, error } = useQuery(
-    ['product', id],
-    () => productService.getProduct(id!),
-    {
-      enabled: !!id,
-    }
-  );
+  const { data: product, isLoading, error } = useProduct(id!);
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -138,7 +132,7 @@ const ProductDetail: React.FC = () => {
               </span>
               {product.price > 20 && (
                 <span className="text-lg text-gray-500 dark:text-gray-400 line-through">
-                  ${(product.price * 1.2).toFixed(2)}
+                  {formatPrice(product.price * 1.2)}
                 </span>
               )}
               <span className="px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-sm font-medium rounded">

@@ -9,7 +9,6 @@ export interface Favorite {
   userId: string;
   productId: string;
   product: Product;
-  createdAt: string;
 }
 
 class FavoriteService {

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { AnimatedContainer } from '@/components/common/AnimatedContainer';
 import { ShoppingCart, Heart, Star, Package, Zap, Eye } from 'lucide-react';
 import { Product } from '@/services/product.service';
 import { useCartStore } from '@/stores/cart.store';
@@ -46,11 +47,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
   );
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+    <AnimatedContainer
+      preset="fadeInUp"
+      duration={0.3}
+      as={motion.div}
       whileHover={{ y: -4 }}
-      transition={{ duration: 0.3 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
@@ -194,7 +195,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
           )}
         </button>
       </div>
-    </motion.div>
+    </AnimatedContainer>
   );
 };
 

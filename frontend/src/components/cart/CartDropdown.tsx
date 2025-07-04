@@ -1,6 +1,7 @@
 // frontend/src/components/cart/CartDropdown.tsx
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { formatPrice } from '@/utils/formatters';
 import { motion } from 'framer-motion';
 import { ShoppingCart, Trash2, Plus, Minus, X } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
@@ -90,7 +91,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
                       {item.product.name}
                     </h4>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      ${item.price.toFixed(2)}
+                      {formatPrice(item.price)}
                     </p>
                   </div>
 
@@ -136,7 +137,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
                 Total:
               </span>
               <span className="text-lg font-bold text-gray-900 dark:text-white">
-                ${getSubtotal().toFixed(2)}
+                {formatPrice(getSubtotal())}
               </span>
             </div>
             

@@ -9,53 +9,19 @@ import {
   ArrowLeft, Package, CheckCircle, Clock, 
   DollarSign, Calendar, RefreshCcw, ShoppingCart
 } from 'lucide-react';
-import { orderService, Order } from '@/services/order.service';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { useOrder } from '@/hooks';
+import { AsyncStateWrapper, StatusIndicator } from '@/components/common';
 import toast from 'react-hot-toast';
 import { useCartStore } from '@/stores/cart.store';
+import { formatOrderNumber, formatPrice } from '@/utils/formatters';
 
 const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addItem } = useCartStore();
 
-  const { data: order, isLoading, error, refetch } = useQuery<Order>(
-    ['order', id],
-    () => orderService.getOrder(id!),
-    {
-      enabled: !!id,
-    }
-  );
+  const { data: order, isLoading, error, refetch } = useOrder(id!);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="text-yellow-500" size={20} />;
-      case 'confirmed':
-        return <CheckCircle className="text-blue-500" size={20} />;
-      case 'completed':
-        return <Package className="text-green-500" size={20} />;
-      case 'cancelled':
-        return <Clock className="text-gray-500" size={20} />;
-      default:
-        return <Clock className="text-gray-500" size={20} />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'completed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
 
   const handleReorder = () => {
     if (!order) return;
@@ -113,13 +79,15 @@ const OrderDetail: React.FC = () => {
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              Order #{order.orderNumber}
+              Order {formatOrderNumber(order.orderNumber)}
             </h1>
             <div className="flex items-center gap-4">
-              <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
-                {getStatusIcon(order.status)}
-                <span className="capitalize">{order.status}</span>
-              </div>
+              <StatusIndicator
+                status={order.status as any}
+                variant="pill"
+                size="md"
+                showIcon={true}
+              />
               <span className="text-gray-500 dark:text-gray-400">
                 Placed on {new Date(order.createdAt).toLocaleDateString()}
               </span>
@@ -166,13 +134,13 @@ const OrderDetail: React.FC = () => {
                     </h4>
                     <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
                       <span>Qty: {item.quantity}</span>
-                      <span>${item.price.toFixed(2)} each</span>
+                      <span>{formatPrice(item.price)} each</span>
                     </div>
                   </div>
                   
                   <div className="text-right">
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      ${item.total.toFixed(2)}
+                      {formatPrice(item.total)}
                     </div>
                   </div>
                 </motion.div>
@@ -192,25 +160,25 @@ const OrderDetail: React.FC = () => {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                <span className="font-medium">${order.subtotal.toFixed(2)}</span>
+                <span className="font-medium">{formatPrice(order.subtotal)}</span>
               </div>
               
               <div className="flex justify-between">
                 <span className="text-gray-600 dark:text-gray-400">Tax</span>
-                <span className="font-medium">${order.tax.toFixed(2)}</span>
+                <span className="font-medium">{formatPrice(order.tax)}</span>
               </div>
               
               {order.discount > 0 && (
                 <div className="flex justify-between text-green-600">
                   <span>Discount</span>
-                  <span>-${order.discount.toFixed(2)}</span>
+                  <span>-{formatPrice(order.discount)}</span>
                 </div>
               )}
               
               <div className="border-t border-gray-200 dark:border-gray-700 pt-2 mt-2">
                 <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
-                  <span>${order.total.toFixed(2)}</span>
+                  <span>{formatPrice(order.total)}</span>
                 </div>
               </div>
             </div>

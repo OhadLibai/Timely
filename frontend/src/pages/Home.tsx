@@ -8,6 +8,7 @@ import {
   ShoppingCart, TrendingUp, Clock, Heart, 
   Package, Truck, Shield, Sparkles, Brain
 } from 'lucide-react';
+import { ResponsiveGrid, FeatureGrid } from '@/components/layout/ResponsiveGrid';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -142,7 +143,7 @@ const Home: React.FC = () => {
               Why Choose Timely?
             </h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <FeatureGrid gap={8}>
               {features.map((feature, index) => (
                 <motion.div
                   key={feature.title}
@@ -188,7 +189,7 @@ const Home: React.FC = () => {
               Powered by Real Data
             </h2>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <ResponsiveGrid cols={{ sm: 2, md: 4 }} gap={8}>
               {stats.map((stat, index) => (
                 <motion.div
                   key={stat.label}

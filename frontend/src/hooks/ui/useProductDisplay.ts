@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { Product } from '@/services/product.service';
+import { formatPrice } from '@/utils/formatters';
 
 export const useProductDisplay = (product: Product) => {
   const stockStatus = useMemo(() => {
@@ -25,7 +26,7 @@ export const useProductDisplay = (product: Product) => {
   }, [product.trackInventory, product.stock]);
 
   const pricing = useMemo(() => ({
-    currentPrice: product.price.toFixed(2),
+    currentPrice: formatPrice(product.price),
   }), [product.price]);
 
   const badges = useMemo(() => {

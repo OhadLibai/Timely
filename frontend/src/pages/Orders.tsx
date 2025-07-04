@@ -2,28 +2,22 @@
 // CLEANED: Removed all tracking/shipping UI - Focus on order history for ML demonstrations
 
 import React, { useState } from 'react';
-import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
-  Eye, RefreshCcw, Calendar, DollarSign, Package, ShoppingCart, Filter
+  Eye, Calendar, DollarSign, Package, ShoppingCart, Filter
 } from 'lucide-react';
-import { orderService } from '@/services/order.service';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { useOrders } from '@/hooks';
+import { AsyncStateWrapper, StatusIndicator } from '@/components/common';
 import EmptyState from '@/components/common/EmptyState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
+import { AnimatedContainer } from '@/components/common/AnimatedContainer';
+import { formatOrderNumber, formatPrice } from '@/utils/formatters';
 
 const Orders: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled'>('all');
 
-  const { data: ordersResponse, isLoading, error, refetch } = useQuery(
-    ['orders'],
-    () => orderService.getOrders(),
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
-  );
+  const { data: ordersResponse, isLoading, error, refetch } = useOrders();
 
   const orders = ordersResponse?.orders || [];
 
@@ -36,64 +30,15 @@ const Orders: React.FC = () => {
     return acc;
   }, {} as Record<string, number>);
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'clock';
-      case 'confirmed':
-        return 'check-circle';
-      case 'completed':
-        return 'package-check';
-      case 'cancelled':
-        return 'x-circle';
-      default:
-        return 'package';
-    }
-  };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
-      case 'completed':
-        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
-      case 'cancelled':
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
-    }
-  };
 
-  if (isLoading) return <LoadingSpinner fullScreen />;
-
-  if (error) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Failed to load orders
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Something went wrong while fetching your orders.
-          </p>
-          <Button
-            onClick={() => refetch()}
-            variant="primary"
-            icon={RefreshCcw}
-            className="mx-auto"
-          >
-            Try Again
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!orders || orders.length === 0) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
+  return (
+    <AsyncStateWrapper
+      loading={isLoading}
+      error={error}
+      onRetry={refetch}
+      isEmpty={!orders || orders.length === 0}
+      emptyState={
         <EmptyState
           icon={Package}
           title="No orders yet"
@@ -103,12 +48,11 @@ const Orders: React.FC = () => {
             href: "/products"
           }}
         />
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+      }
+      errorTitle="Failed to load orders"
+      errorDescription="Something went wrong while fetching your orders."
+      className="max-w-6xl mx-auto px-4 py-8"
+    >
       <PageHeader
         title="Order History"
         description="View your past orders and reorder your favorite items"
@@ -146,18 +90,18 @@ const Orders: React.FC = () => {
 
       {/* Orders List */}
       <div className="space-y-4">
-        {filteredOrders.map((order) => (
-          <motion.div
+        {filteredOrders.map((order, index) => (
+          <AnimatedContainer
             key={order.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+            preset="fadeInUp"
+            delay={index * 0.1}
             className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Order #{order.orderNumber}
+                    Order {formatOrderNumber(order.orderNumber)}
                   </h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <Calendar size={14} />
@@ -169,13 +113,15 @@ const Orders: React.FC = () => {
               </div>
               
               <div className="flex items-center gap-3">
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
-                  <span className="capitalize">{order.status}</span>
-                </div>
+                <StatusIndicator
+                  status={order.status as any}
+                  variant="pill"
+                  size="sm"
+                />
                 
                 <div className="text-right">
                   <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                    ${order.total.toFixed(2)}
+                    {formatPrice(order.total)}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
                     {order.paymentStatus === 'completed' ? 'Paid' : 'Pending Payment'}
@@ -239,7 +185,7 @@ const Orders: React.FC = () => {
                 )}
               </div>
             </div>
-          </motion.div>
+          </AnimatedContainer>
         ))}
       </div>
 
@@ -254,7 +200,7 @@ const Orders: React.FC = () => {
           </p>
         </div>
       )}
-    </div>
+    </AsyncStateWrapper>
   );
 };
 

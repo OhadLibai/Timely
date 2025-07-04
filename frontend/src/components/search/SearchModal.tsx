@@ -5,6 +5,7 @@ import { Search, X, Clock, TrendingUp, Package, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom';
 import { useSearchWithHistory } from '@/hooks/search/useSearchWithHistory';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { formatPrice } from '@/utils/formatters';
 
 interface SearchModalProps {
   onClose: () => void;
@@ -170,7 +171,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                           {product.name}
                         </h4>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
-                          {product.category} • ${product.price.toFixed(2)}
+                          {product.category} • {formatPrice(product.price)}
                         </p>
                       </div>
                       <ArrowRight size={16} className="text-gray-400" />

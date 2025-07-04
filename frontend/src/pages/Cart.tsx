@@ -16,6 +16,8 @@ import EmptyState from '@/components/common/EmptyState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
 import toast from 'react-hot-toast';
+import { formatPrice } from '@/utils/formatters';
+import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
@@ -98,7 +100,7 @@ const Cart: React.FC = () => {
           icon={ShoppingCart}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <ResponsiveGrid cols={{ sm: 1, lg: 3 }} gap={8}>
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
@@ -153,10 +155,10 @@ const Cart: React.FC = () => {
                               {item.product.originalPrice > item.product.price && (
                                 <div className="flex items-center gap-2 mt-1">
                                   <span className="text-sm line-through text-gray-400">
-                                    ${item.product.originalPrice.toFixed(2)}
+                                    {formatPrice(item.product.originalPrice)}
                                   </span>
                                   <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                                    Save ${(item.product.originalPrice - item.product.price).toFixed(2)}
+                                    Save {formatPrice(item.product.originalPrice - item.product.price)}
                                   </span>
                                 </div>
                               )}
@@ -196,10 +198,10 @@ const Cart: React.FC = () => {
                             
                             <div className="text-right">
                               <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                                ${item.total.toFixed(2)}
+                                {formatPrice(item.total)}
                               </div>
                               <div className="text-sm text-gray-500 dark:text-gray-400">
-                                ${item.price.toFixed(2)} each
+                                {formatPrice(item.price)} each
                               </div>
                             </div>
                           </div>
@@ -233,13 +235,13 @@ const Cart: React.FC = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                  <span className="text-gray-900 dark:text-white">${subtotal.toFixed(2)}</span>
+                  <span className="text-gray-900 dark:text-white">{formatPrice(subtotal)}</span>
                 </div>
                 
                 <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
                   <div className="flex justify-between font-semibold text-lg">
                     <span className="text-gray-900 dark:text-white">Total</span>
-                    <span className="text-gray-900 dark:text-white">${total.toFixed(2)}</span>
+                    <span className="text-gray-900 dark:text-white">{formatPrice(total)}</span>
                   </div>
                 </div>
               </div>
@@ -264,7 +266,7 @@ const Cart: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </ResponsiveGrid>
       </div>
     </div>
   );

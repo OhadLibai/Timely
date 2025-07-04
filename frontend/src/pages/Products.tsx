@@ -7,8 +7,9 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, X, Grid, List, Package } from 'lucide-react';
-import { useQuery } from 'react-query';
-import { productService } from '@/services/product.service';
+import { useProducts, useCategories } from '@/hooks';
+import { ProductGrid } from '@/components/layout/ResponsiveGrid';
+import { AsyncStateWrapper } from '@/components/common';
 import ProductCard from '@/components/products/ProductCard';
 import ProductListItem from '@/components/products/ProductListItem';
 import CategoryFilter from '@/components/products/CategoryFilter';
@@ -45,29 +46,18 @@ const Products: React.FC = () => {
   const { sortBy, sortOrder } = parseSortOption(sortOption);
 
   // CLEANED: Removed minPrice/maxPrice from API call
-  const { data, isLoading, error } = useQuery<any>(
-    ['products', currentPage, sortBy, sortOrder, filters, searchQuery],
-    () => productService.getProducts({
-      page: currentPage,
-      limit: itemsPerPage,
-      sort: sortBy,
-      order: sortOrder,
-      search: searchQuery,
-      categories: filters.categories,
-      inStock: filters.inStock,
-    }),
-    { 
-      keepPreviousData: true,
-      staleTime: 5 * 60 * 1000,
-    }
-  );
+  const { data, isLoading, error } = useProducts({
+    page: currentPage,
+    limit: itemsPerPage,
+    sort: sortBy,
+    order: sortOrder,
+    search: searchQuery,
+    categories: filters.categories,
+    inStock: filters.inStock,
+  });
 
   // Fetch categories for filter
-  const { data: categories } = useQuery(
-    'categories',
-    () => productService.getCategories(),
-    { staleTime: 10 * 60 * 1000 }
-  );
+  const { data: categories } = useCategories();
 
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
@@ -238,18 +228,13 @@ const Products: React.FC = () => {
           </AnimatePresence>
 
           {/* Product Grid/List */}
-          <div className="flex-1">
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <LoadingSpinner size="large" />
-              </div>
-            ) : error ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400">
-                  Error loading products. Please try again.
-                </p>
-              </div>
-            ) : products.length === 0 ? (
+          <AsyncStateWrapper
+            loading={isLoading}
+            error={error}
+            isEmpty={products.length === 0}
+            emptyTitle="No products found"
+            emptyDescription="No products found matching your criteria."
+            emptyState={
               <div className="text-center py-12">
                 <p className="text-gray-500 dark:text-gray-400 text-lg">
                   No products found matching your criteria.
@@ -261,7 +246,9 @@ const Products: React.FC = () => {
                   Clear filters to see all products
                 </button>
               </div>
-            ) : (
+            }
+            className="flex-1"
+          >
               <>
                 {/* Results Summary */}
                 <div className="mb-6 flex items-center justify-between">
@@ -276,17 +263,14 @@ const Products: React.FC = () => {
                 {/* Product Grid/List */}
                 <AnimatePresence mode="wait">
                   {viewMode === 'grid' ? (
-                    <motion.div
+                    <ProductGrid
                       key="grid"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                      animated={true}
                     >
                       {products.map((product) => (
                         <ProductCard key={product.id} product={product} />
                       ))}
-                    </motion.div>
+                    </ProductGrid>
                   ) : (
                     <motion.div
                       key="list"
@@ -312,9 +296,7 @@ const Products: React.FC = () => {
                     />
                   </div>
                 )}
-              </>
-            )}
-          </div>
+          </AsyncStateWrapper>
         </div>
       </div>
     </div>

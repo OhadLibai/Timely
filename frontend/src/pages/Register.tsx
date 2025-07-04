@@ -1,7 +1,7 @@
 // frontend/src/pages/Register.tsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { AnimatedContainer } from '@/components/common/AnimatedContainer';
 import { useForm } from 'react-hook-form';
 import { 
   Mail, Lock, Eye, EyeOff, User, Phone, 
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import toast from 'react-hot-toast';
+import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 
 interface RegisterFormData {
   firstName: string;
@@ -86,10 +87,9 @@ const Register: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
+      <AnimatedContainer
+        preset="fadeInUp"
+        duration={0.5}
         className="w-full max-w-5xl flex gap-8"
       >
         {/* Left Side - Benefits */}
@@ -208,7 +208,7 @@ const Register: React.FC = () => {
                     Personal Information
                   </h3>
                   
-                  <div className="grid grid-cols-2 gap-4">
+                  <ResponsiveGrid cols={{ sm: 2 }} gap={4}>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                         First Name

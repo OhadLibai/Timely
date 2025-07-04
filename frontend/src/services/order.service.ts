@@ -13,6 +13,7 @@ export interface OrderItem {
   price: number;
   total: number;
   createdAt: string;
+
   // ML fields
   addToCartOrder?: number;
   reordered?: boolean;
@@ -24,16 +25,11 @@ export interface Order {
   userId: string;
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled'; // Simplified statuses
   items: OrderItem[];
-  subtotal: number;
-  tax: number;
-  discount: number;
   total: number;
   paymentMethod: string;
   paymentStatus: string;
-  notes?: string;
   metadata: Record<string, any>;
-  createdAt: string;
-  updatedAt: string;
+  
   // ML fields for Instacart compatibility
   orderSequence?: number;
   daysSincePriorOrder?: number;
@@ -46,7 +42,6 @@ export interface Order {
 export interface CreateOrderData {
   cartId: string;
   paymentMethod: string;
-  notes?: string;
 }
 
 export interface OrdersResponse {
@@ -89,35 +84,6 @@ class OrderService {
   // Get a single order by ID - ESSENTIAL for order details
   async getOrder(orderId: string): Promise<Order> {
     return api.get<Order>(`/orders/${orderId}`);
-  }
-
-  // Utility functions for UI display
-  getStatusColor(status: Order['status']): string {
-    const colors = {
-      pending: 'yellow',
-      confirmed: 'blue',
-      completed: 'green',
-      cancelled: 'gray'
-    };
-    return colors[status] || 'gray';
-  }
-
-  getStatusIcon(status: Order['status']): string {
-    const icons = {
-      pending: 'clock',
-      confirmed: 'check-circle',
-      completed: 'package-check',
-      cancelled: 'x-circle'
-    };
-    return icons[status] || 'package';
-  }
-
-  formatOrderNumber(orderNumber: string): string {
-    return `#${orderNumber.toUpperCase()}`;
-  }
-
-  canCancel(order: Order): boolean {
-    return ['pending'].includes(order.status);
   }
 }
 

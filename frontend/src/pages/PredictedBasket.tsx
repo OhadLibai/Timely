@@ -18,6 +18,7 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ProductImage from '@/components/products/ProductImage';
 import ConfidenceIndicator from '@/components/predictions/ConfidenceIndicator';
 import toast from 'react-hot-toast';
+import { formatPrice } from '@/utils/formatters';
 import { useNavigate } from 'react-router-dom';
 
 const PredictedBasket: React.FC = () => {
@@ -192,7 +193,7 @@ const PredictedBasket: React.FC = () => {
               </div>
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                  ${stats.totalValue.toFixed(2)}
+                  {formatPrice(stats.totalValue)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">Total Value</div>
               </div>
@@ -267,7 +268,7 @@ const PredictedBasket: React.FC = () => {
                         <div>
                           {/* CLEANED: Using regular price, removed compareAtPrice */}
                           <p className="text-lg font-bold text-gray-900 dark:text-white">
-                            ${item.product.price.toFixed(2)}
+                            {formatPrice(item.product.price)}
                           </p>
                           <ConfidenceIndicator score={item.confidenceScore} compact />
                         </div>

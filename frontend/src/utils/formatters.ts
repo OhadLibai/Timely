@@ -81,3 +81,17 @@ export const getProductBadges = (product: {
 
   return badges;
 };
+
+
+/**
+ * Format order number for display
+ */
+export const formatOrderNumber = (orderNumber: string): string => {
+  // If order number is already formatted, return as is
+  if (orderNumber.includes('#')) {
+    return orderNumber;
+  }
+  
+  // Add # prefix if not present
+  return `#${orderNumber}`;
+};

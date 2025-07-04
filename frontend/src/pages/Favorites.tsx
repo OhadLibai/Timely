@@ -2,7 +2,8 @@
 // FIXED: Removed "Clear All" functionality that backend doesn't support
 
 import React from 'react';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
+import { useFavorites } from '@/hooks/api/useFavorites';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, Package } from 'lucide-react';
 import { favoriteService } from '@/services/favorite.service';
@@ -19,14 +20,7 @@ const Favorites: React.FC = () => {
   const queryClient = useQueryClient();
 
   // Fetch favorites
-  const { data: favorites, isLoading, error } = useQuery(
-    'favorites',
-    () => favoriteService.getFavorites(),
-    {
-      enabled: isAuthenticated,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    }
-  );
+  const { data: favorites, isLoading, error } = useFavorites();
 
   // Remove from favorites mutation
   const removeFromFavoritesMutation = useMutation(

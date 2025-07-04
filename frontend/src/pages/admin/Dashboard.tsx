@@ -26,6 +26,8 @@ import MetricCard from '@/components/admin/MetricCard';
 import DateRangePicker from '@/components/admin/DateRangePicker';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
+import { formatPrice } from '@/utils/formatters';
+import { ResponsiveGrid, MetricGrid } from '@/components/layout/ResponsiveGrid';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -132,7 +134,7 @@ const AdminDashboard: React.FC = () => {
         />
 
         {/* Key Business Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <MetricGrid className="mb-8">
           <MetricCard
             title="Total Revenue"
             value={`$${stats.totalRevenue.toLocaleString()}`}
@@ -157,12 +159,12 @@ const AdminDashboard: React.FC = () => {
           />
           <MetricCard
             title="Avg Order Value"
-            value={`$${stats.avgOrderValue.toFixed(2)}`}
+            value={formatPrice(stats.avgOrderValue)}
             change={stats.conversionRate}
             icon={TrendingUp}
             color="green"
           />
-        </div>
+        </MetricGrid>
 
         {/* ML Model Performance Summary */}
         <motion.div

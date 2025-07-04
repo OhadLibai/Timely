@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 export type StatusType = 
-  | 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' 
+  | 'pending' | 'processing' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled' 
   | 'completed' | 'failed' | 'active' | 'inactive' | 'draft'
   | 'success' | 'warning' | 'error' | 'info';
 
@@ -38,6 +38,13 @@ const statusConfigs: Record<StatusType, StatusConfig> = {
     bgColor: 'bg-blue-100 dark:bg-blue-900/20',
     textColor: 'text-blue-800 dark:text-blue-200',
     label: 'Processing'
+  },
+  confirmed: {
+    icon: CheckCircle,
+    color: 'text-blue-600 dark:text-blue-400',
+    bgColor: 'bg-blue-100 dark:bg-blue-900/20',
+    textColor: 'text-blue-800 dark:text-blue-200',
+    label: 'Confirmed'
   },
   shipped: {
     icon: Truck,

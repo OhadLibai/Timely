@@ -17,6 +17,8 @@ import ProductImage from '@/components/products/ProductImage';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
+import { formatPrice } from '@/utils/formatters';
+import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import toast from 'react-hot-toast';
 
 interface CheckoutFormData {
@@ -170,7 +172,7 @@ const Checkout: React.FC = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <ResponsiveGrid cols={{ sm: 1, lg: 3 }} gap={8}>
           {/* Main Form */}
           <div className="lg:col-span-2">
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
@@ -188,7 +190,7 @@ const Checkout: React.FC = () => {
                   </h2>
                   
                   {/* Contact Information */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <ResponsiveGrid cols={{ sm: 1, md: 2 }} gap={4} className="mb-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         First Name
@@ -216,9 +218,9 @@ const Checkout: React.FC = () => {
                         <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
                       )}
                     </div>
-                  </div>
+                  </ResponsiveGrid>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <ResponsiveGrid cols={{ sm: 1, md: 2 }} gap={4} className="mb-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Email
@@ -276,7 +278,7 @@ const Checkout: React.FC = () => {
                         )}
                       </div>
                       
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <ResponsiveGrid cols={{ sm: 1, md: 3 }} gap={4}>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             City
@@ -362,7 +364,7 @@ const Checkout: React.FC = () => {
                       )}
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <ResponsiveGrid cols={{ sm: 2 }} gap={4}>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                           Expiry Date
@@ -477,7 +479,7 @@ const Checkout: React.FC = () => {
                       </p>
                     </div>
                     <span className="text-sm font-medium text-gray-900 dark:text-white">
-                      ${item.total.toFixed(2)}
+                      {formatPrice(item.total)}
                     </span>
                   </div>
                 ))}
@@ -487,19 +489,19 @@ const Checkout: React.FC = () => {
               <div className="space-y-2 text-sm border-t border-gray-200 dark:border-gray-700 pt-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                  <span className="text-gray-900 dark:text-white">${subtotal.toFixed(2)}</span>
+                  <span className="text-gray-900 dark:text-white">{formatPrice(subtotal)}</span>
                 </div>
                 
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Delivery</span>
                   <span className={deliveryFee === 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}>
-                    {deliveryFee === 0 ? 'FREE' : `$${deliveryFee.toFixed(2)}`}
+                    {deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}
                   </span>
                 </div>
                 
                 <div className="flex justify-between text-lg font-semibold border-t border-gray-200 dark:border-gray-700 pt-2">
                   <span className="text-gray-900 dark:text-white">Total</span>
-                  <span className="text-gray-900 dark:text-white">${total.toFixed(2)}</span>
+                  <span className="text-gray-900 dark:text-white">{formatPrice(total)}</span>
                 </div>
               </div>
               
