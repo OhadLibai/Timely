@@ -5,9 +5,7 @@ import { api } from '@/services/api.client';
 import { Product } from '@/services/product.service';
 
 export interface Favorite {
-  id: string;
   userId: string;
-  productId: string;
   product: Product;
 }
 
@@ -48,13 +46,6 @@ class FavoriteService {
     } catch (error) {
       return false;
     }
-  }
-
-  /**
-   * Get favorite product IDs only (for quick lookups)
-   */
-  async getFavoriteIds(): Promise<string[]> {
-    return api.get<string[]>('/user/favorites/ids');
   }
 }
 

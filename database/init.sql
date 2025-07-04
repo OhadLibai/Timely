@@ -162,15 +162,20 @@ CREATE TABLE IF NOT EXISTS favorites (
 CREATE TABLE IF NOT EXISTS predicted_baskets (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+
     algorithm VARCHAR(50) DEFAULT 'TIFU-KNN',
-    confidence_score DECIMAL(5,4),
+
     total_items INTEGER DEFAULT 0,
-    status VARCHAR(50) DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'modified', 'rejected')),
+
+    -- 'generated' - predicted basket has been generated for the user
+    -- 'modified' - predicted basket has been modified by the user
+    -- 'archived' - new basket should be generated for the user
+    status VARCHAR(50) DEFAULT 'generated' CHECK (status IN ('generated', 'modified', 'archived' )),
+
     generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    expires_at TIMESTAMP,
-    metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+
+    metadata JSONB DEFAULT '{}',
 );
 
 -- Predicted basket items

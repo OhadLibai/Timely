@@ -1,3 +1,8 @@
+
+// This is file is to the garbage of dev dump
+
+
+/*
 // frontend/src/services/cart.service.ts
 // CLEANED: Removed coupon methods that backend doesn't support
 
@@ -83,3 +88,5 @@ class CartService {
 }
 
 export const cartService = new CartService();
+
+*/

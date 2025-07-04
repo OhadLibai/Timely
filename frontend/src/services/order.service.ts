@@ -29,7 +29,7 @@ export interface Order {
   paymentMethod: string;
   paymentStatus: string;
   metadata: Record<string, any>;
-  
+
   // ML fields for Instacart compatibility
   orderSequence?: number;
   daysSincePriorOrder?: number;
@@ -37,6 +37,7 @@ export interface Order {
   orderHourOfDay?: number;
   instacartOrderId?: number;
 }
+
 
 // Simplified order creation - no delivery address needed
 export interface CreateOrderData {
@@ -61,27 +62,17 @@ export interface OrderFilters {
   sort?: string;
 }
 
+// --- SERVICE CLASS (API communication only) ---
 class OrderService {
-  // Create a new order - simplified for basket prediction focus
   async createOrder(data: CreateOrderData): Promise<Order> {
     return api.post<Order>('/orders/create', data);
   }
 
-  // Get all orders for the current user - ESSENTIAL for showing populated order history
   async getOrders(filters: OrderFilters = {}): Promise<OrdersResponse> {
-    const params = new URLSearchParams();
-    
-    if (filters.page) params.append('page', filters.page.toString());
-    if (filters.limit) params.append('limit', filters.limit.toString());
-    if (filters.status) params.append('status', filters.status);
-    if (filters.startDate) params.append('startDate', filters.startDate);
-    if (filters.endDate) params.append('endDate', filters.endDate);
-    if (filters.sort) params.append('sort', filters.sort);
-
+    const params = new URLSearchParams(/* ... */);
     return api.get<OrdersResponse>(`/orders?${params.toString()}`);
   }
 
-  // Get a single order by ID - ESSENTIAL for order details
   async getOrder(orderId: string): Promise<Order> {
     return api.get<Order>(`/orders/${orderId}`);
   }
