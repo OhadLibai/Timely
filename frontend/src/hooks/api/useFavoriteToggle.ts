@@ -1,7 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import toast from 'react-hot-toast';
 import { favoriteService } from '@/services/favorite.service';
 import { useAuthStore } from '@/stores/auth.store';
+import { useMutationWithToast } from './useMutationWithToast';
+import { QUERY_KEYS } from '@/utils/queryKeys';
 // Note: Uses staleTime: Infinity - special case for favorite status that only changes on user click
 
 export const useFavoriteToggle = (productId: string) => {
@@ -20,8 +22,8 @@ export const useFavoriteToggle = (productId: string) => {
   );
 
   // Toggle favorite mutation
-  const toggleFavoriteMutation = useMutation(
-    () => {
+  const toggleFavoriteMutation = useMutationWithToast({
+    mutationFn: () => {
       // Decide which service method to call based on the current status
       if (isFavorite) {
         return favoriteService.removeFavorite(productId);
@@ -29,17 +31,13 @@ export const useFavoriteToggle = (productId: string) => {
         return favoriteService.addFavorite(productId);
       }
     },
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries(['isFavorite', productId]);
-        queryClient.invalidateQueries('favorites'); // Invalidate the main favorites list
-        toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
-      },
-      onError: () => {
-        toast.error('Failed to update favorites');
-      }
-    }
-  );
+    successMessage: isFavorite ? 'Removed from favorites' : 'Added to favorites',
+    errorMessage: 'Failed to update favorites',
+    onSuccess: () => {
+      queryClient.invalidateQueries(['isFavorite', productId]);
+      queryClient.invalidateQueries(QUERY_KEYS.favorites());
+    },
+  });
 
   const handleToggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();

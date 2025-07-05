@@ -2,11 +2,13 @@
 // UPDATED: Using existing services and direct API calls where needed
 // CONSTRAINT: Cannot modify services in services directory
 
-import { useQuery, useMutation, useQueryClient, UseQueryResult } from 'react-query';
+import { useQueryClient, UseQueryResult } from 'react-query';
+import { useMutationWithToast } from './useMutationWithToast';
 import { adminService } from '@/services/admin.service';
 import { metricsService } from '@/services/metrics.service';
 import { api } from '@/services/api.client';
-import { QUERY_CONFIGS } from '@/utils/queryConfig';
+import { useApiQuery } from './useApiQuery';
+import { QUERY_KEYS } from '@/utils/queryKeys';
 
 // ============================================================================
 // DASHBOARD OVERVIEW HUB HOOKS
@@ -16,22 +18,22 @@ import { QUERY_CONFIGS } from '@/utils/queryConfig';
  * Hook for Overview Hub Dashboard - uses existing services + direct API calls
  */
 export const useDashboardOverview = (dateRange?: any) => {
-  const dashboardStats = useQuery(
-    ['admin-dashboard-stats', dateRange],
+  const dashboardStats = useApiQuery(
+    QUERY_KEYS.adminDashboardStats(dateRange),
     () => api.get('/admin/dashboard/stats', { params: dateRange }),
-    QUERY_CONFIGS.FREQUENT_DATA
+    { staleTime: 'frequent' }
   );
 
-  const mlMetrics = useQuery(
-    'admin-ml-metrics',
+  const mlMetrics = useApiQuery(
+    QUERY_KEYS.mlMetrics(),
     () => metricsService.getModelPerformance(100),
-    QUERY_CONFIGS.STABLE_DATA
+    { staleTime: 'stable' }
   );
 
-  const demoStats = useQuery(
-    'admin-demo-stats',
+  const demoStats = useApiQuery(
+    QUERY_KEYS.adminDemoStats(),
     () => api.get('/admin/demo/user-ids'),
-    QUERY_CONFIGS.ADMIN_DATA
+    { staleTime: 'admin' }
   );
 
   return {
@@ -53,21 +55,21 @@ export const useDashboardOverview = (dateRange?: any) => {
 export const useDemoUserSeeding = () => {
   const queryClient = useQueryClient();
 
-  const seedUser = useMutation(
-    (instacartUserId: string) => adminService.seedDemoUser(instacartUserId),
-    {
-      onSuccess: () => {
-        // Invalidate related queries
-        queryClient.invalidateQueries('admin-demo-stats');
-        queryClient.invalidateQueries('admin-dashboard-stats');
-      }
+  const seedUser = useMutationWithToast({
+    mutationFn: (instacartUserId: string) => adminService.seedDemoUser(instacartUserId),
+    successMessage: 'Demo user seeded successfully',
+    errorMessage: 'Failed to seed demo user',
+    onSuccess: () => {
+      // Invalidate related queries
+      queryClient.invalidateQueries(QUERY_KEYS.adminDemoStats());
+      queryClient.invalidateQueries(QUERY_KEYS.adminDashboardStats());
     }
-  );
+  });
 
-  const demoUserStats = useQuery(
-    'admin-demo-stats',
+  const demoUserStats = useApiQuery(
+    QUERY_KEYS.adminDemoStats(),
     () => api.get('/admin/demo/user-ids'),
-    QUERY_CONFIGS.ADMIN_DATA
+    { staleTime: 'admin' }
   );
 
   return {
@@ -88,21 +90,21 @@ export const useDemoUserSeeding = () => {
 export const useModelPerformance = () => {
   const queryClient = useQueryClient();
 
-  const metrics = useQuery(
-    'admin-ml-metrics',
+  const metrics = useApiQuery(
+    QUERY_KEYS.mlMetrics(),
     () => metricsService.getModelPerformance(100),
-    QUERY_CONFIGS.STABLE_DATA
+    { staleTime: 'stable' }
   );
 
-  const runEvaluation = useMutation(
-    (sampleSize?: number) => metricsService.getModelPerformance(sampleSize || 100),
-    {
-      onSuccess: () => {
-        // Invalidate metrics to refresh with new data
-        queryClient.invalidateQueries('admin-ml-metrics');
-      }
+  const runEvaluation = useMutationWithToast({
+    mutationFn: (sampleSize?: number) => metricsService.getModelPerformance(sampleSize || 100),
+    successMessage: 'Model evaluation completed successfully',
+    errorMessage: 'Failed to run model evaluation',
+    onSuccess: () => {
+      // Invalidate metrics to refresh with new data
+      queryClient.invalidateQueries(QUERY_KEYS.mlMetrics());
     }
-  );
+  });
 
   return {
     metrics,
@@ -120,12 +122,12 @@ export const useModelPerformance = () => {
  * Hook for individual user prediction analysis - uses existing adminService
  */
 export const useUserPredictionAnalysis = (userId?: string) => {
-  const prediction = useQuery(
-    ['admin-user-prediction', userId],
+  const prediction = useApiQuery(
+    QUERY_KEYS.adminUserPrediction(userId!),
     () => adminService.getUserPredictionComparison(userId!),
     {
       enabled: !!userId,
-      ...QUERY_CONFIGS.FREQUENT_DATA,
+      staleTime: 'frequent',
     }
   );
 
@@ -144,16 +146,16 @@ export const useUserPredictionAnalysis = (userId?: string) => {
  * Hook for system health monitoring - direct API calls
  */
 export const useSystemStatus = () => {
-  const systemHealth = useQuery(
-    'admin-system-health',
+  const systemHealth = useApiQuery(
+    QUERY_KEYS.adminSystemHealth(),
     () => api.get('/admin/system/health'),
-    QUERY_CONFIGS.REALTIME
+    { staleTime: 'realtime' }
   );
 
-  const architectureStatus = useQuery(
-    'admin-architecture-status',
+  const architectureStatus = useApiQuery(
+    QUERY_KEYS.adminArchitectureStatus(),
     () => api.get('/admin/architecture/status'),
-    QUERY_CONFIGS.FREQUENT_DATA
+    { staleTime: 'frequent' }
   );
 
   return {
@@ -173,24 +175,24 @@ export const useSystemStatus = () => {
  */
 export const useAdminDataViews = () => {
   const getProducts = (filters?: any) => 
-    useQuery(
-      ['admin-products', filters],
+    useApiQuery(
+      QUERY_KEYS.adminProducts(filters),
       () => api.get('/admin/products', { params: filters }),
-      { enabled: false }
+      { enabled: false, staleTime: 'frequent' }
     );
 
   const getUsers = (filters?: any) =>
-    useQuery(
-      ['admin-users', filters],
+    useApiQuery(
+      QUERY_KEYS.adminUsers(filters),
       () => api.get('/admin/users', { params: filters }),
-      { enabled: false }
+      { enabled: false, staleTime: 'admin' }
     );
 
   const getOrders = (filters?: any) =>
-    useQuery(
-      ['admin-orders', filters],
+    useApiQuery(
+      QUERY_KEYS.adminOrders(filters),
       () => api.get('/admin/orders', { params: filters }),
-      { enabled: false }
+      { enabled: false, staleTime: 'frequent' }
     );
 
   return {

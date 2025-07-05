@@ -1,11 +1,14 @@
-import { useQuery, UseQueryResult } from 'react-query';
+import { UseQueryResult } from 'react-query';
 import { favoriteService } from '@/services/favorite.service';
-import { QUERY_CONFIGS } from '@/utils/queryConfig';
+import { useApiQuery } from './useApiQuery';
+import { QUERY_KEYS } from '@/utils/queryKeys';
 
 export const useFavorites = (): UseQueryResult<any[]> => {
-  return useQuery(
-    'favorites',
+  return useApiQuery(
+    QUERY_KEYS.favorites(),
     favoriteService.getFavorites,
-    QUERY_CONFIGS.FREQUENT_DATA
+    {
+      staleTime: 'frequent',
+    }
   );
 };

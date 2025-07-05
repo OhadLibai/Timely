@@ -2,7 +2,7 @@
 // FIXED: Removed "Clear All" functionality that backend doesn't support
 
 import React from 'react';
-import { useMutation, useQueryClient } from 'react-query';
+import { useQueryClient } from 'react-query';
 import { useFavorites } from '@/hooks/api/useFavorites';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, Package, Plus } from 'lucide-react';
@@ -12,7 +12,8 @@ import { useAuthStore } from '@/stores/auth.store';
 import ProductCard from '@/components/products/ProductCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
-import toast from 'react-hot-toast';
+import { useMutationWithToast } from '@/hooks/api/useMutationWithToast';
+import { QUERY_KEYS } from '@/utils/queryKeys';
 
 const Favorites: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
@@ -23,18 +24,14 @@ const Favorites: React.FC = () => {
   const { data: favorites, isLoading, error } = useFavorites();
 
   // Remove from favorites mutation
-  const removeFromFavoritesMutation = useMutation(
-    (productId: string) => favoriteService.removeFavorite(productId),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('favorites');
-        toast.success('Removed from favorites');
-      },
-      onError: () => {
-        toast.error('Failed to remove from favorites');
-      },
-    }
-  );
+  const removeFromFavoritesMutation = useMutationWithToast({
+    mutationFn: (productId: string) => favoriteService.removeFavorite(productId),
+    successMessage: 'Removed from favorites',
+    errorMessage: 'Failed to remove from favorites',
+    onSuccess: () => {
+      queryClient.invalidateQueries(QUERY_KEYS.favorites());
+    },
+  });
 
   // Add all favorites to cart handler
   const handleAddAllToCart = () => {

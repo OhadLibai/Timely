@@ -1,64 +1,50 @@
-import { useMutation } from 'react-query';
-import toast from 'react-hot-toast';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthenticatedAction } from '@/hooks/auth/useAuthenticatedAction';
 import { Product } from '@/services/product.service';
+import { useMutationWithToast } from './useMutationWithToast';
 
 export const useCartOperations = () => {
   const { addToCart: addToCartStore, addMultipleItems, removeItem, updateQuantity, isUpdating } = useCartStore();
   const { withAuthCheck } = useAuthenticatedAction();
 
-  const addToCartMutation = useMutation(
-    ({ product, quantity = 1 }: { product: Product; quantity?: number }) => {
+  const addToCartMutation = useMutationWithToast({
+    mutationFn: ({ product, quantity = 1 }: { product: Product; quantity?: number }) => {
       addToCartStore(product, quantity);
       return Promise.resolve();
     },
-    {
-      onError: (error) => {
-        console.error('Failed to add to cart:', error);
-        toast.error('Failed to add to cart');
-      }
-    }
-  );
+    successMessage: 'Added to cart',
+    errorMessage: 'Failed to add to cart',
+    showSuccessToast: false,
+  });
 
-  const addMultipleItemsMutation = useMutation(
-    (items: { product: Product; quantity: number }[]) => {
+  const addMultipleItemsMutation = useMutationWithToast({
+    mutationFn: (items: { product: Product; quantity: number }[]) => {
       addMultipleItems(items);
       return Promise.resolve();
     },
-    {
-      onError: (error) => {
-        console.error('Failed to add multiple items to cart:', error);
-        toast.error('Failed to add items to cart');
-      }
-    }
-  );
+    successMessage: (_, items) => `Added ${items.length} items to cart`,
+    errorMessage: 'Failed to add items to cart',
+  });
 
-  const removeFromCartMutation = useMutation(
-    (itemId: string) => {
+  const removeFromCartMutation = useMutationWithToast({
+    mutationFn: (itemId: string) => {
       removeItem(itemId);
       return Promise.resolve();
     },
-    {
-      onError: (error) => {
-        console.error('Failed to remove from cart:', error);
-        toast.error('Failed to remove from cart');
-      }
-    }
-  );
+    successMessage: 'Removed from cart',
+    errorMessage: 'Failed to remove from cart',
+    showSuccessToast: false,
+  });
 
-  const updateQuantityMutation = useMutation(
-    ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+  const updateQuantityMutation = useMutationWithToast({
+    mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) => {
       updateQuantity(itemId, quantity);
       return Promise.resolve();
     },
-    {
-      onError: (error) => {
-        console.error('Failed to update quantity:', error);
-        toast.error('Failed to update quantity');
-      }
-    }
-  );
+    successMessage: 'Quantity updated',
+    errorMessage: 'Failed to update quantity',
+    showSuccessToast: false,
+  });
 
   const handleAddToCart = withAuthCheck(
     (product: Product, quantity = 1) => addToCartMutation.mutate({ product, quantity }),

@@ -1,16 +1,17 @@
-import { useQuery, UseQueryResult } from 'react-query';
+import { UseQueryResult } from 'react-query';
 import { productService, Product, ProductsResponse, ProductFilters } from '@/services/product.service';
-import { QUERY_CONFIGS } from '@/utils/queryConfig';
+import { useApiQuery } from './useApiQuery';
+import { QUERY_KEYS } from '@/utils/queryKeys';
 
 export const useProducts = (
   filters: ProductFilters = {}
 ): UseQueryResult<ProductsResponse> => {
-  return useQuery(
-    ['products', filters],
+  return useApiQuery(
+    QUERY_KEYS.products(filters),
     () => productService.getProducts(filters),
     {
+      staleTime: 'frequent',
       keepPreviousData: true,
-      ...QUERY_CONFIGS.FREQUENT_DATA,
     }
   );
 };
@@ -18,20 +19,22 @@ export const useProducts = (
 export const useProduct = (
   productId: string
 ): UseQueryResult<Product> => {
-  return useQuery(
-    ['product', productId],
+  return useApiQuery(
+    QUERY_KEYS.product(productId),
     () => productService.getProduct(productId),
     {
       enabled: !!productId,
-      ...QUERY_CONFIGS.STABLE_DATA,
+      staleTime: 'stable',
     }
   );
 };
 
 export const useCategories = (): UseQueryResult<string[]> => {
-  return useQuery(
-    'categories',
+  return useApiQuery(
+    QUERY_KEYS.categories(),
     productService.getCategories,
-    QUERY_CONFIGS.STABLE_DATA // Categories don't change often
+    {
+      staleTime: 'stable',
+    }
   );
 };

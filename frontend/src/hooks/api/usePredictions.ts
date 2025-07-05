@@ -1,11 +1,14 @@
-import { useQuery, UseQueryResult } from 'react-query';
+import { UseQueryResult } from 'react-query';
 import { predictionService } from '@/services/prediction.service';
-import { QUERY_CONFIGS } from '@/utils/queryConfig';
+import { useApiQuery } from './useApiQuery';
+import { QUERY_KEYS } from '@/utils/queryKeys';
 
 export const usePredictedBasket = (): UseQueryResult<any> => {
-  return useQuery(
-    'predicted-basket',
+  return useApiQuery(
+    QUERY_KEYS.predictions(),
     predictionService.getPredictedBasket,
-    QUERY_CONFIGS.REALTIME // Predictions can change more frequently
+    {
+      staleTime: 'realtime',
+    }
   );
 };
