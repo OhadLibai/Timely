@@ -1,48 +1,154 @@
-// main.tsx
+// frontend/src/main.tsx
+// UPDATED: Aligned with 4 core demands and development/testing requirements
+// ENHANCED: Better error handling, performance monitoring, and accessibility
+// FIXED: Parcel-specific configurations (removed Vite assumptions)
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from '@/App';
 import '@/index.css';
 
-// Import error boundary
+// Import error boundary for app-level error handling
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 
-// Global error handling
+// Import React Query for data fetching
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { ReactQueryDevtools } from 'react-query/devtools';
+
+// ============================================================================
+// PARCEL TYPE DECLARATIONS
+// ============================================================================
+
+declare const module: {
+  hot?: {
+    accept(): void;
+  };
+};
+
+// ============================================================================
+// GLOBAL ERROR HANDLING
+// ============================================================================
+
+// Global error event handler
 window.addEventListener('error', (event) => {
-  console.error('Global error:', event.error);
+  console.error('💥 Global error caught:', {
+    message: event.error?.message,
+    stack: event.error?.stack,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno
+  });
+  
+  // In development, show more details
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Full error event:', event);
+  }
 });
 
+// Unhandled promise rejection handler
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection:', event.reason);
+  console.error('💥 Unhandled promise rejection:', {
+    reason: event.reason,
+    promise: event.promise
+  });
+  
+  // In development, show more details
+  if (process.env.NODE_ENV === 'development') {
+    console.error('Full rejection event:', event);
+  }
 });
 
-// Development tools
-if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-  // Add to window for debugging
-  (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-    ...((window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ || {}),
-    onCommitFiberRoot: () => {
-      // Custom profiling logic can be added here if needed
+// ============================================================================
+// QUERY CLIENT CONFIGURATION
+// ============================================================================
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      retry: (failureCount, error: any) => {
+        // Don't retry on 401/403 errors (auth issues)
+        if (error?.status === 401 || error?.status === 403) {
+          return false;
+        }
+        // Retry up to 3 times for other errors
+        return failureCount < 3;
+      },
+      refetchOnWindowFocus: false,
+      onError: (error: any) => {
+        console.error('Query error:', error);
+        // Could add global error toast here if needed
+      }
+    },
+    mutations: {
+      retry: 1,
+      onError: (error: any) => {
+        console.error('Mutation error:', error);
+      }
     }
+  }
+});
+
+// ============================================================================
+// DEVELOPMENT TOOLS
+// ============================================================================
+
+const initializeDevelopmentTools = () => {
+  if (process.env.NODE_ENV !== 'development') return;
+
+  console.log('🔧 Timely Development Mode Initialized');
+  console.log('📊 Core App Demands:');
+  console.log('  1. Demo User Creation & ML Prediction Showcase');
+  console.log('  2. Model Performance Evaluation');
+  console.log('  3. Individual User Prediction Comparison');  
+  console.log('  4. Quality User Experience');
+  console.log('');
+  console.log('📁 Instacart Dataset: Ready for testing');
+  console.log('🎯 Environment: Development/Testing Stage');
+  console.log('⚡ Build Tool: Parcel (Hot Module Replacement Active)');
+
+  // Add debugging helpers to window object
+  (window as any).__TIMELY_DEBUG__ = {
+    queryClient,
+    env: process.env,
+    version: '1.0.0-dev',
+    stage: 'development-testing',
+    buildTool: 'parcel'
   };
 
-  // Performance debugging
-  console.log('🔧 Development mode - Performance monitoring enabled');
-  
-  // Parcel hot reload (automatic, no manual config needed)
-}
+  // Performance monitoring
+  if ('performance' in window && 'measure' in performance) {
+    // Mark app start
+    performance.mark('timely-app-start');
+    
+    // Monitor for performance issues
+    const observer = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        if (entry.entryType === 'measure') {
+          console.log(`⚡ Performance: ${entry.name} took ${entry.duration.toFixed(2)}ms`);
+        }
+      }
+    });
+    
+    observer.observe({ entryTypes: ['measure'] });
+  }
+};
 
+// ============================================================================
+// ACCESSIBILITY ENHANCEMENTS
+// ============================================================================
 
-// Accessibility improvements
-const initializeA11y = () => {
-  // Skip to main content link
+const initializeAccessibility = () => {
+  // Skip to main content link for keyboard navigation
   const skipLink = document.createElement('a');
   skipLink.href = '#main-content';
   skipLink.textContent = 'Skip to main content';
-  skipLink.className = 'sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 z-50';
+  skipLink.className = 'sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 bg-blue-600 text-white p-2 z-50 rounded-br transition-all';
+  skipLink.setAttribute('data-testid', 'skip-to-main');
   document.body.insertBefore(skipLink, document.body.firstChild);
 
-  // Focus management for keyboard navigation
+  // Keyboard navigation indicator
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Tab') {
       document.body.classList.add('keyboard-navigation');
@@ -52,96 +158,162 @@ const initializeA11y = () => {
   document.addEventListener('mousedown', () => {
     document.body.classList.remove('keyboard-navigation');
   });
+
+  // Focus management for better UX
+  document.addEventListener('focusin', (e) => {
+    const target = e.target as HTMLElement;
+    if (target.getAttribute('data-focus-visible') === 'true') {
+      target.classList.add('focus-visible');
+    }
+  });
+
+  document.addEventListener('focusout', (e) => {
+    const target = e.target as HTMLElement;
+    target.classList.remove('focus-visible');
+  });
 };
 
-// Loading state management
-const showInitialLoader = () => {
-  const loader = document.createElement('div');
-  loader.id = 'initial-loader';
-  loader.innerHTML = `
-    <div class="fixed inset-0 bg-white flex items-center justify-center z-50">
-      <div class="text-center">
-        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p class="text-gray-600 font-medium">Loading Timely...</p>
+// ============================================================================
+// LOADING STATE MANAGEMENT
+// ============================================================================
+
+const initializationLoader = {
+  show: () => {
+    const loader = document.createElement('div');
+    loader.id = 'timely-initialization-loader';
+    loader.innerHTML = `
+      <div class="fixed inset-0 bg-white flex items-center justify-center z-50">
+        <div class="text-center">
+          <div class="relative">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-6"></div>
+            <div class="absolute inset-0 rounded-full h-16 w-16 border-r-4 border-blue-200 mx-auto animate-pulse"></div>
+          </div>
+          <h1 class="text-2xl font-bold text-gray-800 mb-2">Timely</h1>
+          <p class="text-gray-600 font-medium">Initializing ML-Powered Grocery Assistant...</p>
+          <div class="mt-4 text-sm text-gray-500">
+            <div class="flex items-center justify-center space-x-2">
+              <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+              <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+              <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-  `;
-  document.body.appendChild(loader);
-};
+    `;
+    document.body.appendChild(loader);
+  },
 
-const hideInitialLoader = () => {
-  const loader = document.getElementById('initial-loader');
-  if (loader) {
-    loader.style.opacity = '0';
-    loader.style.transition = 'opacity 300ms ease-out';
-    setTimeout(() => loader.remove(), 300);
+  hide: () => {
+    const loader = document.getElementById('timely-initialization-loader');
+    if (loader) {
+      loader.style.opacity = '0';
+      loader.style.transition = 'opacity 400ms ease-out';
+      setTimeout(() => {
+        loader.remove();
+        // Mark initialization complete for performance monitoring
+        if (process.env.NODE_ENV === 'development' && 'performance' in window) {
+          performance.mark('timely-app-ready');
+          performance.measure('timely-initialization', 'timely-app-start', 'timely-app-ready');
+        }
+      }, 400);
+    }
   }
 };
 
-// App initialization
-const initializeApp = async () => {
+// ============================================================================
+// APP INITIALIZATION
+// ============================================================================
+
+const initializeTimely = async (): Promise<void> => {
   try {
     // Show loading state
-    showInitialLoader();
+    initializationLoader.show();
+    
+    // Initialize development tools
+    initializeDevelopmentTools();
     
     // Initialize accessibility features
-    initializeA11y();
+    initializeAccessibility();
     
     // Get root element
     const rootElement = document.getElementById('root');
     if (!rootElement) {
-      throw new Error('Root element not found');
+      throw new Error('Root element not found - check your HTML template');
     }
 
     // Create React root
     const root = ReactDOM.createRoot(rootElement);
     
-    // Render app with error boundary
+    // Add main content ID for accessibility
+    rootElement.setAttribute('id', 'main-content');
+    
+    // Render the app with all providers
     root.render(
       <React.StrictMode>
         <ErrorBoundary>
-          <App />
+          <QueryClientProvider client={queryClient}>
+            <App />
+            {/* Show React Query devtools in development */}
+            {process.env.NODE_ENV === 'development' && (
+              <ReactQueryDevtools 
+                initialIsOpen={false} 
+                position="bottom-right"
+              />
+            )}
+          </QueryClientProvider>
         </ErrorBoundary>
       </React.StrictMode>
     );
 
-    // Hide initial loader after React hydration
-    setTimeout(hideInitialLoader, 100);
-    
-    // Development logging
-    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-      console.log('✅ Timely app initialized successfully');
-      console.log('♿ Accessibility features enabled');
-      console.log('🔧 Dev/Test mode - Production features disabled');
-    }
+    // Hide loading state after a short delay to ensure smooth transition
+    setTimeout(() => {
+      initializationLoader.hide();
+    }, 1000);
 
-  } catch (error) {
-    console.error('Failed to initialize app:', error);
+    console.log('✅ Timely app initialized successfully');
     
-    // Fallback error UI
-    const errorContainer = document.getElementById('root');
-    if (errorContainer) {
-      errorContainer.innerHTML = `
-        <div class="min-h-screen flex items-center justify-center bg-gray-50">
-          <div class="text-center p-8">
-            <h1 class="text-2xl font-bold text-gray-900 mb-4">
-              Something went wrong
-            </h1>
-            <p class="text-gray-600 mb-6">
-              We're sorry, but there was an error loading the application.
-            </p>
-            <button 
-              onclick="window.location.reload()" 
-              class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Reload Page
-            </button>
+  } catch (error) {
+    console.error('💥 Failed to initialize Timely app:', error);
+    
+    // Hide loader and show error
+    initializationLoader.hide();
+    
+    // Show basic error message
+    document.body.innerHTML = `
+      <div class="min-h-screen flex items-center justify-center bg-red-50">
+        <div class="text-center p-8">
+          <div class="text-red-500 mb-4">
+            <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.728-.833-2.498 0L3.316 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+            </svg>
           </div>
+          <h1 class="text-2xl font-bold text-gray-800 mb-2">Initialization Error</h1>
+          <p class="text-gray-600 mb-4">Failed to start the Timely application.</p>
+          <button 
+            onclick="window.location.reload()" 
+            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+          >
+            Reload Application
+          </button>
+          ${process.env.NODE_ENV === 'development' ? `
+            <details class="mt-4 text-left">
+              <summary class="cursor-pointer text-sm text-gray-500">Development Error Details</summary>
+              <pre class="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded overflow-auto">${error}</pre>
+            </details>
+          ` : ''}
         </div>
-      `;
-    }
+      </div>
+    `;
   }
 };
 
-// Start the application
-initializeApp();
+// ============================================================================
+// START THE APPLICATION
+// ============================================================================
+
+// Wait for DOM to be ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeTimely);
+} else {
+  initializeTimely();
+}
