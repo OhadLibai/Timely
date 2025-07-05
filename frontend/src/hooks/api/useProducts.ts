@@ -1,8 +1,11 @@
 import { UseQueryResult } from 'react-query';
 import { productService, Product, Category } from '@/services/product.service';
-import type { ProductsResponse, ProductFilters } from '@/services/product.service';
 import { useApiQuery } from './useApiQuery';
 import { QUERY_KEYS } from '@/utils/queryKeys';
+
+// Infer types from the actual service methods
+type ProductFilters = Parameters<typeof productService.getProducts>[0];
+type ProductsResponse = Awaited<ReturnType<typeof productService.getProducts>>;
 
 export const useProducts = (
   filters: ProductFilters = {}

@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import {
   CreditCard, MapPin, Package, CheckCircle, 
-  ArrowLeft, User, Mail, Phone, Lock, Calendar
+  ArrowLeft, User
 } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
@@ -17,7 +17,7 @@ import ProductImage from '@/components/products/ProductImage';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
-import { formatPrice } from '@/utils/formatters';
+import { formatPrice, calculateItemTotal } from '@/utils/formatters';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import toast from 'react-hot-toast';
 
@@ -50,8 +50,7 @@ const Checkout: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-    setValue,
-    watch
+    setValue
   } = useForm<CheckoutFormData>();
 
   // Pre-fill user information
@@ -477,7 +476,7 @@ const Checkout: React.FC = () => {
                       </p>
                     </div>
                     <span className="text-sm font-medium text-gray-900">
-                      {formatPrice(item.total)}
+                      {formatPrice(calculateItemTotal(item.price, item.quantity))}
                     </span>
                   </div>
                 ))}

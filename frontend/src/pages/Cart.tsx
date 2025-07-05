@@ -1,41 +1,34 @@
 // frontend/src/pages/Cart.tsx
 // FIXED: Moved confirmation dialog to component level - proper separation of concerns
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingCart, Trash2, Plus, Minus, ArrowRight, 
-  Package, AlertCircle, CheckCircle, Truck, Info
+  Package, CheckCircle
 } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
-import { useAuthStore } from '@/stores/auth.store';
 import ProductImage from '@/components/products/ProductImage';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
 import EmptyState from '@/components/common/EmptyState';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
 import toast from 'react-hot-toast';
-import { formatPrice } from '@/utils/formatters';
+import { formatPrice, calculateItemTotal } from '@/utils/formatters';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 
 const Cart: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
   const { 
     cart, 
-    isLoading, 
     isUpdating,
-    fetchCart, 
     updateQuantity, 
     removeItem, 
     clearCart,
     getTotal,
   } = useCartStore();
 
-  useEffect(() => {
-    fetchCart();
-  }, []);
+  // Cart is handled locally - no need to fetch
 
   const handleQuantityChange = async (itemId: string, currentQuantity: number, delta: number) => {
     const newQuantity = currentQuantity + delta;
@@ -66,13 +59,7 @@ const Cart: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
+  // Cart is local state - no loading needed
 
   if (!cart || cart.items.length === 0) {
     return (
@@ -187,7 +174,7 @@ const Cart: React.FC = () => {
                             
                             <div className="text-right">
                               <div className="text-lg font-semibold text-gray-900">
-                                {formatPrice(item.total)}
+                                {formatPrice(calculateItemTotal(item.price, item.quantity))}
                               </div>
                               <div className="text-sm text-gray-500">
                                 {formatPrice(item.price)} each

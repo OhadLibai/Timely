@@ -3,12 +3,11 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/stores/auth.store';
-import AutoGenerateBasket from '@/components/predictions/AutoGenerateBasket';
 import { 
-  ShoppingCart, TrendingUp, Clock, Heart, 
-  Package, Truck, Shield, Sparkles, Brain
+  TrendingUp, Clock, 
+  Package, Shield, Sparkles, Brain
 } from 'lucide-react';
-import { ResponsiveGrid, FeatureGrid } from '@/components/layout/ResponsiveGrid';
+import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -73,12 +72,24 @@ const Home: React.FC = () => {
 
             {isAuthenticated ? (
               <div className="space-y-6">
-                {/* Prominent Auto-Generate Feature */}
-                <AutoGenerateBasket 
-                  variant="card" 
-                  className="max-w-2xl mx-auto"
-                  onNavigate={navigate}
-                />
+                {/* Auto-Generate Feature - Placeholder */}
+                <div className="max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-purple-100 rounded-lg">
+                      <Brain className="w-6 h-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">AI-Powered Basket</h3>
+                      <p className="text-sm text-gray-600">Generate your personalized shopping list</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => navigate('/predicted-basket')}
+                    className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all"
+                  >
+                    Generate Smart Basket
+                  </button>
+                </div>
                 
                 {/* Quick Actions */}
                 <div className="flex justify-center gap-4 mt-6">
@@ -115,7 +126,7 @@ const Home: React.FC = () => {
           </motion.div>
 
           {/* Demo User Hint */}
-          {isAuthenticated && user?.metadata?.instacart_user_id && (
+          {isAuthenticated && user && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -124,7 +135,7 @@ const Home: React.FC = () => {
             >
               <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100/30 text-green-800 rounded-full text-sm">
                 <Sparkles size={16} />
-                <span>Demo User: Instacart ID {user.metadata.instacart_user_id}</span>
+                <span>Welcome back, {user.firstName || user.email}!</span>
               </div>
             </motion.div>
           )}

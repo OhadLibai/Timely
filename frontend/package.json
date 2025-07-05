@@ -38,6 +38,7 @@
     "@types/react-dom": "^18.2.0",
     "@types/react-lazy-load-image-component": "^1.6.4",
     "autoprefixer": "^10.4.0",
+    "buffer": "^6.0.3",
     "eslint": "^8.45.0",
     "parcel": "^2.9.3",
     "parcel-resolver-ts-base-url": "^1.0.0",

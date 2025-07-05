@@ -17,20 +17,11 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 // Development tools
-if (process.env.NODE_ENV === 'development') {
-  // React DevTools profiler
-  const startProfiling = () => {
-    console.log('🚀 React profiling started');
-  };
-  
-  const stopProfiling = () => {
-    console.log('⏹️ React profiling stopped');
-  };
-
+if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
   // Add to window for debugging
   (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
     ...((window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ || {}),
-    onCommitFiberRoot: (id: any, root: any) => {
+    onCommitFiberRoot: () => {
       // Custom profiling logic can be added here if needed
     }
   };
@@ -118,7 +109,7 @@ const initializeApp = async () => {
     setTimeout(hideInitialLoader, 100);
     
     // Development logging
-    if (process.env.NODE_ENV === 'development') {
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
       console.log('✅ Timely app initialized successfully');
       console.log('♿ Accessibility features enabled');
       console.log('🔧 Dev/Test mode - Production features disabled');

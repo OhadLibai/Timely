@@ -33,9 +33,9 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
           }
         }
       });
-      return { ...initialFilters, ...urlFilters };
+      return { ...initialFilters, ...urlFilters } as FilterState;
     }
-    return initialFilters;
+    return initialFilters as FilterState;
   });
 
   // Update a single filter
@@ -67,9 +67,16 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
   }, [searchParams, setSearchParams, syncWithUrl]);
 
   // Update multiple filters at once
-  const updateFilters = useCallback((updates: Partial<T>) => {
+  const updateFilters = useCallback((updates: Partial<FilterState>) => {
     setFilters(prev => {
-      const newFilters = { ...prev, ...updates };
+      const newFilters: FilterState = { ...prev };
+      
+      // Update each filter ensuring correct types
+      Object.entries(updates).forEach(([key, value]) => {
+        if (value !== undefined) {
+          newFilters[key] = value;
+        }
+      });
       
       // Sync with URL if enabled
       if (syncWithUrl) {
@@ -98,7 +105,7 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
 
   // Clear all filters
   const clearFilters = useCallback(() => {
-    setFilters({ ...initialFilters } as T);
+    setFilters({ ...initialFilters });
     
     if (syncWithUrl) {
       const newSearchParams = new URLSearchParams();
@@ -113,15 +120,15 @@ export const useFilters = (options: UseFiltersOptions = {}) => {
   }, [initialFilters, searchParams, setSearchParams, syncWithUrl]);
 
   // Clear a specific filter
-  const clearFilter = useCallback((key: keyof T) => {
-    updateFilter(key, initialFilters[key as keyof T]);
+  const clearFilter = useCallback((key: keyof FilterState) => {
+    updateFilter(key, (initialFilters as any)[key]);
   }, [updateFilter, initialFilters]);
 
   // Check if filters have been modified from initial state
   const hasActiveFilters = useMemo(() => {
     return Object.keys(filters).some(key => {
-      const current = filters[key as keyof T];
-      const initial = initialFilters[key as keyof T];
+      const current = (filters as any)[key];
+      const initial = (initialFilters as any)[key];
       
       if (Array.isArray(current) && Array.isArray(initial)) {
         return current.length !== initial.length || 

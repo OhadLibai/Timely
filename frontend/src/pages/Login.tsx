@@ -1,11 +1,11 @@
 // frontend/src/pages/Login.tsx
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { AnimatedContainer } from '@/components/common/AnimatedContainer';
 import { useForm } from 'react-hook-form';
 import { Mail, Lock, ShoppingCart, Brain } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
-import { useCartStore } from '@/stores/cart.store';
 import toast from 'react-hot-toast';
 import { FormInput } from '@/components/forms/FormInput';
 import { Button } from '@/components/common/Button';
@@ -20,7 +20,6 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login, isLoading } = useAuthStore();
-  const { fetchCart } = useCartStore();
 
   const from = (location.state as any)?.from?.pathname || '/';
 
@@ -40,9 +39,6 @@ const Login: React.FC = () => {
   const onSubmit = async (data: LoginFormData) => {
     try {
       await login(data.email, data.password);
-      
-      // Fetch cart after successful login
-      await fetchCart();
       
       // Redirect to intended page or home
       navigate(from, { replace: true });

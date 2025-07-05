@@ -11,6 +11,13 @@ export const formatPrice = (price: number): string => {
 };
 
 /**
+ * Calculate total price for cart item (reusable utility)
+ */
+export const calculateItemTotal = (price: number, quantity: number): number => {
+  return price * quantity;
+};
+
+/**
  * Format product stock status
  */
 export const formatStockStatus = (stock: number): { 
