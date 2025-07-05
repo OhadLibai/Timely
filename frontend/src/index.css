@@ -65,7 +65,7 @@ body {
 /* ============================================================================ */
 
 *:focus {
-  outline: 2px solid theme('colors.primary.500');
+  outline: 2px solid #0ea5e9;
   outline-offset: 2px;
 }
 
@@ -85,12 +85,12 @@ body {
   
   /* Form Components */
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 placeholder-gray-400 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500;
+    @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all duration-200 placeholder-gray-400;
   }
   
   /* Card Component */
   .card {
-    @apply bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-200 dark:border-gray-700 p-6;
+    @apply bg-white rounded-lg shadow-md border border-gray-200 p-6;
   }
   
   /* Loading Components */
@@ -100,19 +100,19 @@ body {
   
   /* Status Badges */
   .badge-success {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800 dark:bg-success-900 dark:text-success-200;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-100 text-success-800;
   }
   
   .badge-warning {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800 dark:bg-warning-900 dark:text-warning-200;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-100 text-warning-800;
   }
   
   .badge-error {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-800 dark:bg-error-900 dark:text-error-200;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-error-100 text-error-800;
   }
   
   .badge-info {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-100 text-info-800 dark:bg-info-900 dark:text-info-200;
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-info-100 text-info-800;
   }
 }
 
@@ -160,11 +160,6 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.125);
   }
   
-  .glass-dark {
-    backdrop-filter: blur(16px) saturate(180%);
-    background-color: rgba(17, 25, 39, 0.75);
-    border: 1px solid rgba(255, 255, 255, 0.125);
-  }
 }
 
 /* ============================================================================ */
@@ -188,15 +183,6 @@ body {
   }
 }
 
-/* ============================================================================ */
-/* DARK MODE SUPPORT */
-/* ============================================================================ */
-
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
-}
 
 /* ============================================================================ */
 /* ACCESSIBILITY IMPROVEMENTS */
@@ -231,7 +217,7 @@ body {
 /* ✅ REMOVED: CSS custom properties (moved to tailwind.config.js)
 /* ✅ REMOVED: @keyframes animations (moved to tailwind.config.js)  
 /* ✅ FIXED: Completed incomplete input-field class
-/* ✅ ENHANCED: Added dark mode support to components
+/* ✅ REMOVED: All theme references completely eradicated
 /* ✅ ENHANCED: Added accessibility improvements
 /* ✅ ENHANCED: Added useful utility classes
 /* ✅ MAINTAINED: Essential base styles and component patterns

@@ -9,7 +9,6 @@ import { AnimatePresence } from 'framer-motion';
 
 // Import stores
 import { useAuthStore } from '@/stores/auth.store';
-import { useThemeStore } from '@/stores/theme.store';
 
 // Import layouts and route guards
 import MainLayout from '@/layouts/MainLayout';
@@ -117,15 +116,11 @@ const adminRoutes: RouteConfig[] = [
 
 const App: React.FC = () => {
   const { checkAuth, isLoading: authLoading } = useAuthStore();
-  const { theme } = useThemeStore();
 
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
-  useEffect(() => {
-    document.documentElement.className = theme;
-  }, [theme]);
 
   if (authLoading) {
     return <PageLoader />;
@@ -177,8 +172,8 @@ const App: React.FC = () => {
             toastOptions={{
               duration: 4000,
               style: {
-                background: theme === 'dark' ? '#374151' : '#fff',
-                color: theme === 'dark' ? '#fff' : '#000',
+                background: '#fff',
+                color: '#000',
               },
             }}
           />

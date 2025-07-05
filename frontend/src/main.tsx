@@ -41,18 +41,6 @@ if (process.env.NODE_ENV === 'development') {
   // Parcel hot reload (automatic, no manual config needed)
 }
 
-// Theme detection and persistence
-const initializeTheme = () => {
-  const savedTheme = localStorage.getItem('timely-theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const theme = savedTheme || (prefersDark ? 'dark' : 'light');
-  
-  document.documentElement.classList.toggle('dark', theme === 'dark');
-  document.documentElement.setAttribute('data-theme', theme);
-};
-
-// Initialize theme before React renders
-initializeTheme();
 
 // Accessibility improvements
 const initializeA11y = () => {
@@ -132,7 +120,6 @@ const initializeApp = async () => {
     // Development logging
     if (process.env.NODE_ENV === 'development') {
       console.log('✅ Timely app initialized successfully');
-      console.log('🎨 Theme system ready');
       console.log('♿ Accessibility features enabled');
       console.log('🔧 Dev/Test mode - Production features disabled');
     }
