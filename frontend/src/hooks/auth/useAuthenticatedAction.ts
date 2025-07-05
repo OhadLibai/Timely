@@ -17,17 +17,18 @@ export const useAuthenticatedAction = () => {
     return action();
   }, [isAuthenticated]);
 
-  const withAuthCheck = useCallback((
-    action: () => void | Promise<void>,
+  const withAuthCheck = useCallback(<T extends any[]>(
+    action: (...args: T) => void | Promise<void>,
     unauthenticatedMessage = 'Please login to continue'
   ) => {
-    return (e?: React.MouseEvent) => {
-      e?.preventDefault();
-      e?.stopPropagation();
-      
-      return executeWithAuth(action, unauthenticatedMessage);
+    return (...args: T) => {
+      if (!isAuthenticated) {
+        toast.error(unauthenticatedMessage);
+        return;
+      }
+      return action(...args);
     };
-  }, [executeWithAuth]);
+  }, [isAuthenticated]);
 
   return {
     isAuthenticated,

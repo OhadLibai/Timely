@@ -2,10 +2,9 @@
 // CLEANED: Removed old admin routes and updated to use new structure
 // CONSTRAINT: Using existing services without modification
 
-import React, { lazy, Suspense, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import React, { lazy, Suspense } from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AnimatePresence } from 'framer-motion';
 
 // Import stores
 import { useAuthStore } from '@/stores/auth.store';
@@ -27,12 +26,7 @@ const Login = lazy(() => import('@/pages/Login'));
 const Register = lazy(() => import('@/pages/Register'));
 const Products = lazy(() => import('@/pages/Products'));
 const ProductDetail = lazy(() => import('@/pages/ProductDetail'));
-const About = lazy(() => import('@/pages/About'));
-const Contact = lazy(() => import('@/pages/Contact'));
-const NotFound = lazy(() => import('@/pages/NotFound'));
-
 // Protected user pages
-const Dashboard = lazy(() => import('@/pages/Dashboard'));
 const Profile = lazy(() => import('@/pages/Profile'));
 const Orders = lazy(() => import('@/pages/Orders'));
 const OrderDetail = lazy(() => import('@/pages/OrderDetail'));
@@ -40,7 +34,6 @@ const Cart = lazy(() => import('@/pages/Cart'));
 const Checkout = lazy(() => import('@/pages/Checkout'));
 const Favorites = lazy(() => import('@/pages/Favorites'));
 const PredictedBasket = lazy(() => import('@/pages/PredictedBasket'));
-const OrderSuccess = lazy(() => import('@/pages/OrderSuccess'));
 
 // ============================================================================
 // ADMIN PAGES - RESTRUCTURED FOR 4 CORE DEMANDS
@@ -71,19 +64,16 @@ const PageLoader: React.FC = () => (
 // Route configuration
 interface RouteConfig {
   path: string;
-  element: React.LazyExoticComponent<React.FC>;
+  element: React.LazyExoticComponent<React.ComponentType<any>>;
 }
 
 const publicRoutes: RouteConfig[] = [
   { path: '/', element: Home },
   { path: '/products', element: Products },
   { path: '/products/:id', element: ProductDetail },
-  { path: '/about', element: About },
-  { path: '/contact', element: Contact },
 ];
 
 const protectedRoutes: RouteConfig[] = [
-  { path: '/dashboard', element: Dashboard },
   { path: '/profile', element: Profile },
   { path: '/orders', element: Orders },
   { path: '/orders/:id', element: OrderDetail },
@@ -91,7 +81,6 @@ const protectedRoutes: RouteConfig[] = [
   { path: '/checkout', element: Checkout },
   { path: '/favorites', element: Favorites },
   { path: '/predicted-basket', element: PredictedBasket },
-  { path: '/order-success', element: OrderSuccess },
 ];
 
 // ============================================================================
@@ -115,11 +104,8 @@ const adminRoutes: RouteConfig[] = [
 ];
 
 const App: React.FC = () => {
-  const { checkAuth, isLoading: authLoading } = useAuthStore();
+  const { isLoading: authLoading } = useAuthStore();
 
-  useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
 
 
   if (authLoading) {
@@ -132,37 +118,39 @@ const App: React.FC = () => {
         <div className="min-h-screen bg-gray-50">
           <Suspense fallback={<PageLoader />}>
             <Routes>
+              {/* Auth routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+
               {/* Public routes */}
               <Route path="/" element={<MainLayout />}>
                 {publicRoutes.map(({ path, element: Component }) => (
                   <Route key={path} path={path} element={<Component />} />
                 ))}
-              </Route>
 
-              {/* Auth routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-
-              {/* Protected user routes */}
-              <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
-                {protectedRoutes.map(({ path, element: Component }) => (
-                  <Route key={path} path={path} element={<Component />} />
-                ))}
+                {/* Protected user routes within MainLayout */}
+                <Route element={<ProtectedRoute />}>
+                  {protectedRoutes.map(({ path, element: Component }) => (
+                    <Route key={path} path={path} element={<Component />} />
+                  ))}
+                </Route>
               </Route>
 
               {/* Admin routes - CLEANED */}
-              <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>}>
-                {adminRoutes.map(({ path, element: Component }) => (
-                  <Route 
-                    key={path} 
-                    path={path === '/admin' ? '' : path.replace('/admin', '')} 
-                    element={<Component />} 
-                  />
-                ))}
+              <Route path="/admin" element={<AdminRoute />}>
+                <Route element={<AdminLayout />}>
+                  {adminRoutes.map(({ path, element: Component }) => (
+                    <Route 
+                      key={path} 
+                      path={path === '/admin' ? '' : path.replace('/admin', '')} 
+                      element={<Component />} 
+                    />
+                  ))}
+                </Route>
               </Route>
 
               {/* Fallback route */}
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<div>404 - Page Not Found</div>} />
             </Routes>
           </Suspense>
 

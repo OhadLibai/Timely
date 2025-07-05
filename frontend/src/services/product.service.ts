@@ -11,7 +11,6 @@ export interface Product {
   price: number;
   brand?: string;
   imageUrl?: string;
-  categoryId: string;
   category?: Category;
   stock: number;
   isActive: boolean;
@@ -40,11 +39,11 @@ class ProductService {
     if (filters.sort) params.append('sort', filters.sort);
     if (filters.search) params.append('search', filters.search);
     if (filters.categories?.length) {
-      filters.categories.forEach(cat => params.append('categories[]', cat));
+      filters.categories.forEach((cat: string) => params.append('categories[]', cat));
     }
     if (filters.inStock) params.append('inStock', 'true');
 
-    return api.get<ProductsResponse>(`/products?${params.toString()}`);
+    return api.get(`/products?${params.toString()}`);
   }
 
   // Get single product
@@ -53,12 +52,12 @@ class ProductService {
   }
 
   // Get products by category
-  async getProductsByCategory(categoryId: string, filters: ProductFilters = {}): Promise<ProductsResponse> {
+  async getProductsByCategory(categoryId: string, filters: ProductFilters = {}) {
     return this.getProducts({ ...filters, categories: [categoryId] });
   }
 
   // Search products
-  async searchProducts(query: string, filters: ProductFilters = {}): Promise<ProductsResponse> {
+  async searchProducts(query: string, filters: ProductFilters = {}) {
     return this.getProducts({ ...filters, search: query });
   }
 

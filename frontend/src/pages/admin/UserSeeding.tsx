@@ -6,10 +6,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  UserPlus, Database, CheckCircle, AlertCircle, 
+  UserPlus, Database, CheckCircle,
   Info, Loader2, Mail, Key, Calendar, Package,
   Sparkles, Users, ShoppingCart, Clock, ArrowLeft,
-  PlayCircle, Zap, TrendingUp, Activity
+  PlayCircle, TrendingUp
 } from 'lucide-react';
 import { useDemoUserSeeding } from '@/hooks/api/useAdmin';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -36,7 +36,7 @@ const UserSeeding: React.FC = () => {
   const [seedingResults, setSeedingResults] = useState<SeedingResult[]>([]);
   const [showInstructions, setShowInstructions] = useState(true);
 
-  const { seedUser, demoUserStats, isSeeding, seedingError } = useDemoUserSeeding();
+  const { seedUser, demoUserStats, isSeeding } = useDemoUserSeeding();
 
   // Popular Instacart user IDs for quick testing
   const popularUserIds = [
@@ -167,7 +167,7 @@ const UserSeeding: React.FC = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {demoUserStats?.available_users?.length || 0}
+                  {demoUserStats?.data?.available_users?.length || 0}
                 </div>
                 <div className="text-sm text-gray-600">
                   Demo Users Created
@@ -188,7 +188,7 @@ const UserSeeding: React.FC = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {demoUserStats?.seeded_today || 0}
+                  {demoUserStats?.data?.seeded_today || 0}
                 </div>
                 <div className="text-sm text-gray-600">
                   Seeded Today
@@ -209,7 +209,7 @@ const UserSeeding: React.FC = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {demoUserStats?.last_seeded || 'None'}
+                  {demoUserStats?.data?.last_seeded || 'None'}
                 </div>
                 <div className="text-sm text-gray-600">
                   Last Seeded User

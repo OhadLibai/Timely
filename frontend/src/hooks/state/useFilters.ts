@@ -10,26 +10,26 @@ interface UseFiltersOptions {
   syncWithUrl?: boolean;
 }
 
-export const useFilters = <T extends FilterState>(options: UseFiltersOptions = {}) => {
-  const { initialFilters = {} as T, syncWithUrl = false } = options;
+export const useFilters = (options: UseFiltersOptions = {}) => {
+  const { initialFilters = {}, syncWithUrl = false } = options;
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Initialize filters from URL params or initial values
-  const [filters, setFilters] = useState<T>(() => {
+  const [filters, setFilters] = useState<FilterState>(() => {
     if (syncWithUrl) {
-      const urlFilters: Partial<T> = {};
+      const urlFilters: Partial<FilterState> = {};
       searchParams.forEach((value, key) => {
         if (key in initialFilters) {
           // Parse the value based on initial filter type
           const initialType = typeof initialFilters[key];
           if (initialType === 'boolean') {
-            urlFilters[key as keyof T] = value === 'true' as T[keyof T];
+            (urlFilters as any)[key] = value === 'true';
           } else if (initialType === 'number') {
-            urlFilters[key as keyof T] = Number(value) as T[keyof T];
+            (urlFilters as any)[key] = Number(value);
           } else if (Array.isArray(initialFilters[key])) {
-            urlFilters[key as keyof T] = value.split(',') as T[keyof T];
+            (urlFilters as any)[key] = value.split(',');
           } else {
-            urlFilters[key as keyof T] = value as T[keyof T];
+            (urlFilters as any)[key] = value;
           }
         }
       });
@@ -39,7 +39,7 @@ export const useFilters = <T extends FilterState>(options: UseFiltersOptions = {
   });
 
   // Update a single filter
-  const updateFilter = useCallback((key: keyof T, value: T[keyof T]) => {
+  const updateFilter = useCallback((key: keyof FilterState, value: any) => {
     setFilters(prev => {
       const newFilters = { ...prev, [key]: value };
       
@@ -98,7 +98,7 @@ export const useFilters = <T extends FilterState>(options: UseFiltersOptions = {
 
   // Clear all filters
   const clearFilters = useCallback(() => {
-    setFilters(initialFilters);
+    setFilters({ ...initialFilters } as T);
     
     if (syncWithUrl) {
       const newSearchParams = new URLSearchParams();
@@ -114,7 +114,7 @@ export const useFilters = <T extends FilterState>(options: UseFiltersOptions = {
 
   // Clear a specific filter
   const clearFilter = useCallback((key: keyof T) => {
-    updateFilter(key, initialFilters[key]);
+    updateFilter(key, initialFilters[key as keyof T]);
   }, [updateFilter, initialFilters]);
 
   // Check if filters have been modified from initial state
@@ -135,8 +135,8 @@ export const useFilters = <T extends FilterState>(options: UseFiltersOptions = {
   // Get active filter count
   const activeFilterCount = useMemo(() => {
     return Object.keys(filters).filter(key => {
-      const current = filters[key as keyof T];
-      const initial = initialFilters[key as keyof T];
+      const current = (filters as any)[key];
+      const initial = (initialFilters as any)[key];
       
       if (Array.isArray(current) && Array.isArray(initial)) {
         return current.length > 0 && current.length !== initial.length;

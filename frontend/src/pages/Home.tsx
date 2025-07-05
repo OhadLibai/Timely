@@ -143,7 +143,7 @@ const Home: React.FC = () => {
               Why Choose Timely?
             </h2>
             
-            <FeatureGrid gap={8}>
+            <ResponsiveGrid cols={{ sm: 1, md: 2, lg: 4 }} gap={8}>
               {features.map((feature, index) => (
                 <motion.div
                   key={feature.title}
@@ -172,7 +172,7 @@ const Home: React.FC = () => {
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </ResponsiveGrid>
           </motion.div>
         </div>
       </section>
@@ -209,7 +209,7 @@ const Home: React.FC = () => {
                   </div>
                 </motion.div>
               ))}
-            </div>
+            </ResponsiveGrid>
           </motion.div>
         </div>
       </section>

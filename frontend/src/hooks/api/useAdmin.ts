@@ -2,7 +2,7 @@
 // UPDATED: Using existing services and direct API calls where needed
 // CONSTRAINT: Cannot modify services in services directory
 
-import { useQueryClient, UseQueryResult } from 'react-query';
+import { useQueryClient } from 'react-query';
 import { useMutationWithToast } from './useMutationWithToast';
 import { adminService } from '@/services/admin.service';
 import { metricsService } from '@/services/metrics.service';

@@ -252,7 +252,7 @@ const Checkout: React.FC = () => {
                         <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
                       )}
                     </div>
-                  </div>
+                  </ResponsiveGrid>
                   
                   {/* Shipping Address */}
                   <div className="border-t border-gray-200 pt-6">
@@ -318,7 +318,7 @@ const Checkout: React.FC = () => {
                             <p className="text-red-500 text-xs mt-1">{errors.zipCode.message}</p>
                           )}
                         </div>
-                      </div>
+                      </ResponsiveGrid>
                     </div>
                   </div>
                   
@@ -388,7 +388,7 @@ const Checkout: React.FC = () => {
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>
-                    </div>
+                    </ResponsiveGrid>
                   </div>
                   
                   <div className="flex justify-between pt-6">
@@ -492,7 +492,7 @@ const Checkout: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </ResponsiveGrid>
       </div>
     </div>
   );

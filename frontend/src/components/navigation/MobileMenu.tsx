@@ -18,7 +18,7 @@ interface MobileMenuProps {
   navLinks: NavLink[];
 }
 
-const MobileMenu: React.FC<MobileMenuProps> = ({ isOpen, onClose, navLinks }) => {
+const MobileMenu: React.FC<MobileMenuProps> = ({ onClose, navLinks }) => {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuthStore();
 

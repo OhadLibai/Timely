@@ -1,9 +1,8 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, X, Grid, List } from 'lucide-react';
+import { Search, Filter, X, Grid, List, LucideIcon } from 'lucide-react';
 import { AsyncStateWrapper } from '@/components/common';
 import { ProductGrid } from '@/components/layout/ResponsiveGrid';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
 import Pagination from '@/components/common/Pagination';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
@@ -12,7 +11,7 @@ interface ListPageProps<T> {
   // Header
   title: string;
   subtitle?: string;
-  icon?: React.ElementType;
+  icon?: LucideIcon;
   
   // Data and loading
   data?: T[];
@@ -87,7 +86,7 @@ function ListPage<T>({
       {/* Header */}
       <PageHeader
         title={title}
-        subtitle={subtitle}
+        description={subtitle}
         icon={Icon}
       />
 

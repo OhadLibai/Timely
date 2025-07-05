@@ -108,7 +108,7 @@ export const useSearchWithHistory = (options: UseSearchWithHistoryOptions = {}) 
     clearHistory,
     
     // Computed values
-    hasResults: searchResults && searchResults.length > 0,
+    hasResults: searchResults && searchResults.products && searchResults.products.length > 0,
     isSearching: searchTerm.length >= minSearchLength,
   };
 };

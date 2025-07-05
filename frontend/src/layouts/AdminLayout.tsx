@@ -6,9 +6,9 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Menu, X, Brain, Target, UserPlus, BarChart3, 
-  Home, LogOut, Zap, Database, Sparkles, 
-  TrendingUp, Users, Palette, CheckCircle
+  Menu, X, Brain, Target, UserPlus,
+  Home, LogOut, Sparkles,
+  Palette
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 

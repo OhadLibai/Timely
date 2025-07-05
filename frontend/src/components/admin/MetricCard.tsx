@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { LucideIcon, TrendingUp, TrendingDown, Activity, AlertTriangle } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown, Activity } from 'lucide-react';
 
 interface MetricCardProps {
   title: string;

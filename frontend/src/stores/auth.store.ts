@@ -27,7 +27,7 @@ interface AuthState {
 export const useAuthStore = create<AuthState>()(
   devtools(
     persist(
-      (set, get) => ({
+      (set) => ({
         user: authService.getUser(),
         isAuthenticated: authService.isAuthenticated(),
         isLoading: false,

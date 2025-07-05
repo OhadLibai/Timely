@@ -206,7 +206,7 @@ const Profile: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </div>
+              </ResponsiveGrid>
 
               {/* Action Buttons */}
               <AnimatePresence>
@@ -275,7 +275,7 @@ const Profile: React.FC = () => {
                   }
                 </p>
               </div>
-            </div>
+            </ResponsiveGrid>
           </div>
         </div>
       </div>

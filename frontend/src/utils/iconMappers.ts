@@ -1,4 +1,3 @@
-import React from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -42,15 +41,15 @@ export const getConfidenceIcon = (score: number): LucideIcon => {
 export const getNotificationIcon = (type: 'order' | 'favorite' | 'cart' | 'system' | string) => {
   switch (type) {
     case 'order':
-      return <Package size={16} className="text-blue-500" />;
+      return Package;
     case 'favorite':
-      return <Heart size={16} className="text-red-500" />;
+      return Heart;
     case 'cart':
-      return <ShoppingCart size={16} className="text-green-500" />;
+      return ShoppingCart;
     case 'system':
-      return <Settings size={16} className="text-gray-500" />;
+      return Settings;
     default:
-      return <Bell size={16} className="text-gray-500" />;
+      return Bell;
   }
 };
 
@@ -60,13 +59,13 @@ export const getNotificationIcon = (type: 'order' | 'favorite' | 'cart' | 'syste
 export const renderIconWithLoading = (
   Icon: LucideIcon | undefined, 
   loading: boolean = false, 
-  className: string = "w-5 h-5"
+  _className: string = "w-5 h-5"
 ) => {
   if (loading) {
-    return <Loader2 className={`${className} animate-spin`} />;
+    return Loader2;
   }
   if (Icon) {
-    return <Icon className={className} />;
+    return Icon;
   }
   return null;
 };

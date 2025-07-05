@@ -4,13 +4,12 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AnimatedContainer } from '@/components/common/AnimatedContainer';
-import { ShoppingCart, Heart, Star, Package, Zap, Eye } from 'lucide-react';
+import { ShoppingCart, Heart, Package, Zap, Eye } from 'lucide-react';
 import { Product } from '@/services/product.service';
 import { useCartStore } from '@/stores/cart.store';
 import ProductImage from '@/components/products/ProductImage';
 import { useFavoriteToggle } from '@/hooks/api/useFavoriteToggle';
 import { useAuthenticatedAction } from '@/hooks/auth/useAuthenticatedAction';
-import { useProductDisplay } from '@/hooks/ui/useProductDisplay';
 import { formatPrice, getProductBadges } from '@/utils/formatters';
 
 interface ProductCardProps {
@@ -18,27 +17,26 @@ interface ProductCardProps {
   variant?: 'default' | 'compact' | 'detailed';
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const { addToCart, isProductInCart, isUpdating } = useCartStore();
   const { withAuthCheck } = useAuthenticatedAction();
   
   // Use our hooks for state management
-  const { isFavorite, isFavoriteLoading, isToggling, handleToggleFavorite } = useFavoriteToggle(product.id);
-  const { pricing, stockStatus, availability } = useProductDisplay(product);
+  const { isFavorite, isToggling, handleToggleFavorite } = useFavoriteToggle(product.id);
 
   const isInCart = isProductInCart(product.id);
 
   // UPDATED: Use utility functions for formatting
   const badges = getProductBadges({
     isNew: false, // This would come from product data
-    isOrganic: product.isOrganic
+    isOrganic: false // This would come from product data if available
   });
 
   const handleAddToCart = withAuthCheck(
     async () => {
       try {
-        await addToCart(product.id);
+        await addToCart(product);
       } catch (error) {
         console.error('Failed to add to cart:', error);
       }
@@ -50,11 +48,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
     <AnimatedContainer
       preset="fadeInUp"
       duration={0.3}
-      as={motion.div}
-      whileHover={{ y: -4 }}
+      className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
     >
       <Link to={`/products/${product.id}`} className="block">
         {/* Image Container */}
@@ -82,10 +78,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
             className="absolute top-3 right-3 flex flex-col gap-2"
           >
             <button
-              onClick={(e) => {
-                e.preventDefault();
-                handleToggleFavorite();
-              }}
+              onClick={handleToggleFavorite}
               disabled={isToggling}
               className={`p-2 rounded-full backdrop-blur-sm transition-all ${
                 isFavorite
@@ -132,34 +125,12 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
           </p>
         )}
 
-        {/* Rating */}
-        {product.rating && (
-          <div className="flex items-center gap-1 mb-2">
-            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-medium text-gray-900">
-              {product.rating.toFixed(1)}
-            </span>
-            {product.reviewCount && (
-              <span className="text-sm text-gray-500">
-                ({product.reviewCount})
-              </span>
-            )}
-          </div>
-        )}
-
         {/* Price - Using utility function */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg font-bold text-gray-900">
             {formatPrice(product.price)}
           </span>
         </div>
-
-        {/* Size/Unit */}
-        {(product.size || product.unit) && (
-          <p className="text-xs text-gray-500 mb-3">
-            {product.size} {product.unit}
-          </p>
-        )}
 
         {/* Add to Cart Button */}
         <button

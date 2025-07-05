@@ -6,10 +6,6 @@ import { formatPrice } from '@/utils/formatters';
 
 export const useProductDisplay = (product: Product) => {
   const stockStatus = useMemo(() => {
-    if (!product.trackInventory) {
-      return { status: 'available', message: 'In stock', color: 'green' };
-    }
-
     if (product.stock === 0) {
       return { status: 'out-of-stock', message: 'Out of stock', color: 'red' };
     }
@@ -23,7 +19,7 @@ export const useProductDisplay = (product: Product) => {
     }
 
     return { status: 'in-stock', message: 'In stock', color: 'green' };
-  }, [product.trackInventory, product.stock]);
+  }, [product.stock]);
 
   const pricing = useMemo(() => ({
     currentPrice: formatPrice(product.price),
@@ -44,11 +40,10 @@ export const useProductDisplay = (product: Product) => {
   }, [stockStatus.status]);
 
   const availability = useMemo(() => ({
-    isAvailable: product.stock > 0 || !product.trackInventory,
-    canAddToCart: (product.stock > 0 || !product.trackInventory),
+    isAvailable: product.stock > 0,
+    canAddToCart: product.stock > 0,
     stockCount: product.stock,
-    trackInventory: product.trackInventory,
-  }), [product.stock, product.trackInventory]);
+  }), [product.stock]);
 
   return {
     pricing,

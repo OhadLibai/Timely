@@ -1,6 +1,7 @@
 // frontend/src/services/admin.service.ts
 
 import { api } from '@/services/api.client';
+import { Product } from '@/services/product.service';
   
 // ============================================================================
 // INTERFACES

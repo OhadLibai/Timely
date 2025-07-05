@@ -3,7 +3,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Heart, Star, Package, Zap } from 'lucide-react';
+import { ShoppingCart, Heart, Package } from 'lucide-react';
 import { Product } from '@/services/product.service';
 import ProductImage from '@/components/products/ProductImage';
 import { useCartStore } from '@/stores/cart.store';
@@ -22,11 +22,10 @@ interface ProductListItemProps {
 const ProductListItem: React.FC<ProductListItemProps> = ({ 
   product, 
   variant = 'default',
-  showRating = true,
   className = ''
 }) => {
   // Use cart store for cart operations
-  const { addToCart, isProductInCart, isUpdating } = useCartStore();
+  const { addToCart, isUpdating } = useCartStore();
 
   const {
     isFavorite,
@@ -35,19 +34,14 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
   } = useFavoriteToggle(product.id);
 
   const {
-    pricing,
-    stockStatus,
-    availability,
-    displayPrice,
     stockMessage,
     stockColor,
-    isOutOfStock,
-    isLowStock
+    isOutOfStock
   } = useProductDisplay(product);
 
   const handleAddToCartClick = () => {
     if (!isOutOfStock && !isUpdating) {
-      addToCart(product, 1);
+      addToCart(product);
     }
   };
 
@@ -105,14 +99,15 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
               </span>
             </div>
 
-            {showRating && product.rating && (
+            {/* Rating commented out - not available in Product type */}
+            {/* {showRating && product.rating && (
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
                 <span className="text-sm text-gray-600">
                   {product.rating.toFixed(1)}
                 </span>
               </div>
-            )}
+            )} */}
           </div>
 
           {/* Stock Status */}

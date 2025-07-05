@@ -11,7 +11,7 @@ interface CartDropdownProps {
 }
 
 const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
-  const { cart, updateQuantity, removeItem, getSubtotal, getItemCount } = useCartStore();
+  const { cart, updateQuantity, removeItem, getTotal, getItemCount } = useCartStore();
 
   const handleQuantityChange = (id: string, newQuantity: number) => {
     if (newQuantity <= 0) {
@@ -78,7 +78,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
                   {/* Product Image */}
                   <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
                     <img
-                      src={item.product.image}
+                      src={item.product.imageUrl}
                       alt={item.product.name}
                       className="w-full h-full object-cover"
                       loading="lazy"
@@ -137,7 +137,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
                 Total:
               </span>
               <span className="text-lg font-bold text-gray-900">
-                {formatPrice(getSubtotal())}
+                {formatPrice(getTotal())}
               </span>
             </div>
             

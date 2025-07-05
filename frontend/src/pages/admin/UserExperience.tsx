@@ -7,9 +7,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Palette, CheckCircle, ShoppingCart, Package, 
-  Heart, CreditCard, User, Search, ArrowLeft,
-  Smartphone, Monitor, Tablet, Zap, Eye,
-  Clock, TrendingUp, Star, Gift
+  User, ArrowLeft,
+  Smartphone, Zap,
+  TrendingUp, Star, Gift
 } from 'lucide-react';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
@@ -107,7 +107,7 @@ const UserExperience: React.FC = () => {
     description: string;
     features?: string[];
     details?: string;
-  }> = ({ name, status, icon: Icon, description, features, details }) => (
+  }> = ({ name, icon: Icon, description, features, details }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}

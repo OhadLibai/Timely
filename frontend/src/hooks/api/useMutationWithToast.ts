@@ -9,7 +9,7 @@ interface MutationWithToastOptions<TData, TVariables, TError = unknown> {
   onError?: (error: TError, variables: TVariables) => void;
   showSuccessToast?: boolean;
   showErrorToast?: boolean;
-  mutationOptions?: Omit<UseMutationOptions<TData, TError, TVariables>, 'onSuccess' | 'onError' | 'mutationFn'>;
+  mutationOptions?: Omit<UseMutationOptions<TData, TError, TVariables>, 'mutationFn'>;
 }
 
 export const useMutationWithToast = <TData, TVariables, TError = unknown>({
@@ -37,7 +37,9 @@ export const useMutationWithToast = <TData, TVariables, TError = unknown>({
       onSuccess?.(data, variables);
       
       // Call original onSuccess from mutationOptions
-      mutationOptions.onSuccess?.(data, variables, context);
+      if (mutationOptions && 'onSuccess' in mutationOptions) {
+        mutationOptions.onSuccess?.(data, variables, context);
+      }
     },
     onError: (error, variables, context) => {
       // Show error toast
@@ -52,7 +54,9 @@ export const useMutationWithToast = <TData, TVariables, TError = unknown>({
       onError?.(error, variables);
       
       // Call original onError from mutationOptions
-      mutationOptions.onError?.(error, variables, context);
+      if (mutationOptions && 'onError' in mutationOptions) {
+        mutationOptions.onError?.(error, variables, context);
+      }
     }
   });
 };

@@ -250,11 +250,12 @@ export const useCartStore = create<CartState>()(
 // ============================================================================
 
 useCartStore.subscribe(
-  (state) => state.cart.itemCount,
-  (itemCount) => {
-    // Update cart badge in UI
-    const event = new CustomEvent('cart-updated', { detail: { itemCount } });
-    window.dispatchEvent(event);
+  (state, prevState) => {
+    if (state.cart.itemCount !== prevState.cart.itemCount) {
+      // Update cart badge in UI
+      const event = new CustomEvent('cart-updated', { detail: { itemCount: state.cart.itemCount } });
+      window.dispatchEvent(event);
+    }
   }
 );
 

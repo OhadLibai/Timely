@@ -252,7 +252,7 @@ const Register: React.FC = () => {
                         </p>
                       )}
                     </div>
-                  </div>
+                  </ResponsiveGrid>
                   
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -483,7 +483,7 @@ const Register: React.FC = () => {
             </form>
           </motion.div>
         </div>
-      </motion.div>
+      </AnimatedContainer>
     </div>
   );
 };

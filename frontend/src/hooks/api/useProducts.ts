@@ -1,5 +1,6 @@
 import { UseQueryResult } from 'react-query';
-import { productService, Product, ProductsResponse, ProductFilters } from '@/services/product.service';
+import { productService, Product, Category } from '@/services/product.service';
+import type { ProductsResponse, ProductFilters } from '@/services/product.service';
 import { useApiQuery } from './useApiQuery';
 import { QUERY_KEYS } from '@/utils/queryKeys';
 
@@ -29,7 +30,7 @@ export const useProduct = (
   );
 };
 
-export const useCategories = (): UseQueryResult<string[]> => {
+export const useCategories = (): UseQueryResult<Category[]> => {
   return useApiQuery(
     QUERY_KEYS.categories(),
     productService.getCategories,

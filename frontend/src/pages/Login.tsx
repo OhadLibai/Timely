@@ -201,7 +201,7 @@ const Login: React.FC = () => {
             Privacy Policy
           </Link>
         </div>
-      </motion.div>
+      </AnimatedContainer>
     </div>
   );
 };

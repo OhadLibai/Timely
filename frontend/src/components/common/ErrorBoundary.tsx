@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   children?: ReactNode;
@@ -30,7 +30,7 @@ class ErrorBoundary extends Component<Props, State> {
     });
 
     // Log to external error reporting service
-    if (process.env.NODE_ENV === 'production') {
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
       // Example: Sentry.captureException(error, { extra: errorInfo });
     }
   }
@@ -92,7 +92,7 @@ class ErrorBoundary extends Component<Props, State> {
               </button>
             </div>
 
-            {process.env.NODE_ENV === 'development' && this.state.error && (
+            {typeof window !== 'undefined' && window.location.hostname === 'localhost' && this.state.error && (
               <details className="mt-6 text-left">
                 <summary className="cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
                   Technical Details (Development Only)

@@ -106,7 +106,7 @@ export const createAnimation = (
 ) => {
   const baseAnimation = animationPresets[preset];
   
-  if (customTransition) {
+  if (customTransition && 'transition' in baseAnimation) {
     return {
       ...baseAnimation,
       transition: { ...baseAnimation.transition, ...customTransition }

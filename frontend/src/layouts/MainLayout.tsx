@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart, Search, Menu, X, User, Heart, Package,
   LogOut, Settings, ChevronDown, Brain,
-  Bell, Home
+  Home
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';

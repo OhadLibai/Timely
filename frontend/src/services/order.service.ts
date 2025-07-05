@@ -66,8 +66,8 @@ class OrderService {
     return api.post<Order>('/orders/create', data);
   }
 
-  async getOrders(filters: OrderFilters = {}): Promise<OrdersResponse> {
-    const params = new URLSearchParams(/* ... */);
+  async getOrders(_filters: OrderFilters = {}): Promise<OrdersResponse> {
+    const params = new URLSearchParams();
     return api.get<OrdersResponse>(`/orders?${params.toString()}`);
   }
 

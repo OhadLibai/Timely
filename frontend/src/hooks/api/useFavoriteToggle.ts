@@ -23,12 +23,12 @@ export const useFavoriteToggle = (productId: string) => {
 
   // Toggle favorite mutation
   const toggleFavoriteMutation = useMutationWithToast({
-    mutationFn: () => {
+    mutationFn: async () => {
       // Decide which service method to call based on the current status
       if (isFavorite) {
-        return favoriteService.removeFavorite(productId);
+        await favoriteService.removeFavorite(productId);
       } else {
-        return favoriteService.addFavorite(productId);
+        await favoriteService.addFavorite(productId);
       }
     },
     successMessage: isFavorite ? 'Removed from favorites' : 'Added to favorites',
@@ -48,7 +48,7 @@ export const useFavoriteToggle = (productId: string) => {
       return;
     }
 
-    toggleFavoriteMutation.mutate();
+    toggleFavoriteMutation.mutate(undefined);
   };
 
   return {

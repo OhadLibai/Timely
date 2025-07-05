@@ -1,7 +1,7 @@
 // frontend/src/services/api.client.ts
 // FIXED: Removed mlApiClient - Frontend only communicates with backend gateway
 
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig } from 'axios';
 import toast from 'react-hot-toast';
 import { authService } from '@/services/auth.service';
 
@@ -24,7 +24,7 @@ export const apiClient: AxiosInstance = axios.create({
 // ============================================================================
 
 apiClient.interceptors.request.use(
-  (config: AxiosRequestConfig) => {
+  (config: InternalAxiosRequestConfig) => {
     const token = authService.getAccessToken();
     if (token && config.headers) {
       config.headers['Authorization'] = `Bearer ${token}`;
@@ -93,23 +93,3 @@ export const api = {
   delete: <T = any>(url: string, config?: AxiosRequestConfig): Promise<T> => 
     apiClient.delete(url, config).then(response => response.data),
 };
-
-// ============================================================================
-// ARCHITECTURE CLEANUP:
-// 
-// REMOVED:
-// - mlApiClient: Direct ML service communication
-// - mlApi: ML service request functions
-// 
-// REASON:
-// The frontend should ONLY communicate with the backend API gateway.
-// The backend handles all ML service communication, providing:
-// - Centralized authentication
-// - Request/response logging
-// - Error handling
-// - Business logic validation
-// - Security isolation
-// 
-// This eliminates architectural inconsistencies and maintains proper
-// separation of concerns in the microservices architecture.
-// ============================================================================

@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation } from 'react-query';
 import { 
   Brain, Sparkles, ShoppingCart, ArrowRight, 
-  Loader2, CheckCircle, AlertCircle, Info, TrendingUp
+  Loader2, CheckCircle, Info, TrendingUp
 } from 'lucide-react';
 import { predictionService } from '@/services/prediction.service';
 import { usePredictedBasketStore } from '@/stores/predictedBasket.store';
-import { useCartStore } from '@/stores/cart.store';
+// useCartStore removed as it's not used
 import toast from 'react-hot-toast';
 
 interface AutoGenerateBasketProps {
@@ -27,8 +27,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
   const [generatedCount, setGeneratedCount] = useState(0);
   
   // Store hooks
-  const { setBasket, clearBasket } = usePredictedBasketStore();
-  const { addMultipleItems } = useCartStore();
+  const { setBasket } = usePredictedBasketStore();
 
   // Generate prediction mutation
   const generateMutation = useMutation(

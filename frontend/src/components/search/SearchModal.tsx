@@ -1,6 +1,6 @@
 // frontend/src/components/search/SearchModal.tsx
 import React, { useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Search, X, Clock, TrendingUp, Package, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSearchWithHistory } from '@/hooks/search/useSearchWithHistory';
@@ -11,19 +11,7 @@ interface SearchModalProps {
   onClose: () => void;
 }
 
-interface SearchResult {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  category: string;
-}
-
-interface SearchSuggestion {
-  id: string;
-  text: string;
-  type: 'recent' | 'popular' | 'category';
-}
+// SearchResult and SearchSuggestion interfaces removed as they're unused
 
 const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -149,9 +137,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
               ) : hasResults ? (
                 <div className="space-y-3">
                   <h3 className="text-sm font-medium text-gray-900 mb-3">
-                    Search Results ({searchResults.length})
+                    Search Results ({searchResults?.products?.length || 0})
                   </h3>
-                  {searchResults.slice(0, 6).map((product) => (
+                  {searchResults?.products?.slice(0, 6).map((product: any) => (
                     <Link
                       key={product.id}
                       to={`/products/${product.id}`}
@@ -178,12 +166,12 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                     </Link>
                   ))}
                   
-                  {searchResults && searchResults.length > 6 && (
+                  {searchResults?.products && searchResults.products.length > 6 && (
                     <button
                       onClick={() => handleSearch()}
                       className="w-full p-3 text-center text-indigo-600 hover:bg-indigo-50/20 rounded-lg transition-colors"
                     >
-                      View all {searchResults.length} results
+                      View all {searchResults.products.length} results
                     </button>
                   )}
                 </div>

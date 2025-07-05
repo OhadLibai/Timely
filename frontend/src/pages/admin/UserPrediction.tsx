@@ -4,11 +4,11 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { 
   Target, Search, RefreshCw, CheckCircle, X, Check, 
-  ArrowLeft, Package, TrendingUp, Activity, Sparkles,
-  PlayCircle, Users, BarChart3, Info, AlertCircle
+  ArrowLeft, TrendingUp, Sparkles,
+  PlayCircle, AlertCircle
 } from 'lucide-react';
 import { useUserPredictionAnalysis } from '@/hooks/api/useAdmin';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -25,11 +25,10 @@ const UserPrediction: React.FC = () => {
 
   const { 
     prediction, 
-    isAnalyzing, 
-    analysisError 
-  } = useUserPredictionAnalysis(selectedUserId);
+    isAnalyzing
+  } = useUserPredictionAnalysis(selectedUserId || undefined);
 
-  const { data: predictionData, isLoading: isLoadingPrediction, error: predictionError } = prediction;
+  const { data: predictionData, error: predictionError } = prediction;
 
   // Enhanced user ID suggestions with descriptions
   const userSuggestions = [
@@ -118,13 +117,13 @@ const UserPrediction: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {predictedBasket.map((product, index) => (
+            {predictedBasket.map((product: any, index: number) => (
               <div
                 key={index}
                 className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
               >
                 <ProductImage
-                  src={product.image_url}
+                  src={product.imageUrl}
                   alt={product.name}
                   className="w-12 h-12 rounded-lg"
                 />
@@ -133,11 +132,11 @@ const UserPrediction: React.FC = () => {
                     {product.name}
                   </h4>
                   <p className="text-sm text-gray-600">
-                    Product ID: {product.product_id}
+                    Product ID: {product.id}
                   </p>
                 </div>
                 <div className="flex-shrink-0">
-                  {matchingProducts.some(m => m.product_id === product.product_id) ? (
+                  {matchingProducts.some((m: any) => m.id === product.id) ? (
                     <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                       <Check className="w-4 h-4 text-white" />
                     </div>
@@ -173,13 +172,13 @@ const UserPrediction: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {groundTruthBasket.map((product, index) => (
+            {groundTruthBasket.map((product: any, index: number) => (
               <div
                 key={index}
                 className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
               >
                 <ProductImage
-                  src={product.image_url}
+                  src={product.imageUrl}
                   alt={product.name}
                   className="w-12 h-12 rounded-lg"
                 />
@@ -188,11 +187,11 @@ const UserPrediction: React.FC = () => {
                     {product.name}
                   </h4>
                   <p className="text-sm text-gray-600">
-                    Product ID: {product.product_id}
+                    Product ID: {product.id}
                   </p>
                 </div>
                 <div className="flex-shrink-0">
-                  {matchingProducts.some(m => m.product_id === product.product_id) ? (
+                  {matchingProducts.some((m: any) => m.id === product.id) ? (
                     <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                       <Check className="w-4 h-4 text-white" />
                     </div>
