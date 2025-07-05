@@ -102,23 +102,23 @@ const AdminLayout: React.FC = () => {
       to={item.path}
       className={`flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 group ${
         item.isActive
-          ? 'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 shadow-sm'
-          : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+          ? 'bg-indigo-50/30 text-indigo-600 shadow-sm'
+          : 'text-gray-700 hover:bg-gray-50/50'
       }`}
     >
       <item.icon 
         size={20} 
         className={`flex-shrink-0 ${
-          item.isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-500 dark:text-gray-400'
+          item.isActive ? 'text-indigo-600' : 'text-gray-500'
         }`} 
       />
       <div className="flex-1 min-w-0">
         <div className={`font-medium text-sm ${
-          item.isActive ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-900 dark:text-white'
+          item.isActive ? 'text-indigo-600' : 'text-gray-900'
         }`}>
           {item.label}
         </div>
-        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">
+        <div className="text-xs text-gray-500 mt-0.5 truncate">
           {item.description}
         </div>
       </div>
@@ -132,7 +132,7 @@ const AdminLayout: React.FC = () => {
 
   const renderNavigationSection = (section: any) => (
     <div key={section.category} className="space-y-2">
-      <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+      <h3 className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
         {section.title}
       </h3>
       <div className="space-y-1">
@@ -144,16 +144,16 @@ const AdminLayout: React.FC = () => {
   const sidebarContent = (
     <>
       {/* Header */}
-      <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200 dark:border-gray-700">
+      <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
         <Link to="/admin" className="flex items-center gap-3">
           <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg">
             <Sparkles className="text-white" size={20} />
           </div>
-          <span className="font-bold text-gray-900 dark:text-white">Timely Admin</span>
+          <span className="font-bold text-gray-900">Timely Admin</span>
         </Link>
         <button
           onClick={() => setIsSidebarOpen(false)}
-          className="p-2 rounded-lg text-gray-600 dark:text-gray-400 lg:hidden"
+          className="p-2 rounded-lg text-gray-600 lg:hidden"
         >
           <X size={20} />
         </button>
@@ -165,24 +165,24 @@ const AdminLayout: React.FC = () => {
       </nav>
 
       {/* Footer */}
-      <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600 dark:text-gray-400">
-          <div className="w-8 h-8 bg-indigo-100 dark:bg-indigo-900 rounded-full flex items-center justify-center">
-            <span className="text-indigo-600 dark:text-indigo-400 font-medium text-xs">
+      <div className="px-4 py-4 border-t border-gray-200">
+        <div className="flex items-center gap-3 px-3 py-2 text-sm text-gray-600">
+          <div className="w-8 h-8 bg-indigo-100 rounded-full flex items-center justify-center">
+            <span className="text-indigo-600 font-medium text-xs">
               {user?.firstName?.charAt(0) || 'A'}
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-medium text-gray-900 dark:text-white truncate">
+            <div className="font-medium text-gray-900 truncate">
               {user?.firstName} {user?.lastName}
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+            <div className="text-xs text-gray-500 truncate">
               {user?.email}
             </div>
           </div>
           <button
             onClick={handleLogout}
-            className="p-2 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
             title="Logout"
           >
             <LogOut size={16} />
@@ -193,10 +193,10 @@ const AdminLayout: React.FC = () => {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-gray-50">
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex lg:flex-shrink-0">
-        <div className="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
+        <div className="flex flex-col w-64 bg-white border-r border-gray-200">
           {sidebarContent}
         </div>
       </div>
@@ -220,7 +220,7 @@ const AdminLayout: React.FC = () => {
               animate={{ x: 0 }}
               exit={{ x: -256 }}
               transition={{ type: "spring", damping: 25 }}
-              className="fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 lg:hidden"
+              className="fixed inset-y-0 left-0 z-50 w-64 bg-white lg:hidden"
             >
               <div className="flex flex-col h-full">
                 {sidebarContent}
@@ -233,14 +233,14 @@ const AdminLayout: React.FC = () => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between h-16 px-4 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
+        <div className="lg:hidden flex items-center justify-between h-16 px-4 bg-white border-b border-gray-200">
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="p-2 rounded-lg text-gray-600 dark:text-gray-400"
+            className="p-2 rounded-lg text-gray-600"
           >
             <Menu size={20} />
           </button>
-          <h1 className="font-semibold text-gray-900 dark:text-white">Admin Dashboard</h1>
+          <h1 className="font-semibold text-gray-900">Admin Dashboard</h1>
           <div className="w-10"></div>
         </div>
 

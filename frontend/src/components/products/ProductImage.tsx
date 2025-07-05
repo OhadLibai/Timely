@@ -40,7 +40,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
   if (imageError || !imageSrc) {
     return (
       <div 
-        className={`flex items-center justify-center bg-gray-100 dark:bg-gray-800 ${className}`}
+        className={`flex items-center justify-center bg-gray-100 ${className}`}
         onClick={onClick}
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : undefined}
@@ -53,7 +53,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
   return (
     <div className={`relative overflow-hidden ${className}`}>
       {isLoading && (
-        <div className="absolute inset-0 bg-gray-100 dark:bg-gray-800 animate-pulse" />
+        <div className="absolute inset-0 bg-gray-100 animate-pulse" />
       )}
       <LazyLoadImage
         src={imageSrc}

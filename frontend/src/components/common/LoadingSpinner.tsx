@@ -30,7 +30,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
         animate={{ rotate: 360 }}
         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
       >
-        <div className={`absolute inset-0 rounded-full border-4 border-${color}-200 dark:border-${color}-800`} />
+        <div className={`absolute inset-0 rounded-full border-4 border-${color}-200${color}-800`} />
         <div className={`absolute inset-0 rounded-full border-4 border-t-${color}-600 border-r-transparent border-b-transparent border-l-transparent`} />
       </motion.div>
       {message && (
@@ -38,7 +38,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className={`mt-4 text-${size === 'small' ? 'sm' : size === 'large' ? 'lg' : 'base'} text-gray-600 dark:text-gray-400`}
+          className={`mt-4 text-${size === 'small' ? 'sm' : size === 'large' ? 'lg' : 'base'} text-gray-600`}
         >
           {message}
         </motion.p>
@@ -48,7 +48,7 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
 
   if (fullScreen) {
     return (
-      <div className="fixed inset-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm z-50">
+      <div className="fixed inset-0 bg-white/80/80 backdrop-blur-sm z-50">
         {spinnerContent}
       </div>
     );

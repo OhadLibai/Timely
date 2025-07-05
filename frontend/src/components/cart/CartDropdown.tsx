@@ -35,22 +35,22 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -10, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+        className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
       >
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-lg font-semibold text-gray-900">
               Shopping Cart
             </h3>
             <button
               onClick={onClose}
-              className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="p-1 text-gray-400 hover:text-gray-600"
             >
               <X size={20} />
             </button>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-gray-500">
             {getItemCount()} {getItemCount() === 1 ? 'item' : 'items'}
           </p>
         </div>
@@ -60,7 +60,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
           {!cart || cart.items.length === 0 ? (
             <div className="p-6 text-center">
               <ShoppingCart className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-gray-500 dark:text-gray-400 mb-4">
+              <p className="text-gray-500 mb-4">
                 Your cart is empty
               </p>
               <Link
@@ -76,7 +76,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
               {cart.items.map((item) => (
                 <div key={item.id} className="flex items-center gap-3">
                   {/* Product Image */}
-                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                  <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
                     <img
                       src={item.product.image}
                       alt={item.product.name}
@@ -87,10 +87,10 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
 
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                    <h4 className="text-sm font-medium text-gray-900 truncate">
                       {item.product.name}
                     </h4>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-sm text-gray-500">
                       {formatPrice(item.price)}
                     </p>
                   </div>
@@ -99,18 +99,18 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                      className="w-6 h-6 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                     >
                       <Minus size={12} />
                     </button>
                     
-                    <span className="w-8 text-center text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="w-8 text-center text-sm font-medium text-gray-900">
                       {item.quantity}
                     </span>
                     
                     <button
                       onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
-                      className="w-6 h-6 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      className="w-6 h-6 flex items-center justify-center bg-gray-100 rounded hover:bg-gray-200 transition-colors"
                     >
                       <Plus size={12} />
                     </button>
@@ -131,12 +131,12 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
 
         {/* Footer */}
         {cart && cart.items.length > 0 && (
-          <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+          <div className="p-4 border-t border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-medium text-gray-900 dark:text-white">
+              <span className="text-sm font-medium text-gray-900">
                 Total:
               </span>
-              <span className="text-lg font-bold text-gray-900 dark:text-white">
+              <span className="text-lg font-bold text-gray-900">
                 {formatPrice(getSubtotal())}
               </span>
             </div>
@@ -145,7 +145,7 @@ const CartDropdown: React.FC<CartDropdownProps> = ({ onClose }) => {
               <Link
                 to="/cart"
                 onClick={onClose}
-                className="block w-full text-center bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                className="block w-full text-center bg-gray-100 text-gray-900 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
               >
                 View Cart
               </Link>

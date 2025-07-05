@@ -34,17 +34,17 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         
         <div className="flex items-center gap-3 mb-2">
           {Icon && (
-            <div className="p-2 bg-primary-100 dark:bg-primary-900/30 rounded-lg">
-              <Icon className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            <div className="p-2 bg-primary-100/30 rounded-lg">
+              <Icon className="w-6 h-6 text-primary-600" />
             </div>
           )}
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-gray-900">
             {title}
           </h1>
         </div>
         
         {description && (
-          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl">
+          <p className="text-lg text-gray-600 max-w-2xl">
             {description}
           </p>
         )}

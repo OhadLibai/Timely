@@ -1,181 +1,278 @@
 // frontend/src/stores/cart.store.ts
-// FIXED: Removed window.confirm from store to properly separate concerns
+// REFACTORED: Pure local state with Zustand persist - No backend calls until checkout
 import { create } from 'zustand';
-import { devtools, subscribeWithSelector } from 'zustand/middleware';
-import { cartService, Cart, CartItem } from '@/services/cart.service';
+import { devtools, persist } from 'zustand/middleware';
 import { Product } from '@/services/product.service';
 import toast from 'react-hot-toast';
 
+// ============================================================================
+// INTERFACES - Simplified for local-first approach
+// ============================================================================
+
+export interface CartItem {
+  id: string;
+  product: Product;
+  quantity: number;
+  price: number;
+  addedAt: Date;
+}
+
+export interface Cart {
+  id: string;
+  items: CartItem[];
+  itemCount: number;
+  subtotal: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface CartState {
-  cart: Cart | null;
-  isLoading: boolean;
+  cart: Cart;
   isUpdating: boolean;
   
-  // Actions
-  fetchCart: () => Promise<void>;
-  addToCart: (productId: string, quantity?: number) => Promise<void>;
-  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
-  removeItem: (itemId: string) => Promise<void>;
-  clearCart: () => Promise<void>;
-  syncWithPredictedBasket: (basketId: string) => Promise<void>;
+  // Core Actions
+  addToCart: (product: Product, quantity?: number) => void;
+  addMultipleItems: (items: { product: Product; quantity: number }[]) => void;
+  updateQuantity: (itemId: string, quantity: number) => void;
+  removeItem: (itemId: string) => void;
+  clearCart: () => void;
   
-  // Computed values
+  // Computed Values
   getItemCount: () => number;
   getSubtotal: () => number;
   isProductInCart: (productId: string) => boolean;
   getCartItem: (productId: string) => CartItem | undefined;
+  
+  // Utility
+  generateCartId: () => string;
 }
+
+// ============================================================================
+// CART STORE - Pure Local State
+// ============================================================================
+
+const generateId = () => `cart-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 export const useCartStore = create<CartState>()(
   devtools(
-    subscribeWithSelector((set, get) => ({
-      cart: null,
-      isLoading: false,
-      isUpdating: false,
+    persist(
+      (set, get) => ({
+        cart: {
+          id: generateId(),
+          items: [],
+          itemCount: 0,
+          subtotal: 0,
+          createdAt: new Date(),
+          updatedAt: new Date()
+        },
+        isUpdating: false,
 
-      fetchCart: async () => {
-        set({ isLoading: true });
-        try {
-          const cart = await cartService.getCart();
-          set({ cart, isLoading: false });
-        } catch (error) {
-          set({ isLoading: false });
-          console.error('Failed to fetch cart:', error);
-        }
-      },
+        // ============================================================================
+        // CORE ACTIONS - Pure Local State Updates
+        // ============================================================================
 
-      addToCart: async (productId, quantity = 1) => {
-        set({ isUpdating: true });
-        try {
-          const cart = await cartService.addToCart({ productId, quantity });
-          set({ cart, isUpdating: false });
+        addToCart: (product: Product, quantity = 1) => {
+          set({ isUpdating: true });
           
-          const addedItem = cart.items.find(item => item.productId === productId);
-          if (addedItem) {
-            toast.success(`${addedItem.product.name} added to cart`);
+          const currentCart = get().cart;
+          const existingItem = currentCart.items.find(item => item.product.id === product.id);
+
+          if (existingItem) {
+            // Update existing item quantity
+            const updatedItems = currentCart.items.map(item =>
+              item.product.id === product.id
+                ? { ...item, quantity: item.quantity + quantity }
+                : item
+            );
+            
+            const newCart = {
+              ...currentCart,
+              items: updatedItems,
+              itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
+              subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+              updatedAt: new Date()
+            };
+            
+            set({ cart: newCart, isUpdating: false });
+            toast.success(`Updated ${product.name} quantity`);
+          } else {
+            // Add new item
+            const newItem: CartItem = {
+              id: generateId(),
+              product,
+              quantity,
+              price: product.price,
+              addedAt: new Date()
+            };
+            
+            const updatedItems = [...currentCart.items, newItem];
+            const newCart = {
+              ...currentCart,
+              items: updatedItems,
+              itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
+              subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+              updatedAt: new Date()
+            };
+            
+            set({ cart: newCart, isUpdating: false });
+            toast.success(`${product.name} added to cart`);
           }
-        } catch (error: any) {
-          set({ isUpdating: false });
-          if (error.response?.status !== 401) {
-            toast.error('Failed to add item to cart');
-          }
-          throw error;
-        }
-      },
+        },
 
-      updateQuantity: async (itemId, quantity) => {
-        if (quantity < 1) {
-          return get().removeItem(itemId);
-        }
-
-        set({ isUpdating: true });
-        try {
-          const cart = await cartService.updateCartItem(itemId, { quantity });
-          set({ cart, isUpdating: false });
-        } catch (error) {
-          set({ isUpdating: false });
-          toast.error('Failed to update quantity');
-          throw error;
-        }
-      },
-
-      removeItem: async (itemId) => {
-        set({ isUpdating: true });
-        
-        // Optimistically update UI
-        const currentCart = get().cart;
-        if (currentCart) {
-          const removedItem = currentCart.items.find(item => item.id === itemId);
-          const updatedItems = currentCart.items.filter(item => item.id !== itemId);
-          const updatedCart = {
+        // NEW: Bulk add for predicted basket integration
+        addMultipleItems: (items: { product: Product; quantity: number }[]) => {
+          set({ isUpdating: true });
+          
+          const currentCart = get().cart;
+          const newItems: CartItem[] = items.map(item => ({
+            id: generateId(),
+            product: item.product,
+            quantity: item.quantity,
+            price: item.product.price,
+            addedAt: new Date()
+          }));
+          
+          const updatedItems = [...currentCart.items, ...newItems];
+          const newCart = {
             ...currentCart,
             items: updatedItems,
             itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-            subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            updatedAt: new Date()
           };
-          set({ cart: updatedCart });
+          
+          set({ cart: newCart, isUpdating: false });
+          toast.success(`Added ${items.length} items to cart`);
+        },
 
-          if (removedItem) {
-            toast.success(`${removedItem.product.name} removed from cart`);
+        updateQuantity: (itemId: string, quantity: number) => {
+          if (quantity < 1) {
+            return get().removeItem(itemId);
           }
-        }
+          
+          set({ isUpdating: true });
+          
+          const currentCart = get().cart;
+          const updatedItems = currentCart.items.map(item =>
+            item.id === itemId
+              ? { ...item, quantity }
+              : item
+          );
+          
+          const newCart = {
+            ...currentCart,
+            items: updatedItems,
+            itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
+            subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            updatedAt: new Date()
+          };
+          
+          set({ cart: newCart, isUpdating: false });
+        },
 
-        try {
-          const cart = await cartService.removeFromCart(itemId);
-          set({ cart, isUpdating: false });
-        } catch (error) {
-          // Revert optimistic update on error
-          if (currentCart) {
-            set({ cart: currentCart });
+        removeItem: (itemId: string) => {
+          set({ isUpdating: true });
+          
+          const currentCart = get().cart;
+          const itemToRemove = currentCart.items.find(item => item.id === itemId);
+          const updatedItems = currentCart.items.filter(item => item.id !== itemId);
+          
+          const newCart = {
+            ...currentCart,
+            items: updatedItems,
+            itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
+            subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            updatedAt: new Date()
+          };
+          
+          set({ cart: newCart, isUpdating: false });
+          
+          if (itemToRemove) {
+            toast.success(`${itemToRemove.product.name} removed from cart`);
           }
-          set({ isUpdating: false });
-          toast.error('Failed to remove item');
-          throw error;
-        }
-      },
+        },
 
-      // FIXED: Removed window.confirm from store - UI logic moved to component
-      clearCart: async () => {
-        set({ isUpdating: true });
-        try {
-          const cart = await cartService.clearCart();
-          set({ cart, isUpdating: false });
+        clearCart: () => {
+          set({
+            cart: {
+              id: generateId(),
+              items: [],
+              itemCount: 0,
+              subtotal: 0,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            },
+            isUpdating: false
+          });
           toast.success('Cart cleared');
-        } catch (error) {
-          set({ isUpdating: false });
-          toast.error('Failed to clear cart');
-          throw error;
-        }
-      },
+        },
 
-      syncWithPredictedBasket: async (basketId) => {
-        set({ isUpdating: true });
-        try {
-          const cart = await cartService.syncWithPredictedBasket(basketId);
-          set({ cart, isUpdating: false });
-          toast.success('Cart updated with predicted items');
-        } catch (error) {
-          set({ isUpdating: false });
-          toast.error('Failed to sync with predicted basket');
-          throw error;
-        }
-      },
+        // ============================================================================
+        // COMPUTED VALUES
+        // ============================================================================
 
-      // Computed values
-       getItemCount: () => {
-        const { cart } = get();
-        return cart?.items.reduce((sum, item) => sum + item.quantity, 0) || 0;
-      },
+        getItemCount: () => {
+          const { cart } = get();
+          return cart.itemCount;
+        },
 
-      getSubtotal: () => {
-        const { cart } = get();
-        return cart?.subtotal || 0;
-      },
+        getSubtotal: () => {
+          const { cart } = get();
+          return cart.subtotal;
+        },
 
-      isProductInCart: (productId) => {
-        const { cart } = get();
-        if (!cart) return false;
-        return cartService.isProductInCart(cart, productId);
-      },
+        isProductInCart: (productId: string) => {
+          const { cart } = get();
+          return cart.items.some(item => item.product.id === productId);
+        },
 
-      getCartItem: (productId) => {
-        const { cart } = get();
-        if (!cart) return undefined;
-        return cart.items.find(item => item.productId === productId);
+        getCartItem: (productId: string) => {
+          const { cart } = get();
+          return cart.items.find(item => item.product.id === productId);
+        },
+
+        generateCartId: () => generateId()
+      }),
+      {
+        name: 'timely-cart-store',
+        // Only persist cart data, not loading states
+        partialize: (state) => ({ cart: state.cart })
       }
-    })),
+    ),
     {
       name: 'cart-store'
     }
   )
 );
 
-// Auto-fetch cart on auth state change
+// ============================================================================
+// SIDE EFFECTS - Auto-update cart badge
+// ============================================================================
+
 useCartStore.subscribe(
-  (state) => state.cart,
-  (cart) => {
+  (state) => state.cart.itemCount,
+  (itemCount) => {
     // Update cart badge in UI
-    const event = new CustomEvent('cart-updated', { detail: { itemCount: cart?.itemCount || 0 } });
+    const event = new CustomEvent('cart-updated', { detail: { itemCount } });
     window.dispatchEvent(event);
   }
 );
+
+// ============================================================================
+// ARCHITECTURE NOTES:
+// 
+// ✅ PURE LOCAL STATE: No backend calls until checkout
+// ✅ ZUSTAND PERSIST: Cart survives page refresh
+// ✅ BULK OPERATIONS: addMultipleItems for predicted basket
+// ✅ OPTIMISTIC UPDATES: Instant UI feedback
+// ✅ DRY PRINCIPLE: Single source of truth for cart logic
+// ✅ CODE REUSABILITY: Can be used by any component
+// ✅ DEMAND 4: Smooth user experience with instant updates
+// 
+// The cart store is now a pure local state manager that:
+// 1. Handles all cart operations without backend calls
+// 2. Persists data across sessions
+// 3. Provides bulk operations for predicted basket integration
+// 4. Maintains computed values for UI components
+// 5. Integrates seamlessly with order.service.ts at checkout
+// ============================================================================

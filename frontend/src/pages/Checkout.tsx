@@ -123,7 +123,7 @@ const Checkout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <PageHeader
@@ -150,14 +150,14 @@ const Checkout: React.FC = () => {
               <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
                 currentStep >= step.id 
                   ? 'bg-indigo-600 text-white' 
-                  : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'bg-gray-200 text-gray-600'
               }`}>
                 <step.icon size={16} />
               </div>
               <span className={`ml-2 text-sm font-medium ${
                 currentStep >= step.id 
-                  ? 'text-indigo-600 dark:text-indigo-400' 
-                  : 'text-gray-500 dark:text-gray-400'
+                  ? 'text-indigo-600' 
+                  : 'text-gray-500'
               }`}>
                 {step.name}
               </span>
@@ -165,7 +165,7 @@ const Checkout: React.FC = () => {
                 <div className={`mx-4 h-0.5 w-12 ${
                   currentStep > step.id 
                     ? 'bg-indigo-600' 
-                    : 'bg-gray-200 dark:bg-gray-700'
+                    : 'bg-gray-200'
                 }`} />
               )}
             </div>
@@ -182,9 +182,9 @@ const Checkout: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+                  className="bg-white rounded-lg shadow-sm p-6"
                 >
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                     <User size={20} />
                     Contact & Shipping Information
                   </h2>
@@ -192,13 +192,13 @@ const Checkout: React.FC = () => {
                   {/* Contact Information */}
                   <ResponsiveGrid cols={{ sm: 1, md: 2 }} gap={4} className="mb-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         First Name
                       </label>
                       <input
                         {...register('firstName', { required: 'First name is required' })}
                         type="text"
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       {errors.firstName && (
                         <p className="text-red-500 text-xs mt-1">{errors.firstName.message}</p>
@@ -206,13 +206,13 @@ const Checkout: React.FC = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Last Name
                       </label>
                       <input
                         {...register('lastName', { required: 'Last name is required' })}
                         type="text"
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       {errors.lastName && (
                         <p className="text-red-500 text-xs mt-1">{errors.lastName.message}</p>
@@ -222,7 +222,7 @@ const Checkout: React.FC = () => {
                   
                   <ResponsiveGrid cols={{ sm: 1, md: 2 }} gap={4} className="mb-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Email
                       </label>
                       <input
@@ -234,7 +234,7 @@ const Checkout: React.FC = () => {
                           }
                         })}
                         type="email"
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       {errors.email && (
                         <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
@@ -242,13 +242,13 @@ const Checkout: React.FC = () => {
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Phone
                       </label>
                       <input
                         {...register('phone', { required: 'Phone number is required' })}
                         type="tel"
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       {errors.phone && (
                         <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>
@@ -257,21 +257,21 @@ const Checkout: React.FC = () => {
                   </div>
                   
                   {/* Shipping Address */}
-                  <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                    <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                  <div className="border-t border-gray-200 pt-6">
+                    <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
                       <MapPin size={16} />
                       Shipping Address
                     </h3>
                     
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           Address
                         </label>
                         <input
                           {...register('address', { required: 'Address is required' })}
                           type="text"
-                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                         {errors.address && (
                           <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>
@@ -280,13 +280,13 @@ const Checkout: React.FC = () => {
                       
                       <ResponsiveGrid cols={{ sm: 1, md: 3 }} gap={4}>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
                             City
                           </label>
                           <input
                             {...register('city', { required: 'City is required' })}
                             type="text"
-                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                           {errors.city && (
                             <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>
@@ -294,13 +294,13 @@ const Checkout: React.FC = () => {
                         </div>
                         
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
                             State
                           </label>
                           <input
                             {...register('state', { required: 'State is required' })}
                             type="text"
-                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                           {errors.state && (
                             <p className="text-red-500 text-xs mt-1">{errors.state.message}</p>
@@ -308,13 +308,13 @@ const Checkout: React.FC = () => {
                         </div>
                         
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
                             ZIP Code
                           </label>
                           <input
                             {...register('zipCode', { required: 'ZIP code is required' })}
                             type="text"
-                            className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
                           {errors.zipCode && (
                             <p className="text-red-500 text-xs mt-1">{errors.zipCode.message}</p>
@@ -341,23 +341,23 @@ const Checkout: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+                  className="bg-white rounded-lg shadow-sm p-6"
                 >
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                     <CreditCard size={20} />
                     Payment Information
                   </h2>
                   
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
                         Card Number
                       </label>
                       <input
                         {...register('cardNumber', { required: 'Card number is required' })}
                         type="text"
                         placeholder="1234 5678 9012 3456"
-                        className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
                       {errors.cardNumber && (
                         <p className="text-red-500 text-xs mt-1">{errors.cardNumber.message}</p>
@@ -366,14 +366,14 @@ const Checkout: React.FC = () => {
                     
                     <ResponsiveGrid cols={{ sm: 2 }} gap={4}>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           Expiry Date
                         </label>
                         <input
                           {...register('expiryDate', { required: 'Expiry date is required' })}
                           type="text"
                           placeholder="MM/YY"
-                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                         {errors.expiryDate && (
                           <p className="text-red-500 text-xs mt-1">{errors.expiryDate.message}</p>
@@ -381,13 +381,13 @@ const Checkout: React.FC = () => {
                       </div>
                       
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
                           CVV
                         </label>
                         <input
                           type="text"
                           placeholder="123"
-                          className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
                       </div>
                     </div>
@@ -417,14 +417,14 @@ const Checkout: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+                  className="bg-white rounded-lg shadow-sm p-6"
                 >
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
                     <CheckCircle size={20} />
                     Review Your Order
                   </h2>
                   
-                  <div className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                  <div className="text-sm text-gray-600 mb-6">
                     Please review your order details before placing your order.
                   </div>
                   
@@ -453,8 +453,8 @@ const Checkout: React.FC = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <Package size={20} />
                 Order Summary
               </h3>
@@ -471,14 +471,14 @@ const Checkout: React.FC = () => {
                       />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                      <p className="text-sm font-medium text-gray-900 truncate">
                         {item.product.name}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs text-gray-500">
                         Qty: {item.quantity}
                       </p>
                     </div>
-                    <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    <span className="text-sm font-medium text-gray-900">
                       {formatPrice(item.total)}
                     </span>
                   </div>
@@ -486,28 +486,28 @@ const Checkout: React.FC = () => {
               </div>
 
               {/* Order Totals */}
-              <div className="space-y-2 text-sm border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="space-y-2 text-sm border-t border-gray-200 pt-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                  <span className="text-gray-900 dark:text-white">{formatPrice(subtotal)}</span>
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="text-gray-900">{formatPrice(subtotal)}</span>
                 </div>
                 
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Delivery</span>
-                  <span className={deliveryFee === 0 ? 'text-green-600 dark:text-green-400' : 'text-gray-900 dark:text-white'}>
+                  <span className="text-gray-600">Delivery</span>
+                  <span className={deliveryFee === 0 ? 'text-green-600' : 'text-gray-900'}>
                     {deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}
                   </span>
                 </div>
                 
-                <div className="flex justify-between text-lg font-semibold border-t border-gray-200 dark:border-gray-700 pt-2">
-                  <span className="text-gray-900 dark:text-white">Total</span>
-                  <span className="text-gray-900 dark:text-white">{formatPrice(total)}</span>
+                <div className="flex justify-between text-lg font-semibold border-t border-gray-200 pt-2">
+                  <span className="text-gray-900">Total</span>
+                  <span className="text-gray-900">{formatPrice(total)}</span>
                 </div>
               </div>
               
               {deliveryFee === 0 && (
-                <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                  <p className="text-sm text-green-700 dark:text-green-300">
+                <div className="mt-4 p-3 bg-green-50/20 border border-green-200 rounded-lg">
+                  <p className="text-sm text-green-700">
                     🎉 You qualify for free delivery!
                   </p>
                 </div>

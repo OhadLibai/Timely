@@ -92,7 +92,7 @@ const Cart: React.FC = () => {
   const total = subtotal
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <PageHeader
           title="Shopping Cart"
@@ -103,10 +103,10 @@ const Cart: React.FC = () => {
         <ResponsiveGrid cols={{ sm: 1, lg: 3 }} gap={8}>
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-              <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="bg-white rounded-lg shadow-sm">
+              <div className="p-6 border-b border-gray-200">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h2 className="text-lg font-semibold text-gray-900">
                     Items in your cart
                   </h2>
                   <Button
@@ -115,14 +115,14 @@ const Cart: React.FC = () => {
                     variant="ghost"
                     size="sm"
                     icon={Trash2}
-                    className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                    className="text-red-600 hover:text-red-700"
                   >
                     Clear cart
                   </Button>
                 </div>
               </div>
 
-              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="divide-y divide-gray-200">
                 <AnimatePresence mode="popLayout">
                   {cart.items.map((item) => (
                     <motion.div
@@ -145,10 +145,10 @@ const Cart: React.FC = () => {
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between">
                             <div>
-                              <h3 className="text-base font-medium text-gray-900 dark:text-white truncate">
+                              <h3 className="text-base font-medium text-gray-900 truncate">
                                 {item.product.name}
                               </h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                              <p className="text-sm text-gray-500 mt-1">
                                 {item.product.category?.name}
                               </p>
                               
@@ -157,7 +157,7 @@ const Cart: React.FC = () => {
                                   <span className="text-sm line-through text-gray-400">
                                     {formatPrice(item.product.originalPrice)}
                                   </span>
-                                  <span className="text-sm font-medium text-green-600 dark:text-green-400">
+                                  <span className="text-sm font-medium text-green-600">
                                     Save {formatPrice(item.product.originalPrice - item.product.price)}
                                   </span>
                                 </div>
@@ -167,7 +167,7 @@ const Cart: React.FC = () => {
                             <button
                               onClick={() => removeItem(item.id)}
                               disabled={isUpdating}
-                              className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 p-1 disabled:opacity-50"
+                              className="text-red-600 hover:text-red-700 p-1 disabled:opacity-50"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -178,29 +178,29 @@ const Cart: React.FC = () => {
                               <button
                                 onClick={() => handleQuantityChange(item.id, item.quantity, -1)}
                                 disabled={isUpdating}
-                                className="p-1 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                                className="p-1 rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
                               >
                                 <Minus size={14} />
                               </button>
                               
-                              <span className="w-12 text-center text-sm font-medium text-gray-900 dark:text-white">
+                              <span className="w-12 text-center text-sm font-medium text-gray-900">
                                 {item.quantity}
                               </span>
                               
                               <button
                                 onClick={() => handleQuantityChange(item.id, item.quantity, 1)}
                                 disabled={isUpdating}
-                                className="p-1 rounded-md border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
+                                className="p-1 rounded-md border border-gray-300 hover:bg-gray-50 disabled:opacity-50"
                               >
                                 <Plus size={14} />
                               </button>
                             </div>
                             
                             <div className="text-right">
-                              <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                              <div className="text-lg font-semibold text-gray-900">
                                 {formatPrice(item.total)}
                               </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                              <div className="text-sm text-gray-500">
                                 {formatPrice(item.price)} each
                               </div>
                             </div>
@@ -217,7 +217,7 @@ const Cart: React.FC = () => {
             <div className="flex justify-center">
               <Link
                 to="/products"
-                className="inline-flex items-center gap-2 text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 font-medium"
+                className="inline-flex items-center gap-2 text-indigo-600 hover:text-indigo-700 font-medium"
               >
                 <Package size={16} />
                 Continue Shopping
@@ -227,21 +227,21 @@ const Cart: React.FC = () => {
 
           {/* Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
                 Order Summary
               </h3>
 
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Subtotal</span>
-                  <span className="text-gray-900 dark:text-white">{formatPrice(subtotal)}</span>
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="text-gray-900">{formatPrice(subtotal)}</span>
                 </div>
                 
-                <div className="border-t border-gray-200 dark:border-gray-700 pt-3">
+                <div className="border-t border-gray-200 pt-3">
                   <div className="flex justify-between font-semibold text-lg">
-                    <span className="text-gray-900 dark:text-white">Total</span>
-                    <span className="text-gray-900 dark:text-white">{formatPrice(total)}</span>
+                    <span className="text-gray-900">Total</span>
+                    <span className="text-gray-900">{formatPrice(total)}</span>
                   </div>
                 </div>
               </div>
@@ -260,7 +260,7 @@ const Cart: React.FC = () => {
               </Button>
 
               {/* Security Notice */}
-              <div className="mt-4 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <div className="mt-4 flex items-center gap-2 text-xs text-gray-500">
                 <CheckCircle size={12} />
                 <span>Secure checkout with 256-bit SSL encryption</span>
               </div>

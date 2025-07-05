@@ -95,15 +95,15 @@ const Orders: React.FC = () => {
             key={order.id}
             preset="fadeInUp"
             delay={index * 0.1}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+            className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     Order {formatOrderNumber(order.orderNumber)}
                   </h3>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Calendar size={14} />
                     <span>{new Date(order.createdAt).toLocaleDateString()}</span>
                     <span>•</span>
@@ -120,10 +120,10 @@ const Orders: React.FC = () => {
                 />
                 
                 <div className="text-right">
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  <div className="text-lg font-semibold text-gray-900">
                     {formatPrice(order.total)}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className="text-sm text-gray-600">
                     {order.paymentStatus === 'completed' ? 'Paid' : 'Pending Payment'}
                   </div>
                 </div>
@@ -134,24 +134,24 @@ const Orders: React.FC = () => {
             <div className="mb-4">
               <div className="flex items-center gap-2 overflow-x-auto pb-2">
                 {order.items.slice(0, 3).map((item) => (
-                  <div key={item.id} className="flex items-center gap-2 bg-gray-50 dark:bg-gray-700 rounded-lg p-2 min-w-max">
+                  <div key={item.id} className="flex items-center gap-2 bg-gray-50 rounded-lg p-2 min-w-max">
                     <img
                       src={item.product.imageUrl || '/placeholder.jpg'}
                       alt={item.product.name}
                       className="w-8 h-8 object-cover rounded"
                     />
                     <div className="text-sm">
-                      <div className="font-medium text-gray-900 dark:text-white truncate max-w-32">
+                      <div className="font-medium text-gray-900 truncate max-w-32">
                         {item.product.name}
                       </div>
-                      <div className="text-gray-600 dark:text-gray-400">
+                      <div className="text-gray-600">
                         Qty: {item.quantity}
                       </div>
                     </div>
                   </div>
                 ))}
                 {order.items.length > 3 && (
-                  <div className="text-sm text-gray-600 dark:text-gray-400 px-2">
+                  <div className="text-sm text-gray-600 px-2">
                     +{order.items.length - 3} more
                   </div>
                 )}
@@ -159,8 +159,8 @@ const Orders: React.FC = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
                 <DollarSign size={14} />
                 <span>Payment: {order.paymentMethod}</span>
               </div>
@@ -168,7 +168,7 @@ const Orders: React.FC = () => {
               <div className="flex gap-2">
                 <Link
                   to={`/orders/${order.id}`}
-                  className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
+                  className="flex items-center gap-2 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm"
                 >
                   <Eye size={16} />
                   View Details
@@ -192,10 +192,10 @@ const Orders: React.FC = () => {
       {filteredOrders.length === 0 && filter !== 'all' && (
         <div className="text-center py-12">
           <Package className="mx-auto text-gray-400 mb-4" size={64} />
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          <h3 className="text-xl font-semibold text-gray-900 mb-2">
             No {filter} orders
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600">
             You don't have any orders with this status.
           </p>
         </div>

@@ -111,25 +111,25 @@ const UserExperience: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
+      className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
     >
       <div className="flex items-center gap-4 mb-4">
-        <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-          <Icon className="w-6 h-6 text-green-600 dark:text-green-400" />
+        <div className="p-3 bg-green-100/30 rounded-lg">
+          <Icon className="w-6 h-6 text-green-600" />
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-1">
-            <h3 className="font-semibold text-gray-900 dark:text-white">
+            <h3 className="font-semibold text-gray-900">
               {name}
             </h3>
-            <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+            <CheckCircle className="w-5 h-5 text-green-600" />
           </div>
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-sm text-gray-600">
             {description}
           </p>
         </div>
-        <div className="px-3 py-1 bg-green-100 dark:bg-green-900/30 rounded-full">
-          <span className="text-sm font-medium text-green-700 dark:text-green-300">
+        <div className="px-3 py-1 bg-green-100/30 rounded-full">
+          <span className="text-sm font-medium text-green-700">
             ✅ Operational
           </span>
         </div>
@@ -137,14 +137,14 @@ const UserExperience: React.FC = () => {
 
       {features && (
         <div className="mt-4">
-          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <h4 className="text-sm font-medium text-gray-700 mb-2">
             Key Features:
           </h4>
           <div className="grid grid-cols-2 gap-2">
             {features.map((feature, index) => (
               <div key={index} className="flex items-center gap-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-gray-600">
                   {feature}
                 </span>
               </div>
@@ -154,8 +154,8 @@ const UserExperience: React.FC = () => {
       )}
 
       {details && (
-        <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <p className="text-sm text-green-700 dark:text-green-300">
+        <div className="mt-4 p-3 bg-green-50/20 rounded-lg">
+          <p className="text-sm text-green-700">
             {details}
           </p>
         </div>
@@ -164,7 +164,7 @@ const UserExperience: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <PageHeader
@@ -188,43 +188,43 @@ const UserExperience: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700"
+            className="bg-white rounded-lg shadow-sm p-6 border border-gray-200"
           >
             <div className="flex items-center gap-4 mb-4">
-              <div className="p-3 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+              <div className="p-3 bg-green-100/30 rounded-lg">
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <div>
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-2xl font-semibold text-gray-900">
                   All Systems Operational
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600">
                   Frontend quality and user experience are performing optimally
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                <div className="text-3xl font-bold text-green-600">
                   100%
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-gray-600">
                   System Uptime
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                <div className="text-3xl font-bold text-green-600">
                   ✅
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-gray-600">
                   All Features Working
                 </div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600 dark:text-green-400">
+                <div className="text-3xl font-bold text-green-600">
                   Excellent
                 </div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-gray-600">
                   User Experience
                 </div>
               </div>
@@ -234,7 +234,7 @@ const UserExperience: React.FC = () => {
 
         {/* Core Shopping Flow Status */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
             Core Shopping Flow
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -246,7 +246,7 @@ const UserExperience: React.FC = () => {
 
         {/* User Interface Status */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
             User Interface Quality
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -258,7 +258,7 @@ const UserExperience: React.FC = () => {
 
         {/* ML Integration Status */}
         <div className="mb-8">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-6">
             ML Integration & Personalization
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

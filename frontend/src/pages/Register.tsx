@@ -86,7 +86,7 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 flex items-center justify-center p-4">
       <AnimatedContainer
         preset="fadeInUp"
         duration={0.5}
@@ -99,10 +99,10 @@ const Register: React.FC = () => {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+            <h2 className="text-4xl font-bold text-gray-900 mb-6">
               Join Timely Today
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8">
+            <p className="text-xl text-gray-600 mb-8">
               Experience the future of grocery shopping with AI-powered predictions
             </p>
             
@@ -118,7 +118,7 @@ const Register: React.FC = () => {
                   <div className="p-2 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full">
                     <Check className="w-4 h-4 text-white" />
                   </div>
-                  <span className="text-gray-700 dark:text-gray-300">{benefit}</span>
+                  <span className="text-gray-700">{benefit}</span>
                 </motion.div>
               ))}
             </div>
@@ -130,12 +130,12 @@ const Register: React.FC = () => {
               className="mt-12 p-6 bg-gradient-to-r from-indigo-500/10 to-purple-500/10 rounded-2xl"
             >
               <div className="flex items-center gap-3 mb-3">
-                <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                <h3 className="font-semibold text-gray-900 dark:text-white">
+                <Sparkles className="w-6 h-6 text-indigo-600" />
+                <h3 className="font-semibold text-gray-900">
                   Limited Time Offer
                 </h3>
               </div>
-              <p className="text-gray-600 dark:text-gray-300">
+              <p className="text-gray-600">
                 Sign up now and get 20% off your first AI-predicted basket!
               </p>
             </motion.div>
@@ -150,14 +150,14 @@ const Register: React.FC = () => {
               <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl">
                 <ShoppingCart className="w-8 h-8 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">Timely</span>
+              <span className="text-2xl font-bold text-gray-900">Timely</span>
             </Link>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Create your account
             </h2>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-gray-600">
               Already have an account?{' '}
-              <Link to="/login" className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+              <Link to="/login" className="text-indigo-600 hover:text-indigo-700">
                 Sign in
               </Link>
             </p>
@@ -171,7 +171,7 @@ const Register: React.FC = () => {
                   className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all ${
                     step <= currentStep
                       ? 'bg-indigo-600 text-white'
-                      : 'bg-gray-200 dark:bg-gray-700 text-gray-500'
+                      : 'bg-gray-200 text-gray-500'
                   }`}
                 >
                   {step < currentStep ? <Check size={20} /> : step}
@@ -181,7 +181,7 @@ const Register: React.FC = () => {
                     className={`w-20 h-1 transition-all ${
                       step < currentStep
                         ? 'bg-indigo-600'
-                        : 'bg-gray-200 dark:bg-gray-700'
+                        : 'bg-gray-200'
                     }`}
                   />
                 )}
@@ -194,7 +194,7 @@ const Register: React.FC = () => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8"
+            className="bg-white rounded-2xl shadow-xl p-8"
           >
             <form onSubmit={handleSubmit(onSubmit)}>
               {/* Step 1: Personal Information */}
@@ -204,13 +204,13 @@ const Register: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   className="space-y-6"
                 >
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
                     Personal Information
                   </h3>
                   
                   <ResponsiveGrid cols={{ sm: 2 }} gap={4}>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         First Name
                       </label>
                       <div className="relative">
@@ -218,21 +218,21 @@ const Register: React.FC = () => {
                         <input
                           {...register('firstName', { required: 'First name is required' })}
                           type="text"
-                          className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                            errors.firstName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                          className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                            errors.firstName ? 'border-red-500' : 'border-gray-300'
                           }`}
                           placeholder="John"
                         />
                       </div>
                       {errors.firstName && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        <p className="mt-1 text-sm text-red-600">
                           {errors.firstName.message}
                         </p>
                       )}
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
                         Last Name
                       </label>
                       <div className="relative">
@@ -240,14 +240,14 @@ const Register: React.FC = () => {
                         <input
                           {...register('lastName', { required: 'Last name is required' })}
                           type="text"
-                          className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                            errors.lastName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                          className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                            errors.lastName ? 'border-red-500' : 'border-gray-300'
                           }`}
                           placeholder="Doe"
                         />
                       </div>
                       {errors.lastName && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        <p className="mt-1 text-sm text-red-600">
                           {errors.lastName.message}
                         </p>
                       )}
@@ -255,7 +255,7 @@ const Register: React.FC = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Phone Number (Optional)
                     </label>
                     <div className="relative">
@@ -263,7 +263,7 @@ const Register: React.FC = () => {
                       <input
                         {...register('phone')}
                         type="tel"
-                        className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                        className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                         placeholder="+1 (555) 123-4567"
                       />
                     </div>
@@ -286,12 +286,12 @@ const Register: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   className="space-y-6"
                 >
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
                     Account Security
                   </h3>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Email Address
                     </label>
                     <div className="relative">
@@ -305,21 +305,21 @@ const Register: React.FC = () => {
                           }
                         })}
                         type="email"
-                        className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                          errors.email ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                        className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                          errors.email ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="you@example.com"
                       />
                     </div>
                     {errors.email && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      <p className="mt-1 text-sm text-red-600">
                         {errors.email.message}
                       </p>
                     )}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Password
                     </label>
                     <div className="relative">
@@ -333,8 +333,8 @@ const Register: React.FC = () => {
                           }
                         })}
                         type={showPassword ? 'text' : 'password'}
-                        className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                          errors.password ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                        className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                          errors.password ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="••••••••"
                       />
@@ -347,14 +347,14 @@ const Register: React.FC = () => {
                       </button>
                     </div>
                     {errors.password && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      <p className="mt-1 text-sm text-red-600">
                         {errors.password.message}
                       </p>
                     )}
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
                       Confirm Password
                     </label>
                     <div className="relative">
@@ -365,8 +365,8 @@ const Register: React.FC = () => {
                           validate: value => value === password || 'Passwords do not match'
                         })}
                         type={showConfirmPassword ? 'text' : 'password'}
-                        className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white ${
-                          errors.confirmPassword ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                        className={`w-full pl-10 pr-12 py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                          errors.confirmPassword ? 'border-red-500' : 'border-gray-300'
                         }`}
                         placeholder="••••••••"
                       />
@@ -379,7 +379,7 @@ const Register: React.FC = () => {
                       </button>
                     </div>
                     {errors.confirmPassword && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      <p className="mt-1 text-sm text-red-600">
                         {errors.confirmPassword.message}
                       </p>
                     )}
@@ -389,7 +389,7 @@ const Register: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="flex-1 py-3 px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                      className="flex-1 py-3 px-4 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
                     >
                       Back
                     </button>
@@ -411,11 +411,11 @@ const Register: React.FC = () => {
                   animate={{ opacity: 1, x: 0 }}
                   className="space-y-6"
                 >
-                  <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-xl font-semibold text-gray-900 mb-4">
                     Almost done!
                   </h3>
                   
-                  <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-3">
+                  <div className="p-4 bg-gray-50/50 rounded-lg space-y-3">
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
                         {...register('agreeToTerms', {
@@ -424,19 +424,19 @@ const Register: React.FC = () => {
                         type="checkbox"
                         className="w-5 h-5 text-indigo-600 rounded focus:ring-indigo-500 mt-0.5"
                       />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">
+                      <span className="text-sm text-gray-700">
                         I agree to the{' '}
-                        <Link to="/terms" className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+                        <Link to="/terms" className="text-indigo-600 hover:text-indigo-700">
                           Terms of Service
                         </Link>{' '}
                         and{' '}
-                        <Link to="/privacy" className="text-indigo-600 hover:text-indigo-700 dark:text-indigo-400">
+                        <Link to="/privacy" className="text-indigo-600 hover:text-indigo-700">
                           Privacy Policy
                         </Link>
                       </span>
                     </label>
                     {errors.agreeToTerms && (
-                      <p className="text-sm text-red-600 dark:text-red-400">
+                      <p className="text-sm text-red-600">
                         {errors.agreeToTerms.message}
                       </p>
                     )}
@@ -447,9 +447,9 @@ const Register: React.FC = () => {
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+                      className="p-3 bg-red-50/20 border border-red-200 rounded-lg"
                     >
-                      <p className="text-sm text-red-600 dark:text-red-400">
+                      <p className="text-sm text-red-600">
                         {errors.root.message}
                       </p>
                     </motion.div>
@@ -459,7 +459,7 @@ const Register: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setCurrentStep(2)}
-                      className="flex-1 py-3 px-4 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                      className="flex-1 py-3 px-4 bg-gray-200 text-gray-800 font-semibold rounded-lg hover:bg-gray-300 transition-colors"
                     >
                       Back
                     </button>

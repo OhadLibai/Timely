@@ -26,7 +26,7 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
 
     return (
       <div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
           {label}
         </label>
         <div className="relative">
@@ -38,8 +38,8 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
             type={inputType}
             className={`w-full ${Icon ? 'pl-10' : 'pl-4'} ${
               showPasswordToggle ? 'pr-12' : 'pr-4'
-            } py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white transition-colors ${
-              error ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+            } py-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors ${
+              error ? 'border-red-500' : 'border-gray-300'
             } ${className}`}
             {...props}
           />
@@ -47,19 +47,19 @@ export const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
             >
               {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
             </button>
           )}
         </div>
         {error && (
-          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+          <p className="mt-1 text-sm text-red-600">
             {error.message}
           </p>
         )}
         {helperText && !error && (
-          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+          <p className="mt-1 text-sm text-gray-500">
             {helperText}
           </p>
         )}

@@ -74,17 +74,17 @@ const AdminDashboard: React.FC = () => {
   // ============================================================================
 
   const MLAnalyticsSection = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-            <Brain className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+          <div className="p-2 bg-purple-100/30 rounded-lg">
+            <Brain className="w-6 h-6 text-purple-600" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-gray-900">
               ML Model Performance
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600">
               Real-time ML metrics and evaluation results
             </p>
           </div>
@@ -150,17 +150,17 @@ const AdminDashboard: React.FC = () => {
   );
 
   const DemoManagementSection = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
-            <Users className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+          <div className="p-2 bg-indigo-100/30 rounded-lg">
+            <Users className="w-6 h-6 text-indigo-600" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-gray-900">
               Demo Management
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600">
               User seeding and demo system statistics
             </p>
           </div>
@@ -217,17 +217,17 @@ const AdminDashboard: React.FC = () => {
   );
 
   const PredictionTestingSection = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-            <Target className="w-6 h-6 text-green-600 dark:text-green-400" />
+          <div className="p-2 bg-green-100/30 rounded-lg">
+            <Target className="w-6 h-6 text-green-600" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-gray-900">
               Prediction Testing
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600">
               Individual user prediction analysis
             </p>
           </div>
@@ -284,17 +284,17 @@ const AdminDashboard: React.FC = () => {
   );
 
   const UserExperienceSection = () => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+    <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-pink-100 dark:bg-pink-900/30 rounded-lg">
-            <Palette className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+          <div className="p-2 bg-pink-100/30 rounded-lg">
+            <Palette className="w-6 h-6 text-pink-600" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+            <h2 className="text-xl font-semibold text-gray-900">
               User Experience
             </h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm text-gray-600">
               Frontend quality and shopping flow status
             </p>
           </div>
@@ -312,35 +312,35 @@ const AdminDashboard: React.FC = () => {
 
       {/* Static User Experience Status */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+        <div className="flex items-center gap-3 p-4 bg-green-50/20 rounded-lg">
+          <CheckCircle className="w-8 h-8 text-green-600" />
           <div>
-            <div className="font-semibold text-green-900 dark:text-green-100">
+            <div className="font-semibold text-green-900">
               Shopping Flow
             </div>
-            <div className="text-sm text-green-600 dark:text-green-400">
+            <div className="text-sm text-green-600">
               ✅ Operational
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+        <div className="flex items-center gap-3 p-4 bg-green-50/20 rounded-lg">
+          <CheckCircle className="w-8 h-8 text-green-600" />
           <div>
-            <div className="font-semibold text-green-900 dark:text-green-100">
+            <div className="font-semibold text-green-900">
               Product Display
             </div>
-            <div className="text-sm text-green-600 dark:text-green-400">
+            <div className="text-sm text-green-600">
               ✅ Operational
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-          <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+        <div className="flex items-center gap-3 p-4 bg-green-50/20 rounded-lg">
+          <CheckCircle className="w-8 h-8 text-green-600" />
           <div>
-            <div className="font-semibold text-green-900 dark:text-green-100">
+            <div className="font-semibold text-green-900">
               Cart Functionality
             </div>
-            <div className="text-sm text-green-600 dark:text-green-400">
+            <div className="text-sm text-green-600">
               ✅ Operational
             </div>
           </div>
@@ -350,7 +350,7 @@ const AdminDashboard: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <PageHeader

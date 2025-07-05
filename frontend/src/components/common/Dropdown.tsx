@@ -60,21 +60,21 @@ export const Dropdown: React.FC<DropdownProps> = ({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.2 }}
-              className={`absolute top-full mt-2 ${positions[position]} ${sizes[size]} bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 z-50 ${contentClassName}`}
+              className={`absolute top-full mt-2 ${positions[position]} ${sizes[size]} bg-white rounded-lg shadow-xl border border-gray-200 z-50 ${contentClassName}`}
               onClick={handleContentClick}
             >
               {/* Header */}
               {(title || showCloseButton) && (
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
                   {title && (
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-semibold text-gray-900">
                       {title}
                     </h3>
                   )}
                   {showCloseButton && (
                     <button
                       onClick={close}
-                      className="p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                     >
                       <X size={20} />
                     </button>

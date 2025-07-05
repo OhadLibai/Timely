@@ -108,11 +108,11 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
         animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={{ opacity: 0, y: -20, scale: 0.95 }}
         transition={{ duration: 0.2 }}
-        className="w-full max-w-2xl mx-4 bg-white dark:bg-gray-800 rounded-lg shadow-xl"
+        className="w-full max-w-2xl mx-4 bg-white rounded-lg shadow-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="p-4 border-b border-gray-200">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
             <input
@@ -126,11 +126,11 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                 }
               }}
               placeholder="Search for products..."
-              className="w-full pl-10 pr-12 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white text-lg"
+              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent text-lg"
             />
             <button
               onClick={onClose}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
             >
               <X size={20} />
             </button>
@@ -148,7 +148,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                 </div>
               ) : hasResults ? (
                 <div className="space-y-3">
-                  <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-3">
+                  <h3 className="text-sm font-medium text-gray-900 mb-3">
                     Search Results ({searchResults.length})
                   </h3>
                   {searchResults.slice(0, 6).map((product) => (
@@ -156,9 +156,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                       key={product.id}
                       to={`/products/${product.id}`}
                       onClick={onClose}
-                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors"
                     >
-                      <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-lg overflow-hidden">
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden">
                         <img
                           src={product.image}
                           alt={product.name}
@@ -167,10 +167,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                         />
                       </div>
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900 dark:text-white">
+                        <h4 className="font-medium text-gray-900">
                           {product.name}
                         </h4>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                        <p className="text-sm text-gray-500">
                           {product.category} • {formatPrice(product.price)}
                         </p>
                       </div>
@@ -181,7 +181,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                   {searchResults && searchResults.length > 6 && (
                     <button
                       onClick={() => handleSearch()}
-                      className="w-full p-3 text-center text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-colors"
+                      className="w-full p-3 text-center text-indigo-600 hover:bg-indigo-50/20 rounded-lg transition-colors"
                     >
                       View all {searchResults.length} results
                     </button>
@@ -190,10 +190,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
               ) : (
                 <div className="text-center py-8">
                   <Package className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-gray-500 dark:text-gray-400">
+                  <p className="text-gray-500">
                     No products found for "{searchTerm}"
                   </p>
-                  <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                  <p className="text-sm text-gray-400 mt-1">
                     Try different keywords or browse categories
                   </p>
                 </div>
@@ -206,13 +206,13 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
               {recentSearches.length > 0 && (
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2">
                       <Clock size={16} />
                       Recent Searches
                     </h3>
                     <button
                       onClick={clearHistory}
-                      className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                      className="text-xs text-gray-500 hover:text-gray-700"
                     >
                       Clear
                     </button>
@@ -222,10 +222,10 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                       <button
                         key={index}
                         onClick={() => handleQuickSearch(search)}
-                        className="flex items-center gap-3 w-full p-2 text-left rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        className="flex items-center gap-3 w-full p-2 text-left rounded-lg hover:bg-gray-100 transition-colors"
                       >
                         <Search size={16} className="text-gray-400" />
-                        <span className="text-gray-700 dark:text-gray-300">{search}</span>
+                        <span className="text-gray-700">{search}</span>
                       </button>
                     ))}
                   </div>
@@ -234,7 +234,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
 
               {/* Popular Searches */}
               <div>
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+                <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2 mb-3">
                   <TrendingUp size={16} />
                   Popular Searches
                 </h3>
@@ -243,7 +243,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                     <button
                       key={index}
                       onClick={() => handleQuickSearch(search)}
-                      className="px-3 py-1.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full text-sm hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                      className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors"
                     >
                       {search}
                     </button>
@@ -253,7 +253,7 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
 
               {/* Categories */}
               <div>
-                <h3 className="text-sm font-medium text-gray-900 dark:text-white flex items-center gap-2 mb-3">
+                <h3 className="text-sm font-medium text-gray-900 flex items-center gap-2 mb-3">
                   <Package size={16} />
                   Browse Categories
                 </h3>
@@ -263,9 +263,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                       key={index}
                       to={`/products?category=${encodeURIComponent(category)}`}
                       onClick={onClose}
-                      className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-center"
+                      className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-center"
                     >
-                      <span className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+                      <span className="text-gray-700 text-sm font-medium">
                         {category}
                       </span>
                     </Link>
@@ -277,9 +277,9 @@ const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 text-center">
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            Press <kbd className="px-1 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-xs">Escape</kbd> to close
+        <div className="p-4 border-t border-gray-200 text-center">
+          <p className="text-xs text-gray-500">
+            Press <kbd className="px-1 py-0.5 bg-gray-100 rounded text-xs">Escape</kbd> to close
           </p>
         </div>
       </motion.div>

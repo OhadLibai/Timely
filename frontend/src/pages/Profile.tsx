@@ -77,7 +77,7 @@ const Profile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <PageHeader
@@ -89,8 +89,8 @@ const Profile: React.FC = () => {
         <div className="space-y-8">
           
           {/* Profile Information Card */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
@@ -99,12 +99,12 @@ const Profile: React.FC = () => {
                     </span>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h3 className="text-lg font-semibold text-gray-900">
                       {user.firstName} {user.lastName}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400">{user.email}</p>
+                    <p className="text-gray-600">{user.email}</p>
                     {user.isAdmin && (
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 text-xs font-medium rounded-full mt-1">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-indigo-100/30 text-indigo-800 text-xs font-medium rounded-full mt-1">
                         <Shield size={12} />
                         Administrator
                       </span>
@@ -129,19 +129,19 @@ const Profile: React.FC = () => {
                 
                 {/* First Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     First Name
                   </label>
                   {isEditing ? (
                     <input
                       type="text"
                       {...registerProfile('firstName', { required: 'First name is required' })}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   ) : (
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                      <User size={16} className="text-gray-500 dark:text-gray-400" />
-                      <span className="text-gray-900 dark:text-white">{user.firstName}</span>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
+                      <User size={16} className="text-gray-500" />
+                      <span className="text-gray-900">{user.firstName}</span>
                     </div>
                   )}
                   {profileErrors.firstName && (
@@ -151,19 +151,19 @@ const Profile: React.FC = () => {
 
                 {/* Last Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Last Name
                   </label>
                   {isEditing ? (
                     <input
                       type="text"
                       {...registerProfile('lastName', { required: 'Last name is required' })}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                     />
                   ) : (
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                      <User size={16} className="text-gray-500 dark:text-gray-400" />
-                      <span className="text-gray-900 dark:text-white">{user.lastName}</span>
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
+                      <User size={16} className="text-gray-500" />
+                      <span className="text-gray-900">{user.lastName}</span>
                     </div>
                   )}
                   {profileErrors.lastName && (
@@ -173,34 +173,34 @@ const Profile: React.FC = () => {
 
                 {/* Email */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Email Address
                   </label>
-                  <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                    <Mail size={16} className="text-gray-500 dark:text-gray-400" />
-                    <span className="text-gray-900 dark:text-white">{user.email}</span>
+                  <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
+                    <Mail size={16} className="text-gray-500" />
+                    <span className="text-gray-900">{user.email}</span>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-gray-500 mt-1">
                     Email cannot be changed in demo mode
                   </p>
                 </div>
 
                 {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Phone Number
                   </label>
                   {isEditing ? (
                     <input
                       type="tel"
                       {...registerProfile('phone')}
-                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       placeholder="Optional"
                     />
                   ) : (
-                    <div className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-md">
-                      <Phone size={16} className="text-gray-500 dark:text-gray-400" />
-                      <span className="text-gray-900 dark:text-white">
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
+                      <Phone size={16} className="text-gray-500" />
+                      <span className="text-gray-900">
                         {user.phone || 'Not provided'}
                       </span>
                     </div>
@@ -215,7 +215,7 @@ const Profile: React.FC = () => {
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700"
+                    className="flex justify-end gap-3 mt-8 pt-6 border-t border-gray-200"
                   >
                     <Button
                       type="button"
@@ -241,30 +241,30 @@ const Profile: React.FC = () => {
           </div>
 
           {/* Account Information */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          <div className="bg-white rounded-lg shadow-sm p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Account Information
             </h3>
             <ResponsiveGrid cols={{ sm: 1, md: 2 }} gap={6}>
               <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Account Type</p>
+                <p className="text-sm font-medium text-gray-700">Account Type</p>
                 <div className="flex items-center gap-2 mt-1">
                   {user.isAdmin ? (
                     <>
-                      <Shield size={16} className="text-indigo-600 dark:text-indigo-400" />
-                      <span className="text-indigo-600 dark:text-indigo-400 font-medium">Administrator</span>
+                      <Shield size={16} className="text-indigo-600" />
+                      <span className="text-indigo-600 font-medium">Administrator</span>
                     </>
                   ) : (
                     <>
-                      <User size={16} className="text-gray-600 dark:text-gray-400" />
-                      <span className="text-gray-900 dark:text-white">Standard User</span>
+                      <User size={16} className="text-gray-600" />
+                      <span className="text-gray-900">Standard User</span>
                     </>
                   )}
                 </div>
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Member Since</p>
-                <p className="text-gray-900 dark:text-white mt-1">
+                <p className="text-sm font-medium text-gray-700">Member Since</p>
+                <p className="text-gray-900 mt-1">
                   {user.createdAt 
                     ? new Date(user.createdAt).toLocaleDateString('en-US', {
                         year: 'numeric',

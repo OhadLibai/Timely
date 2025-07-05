@@ -36,7 +36,7 @@ class PredictionService {
    * This simplifies the frontend logic immensely—it just has to call one
    * function and display the result.
    */
-  async getPredictedBasket(): Promise<PredictedBasket | null> {
+  async getPredictedBasket(force: boolean = false): Promise<PredictedBasket | null> {
     try {
       // This single endpoint handles both fetching and generation.
       const response = await api.post<{ basket: PredictedBasket }>('/predictions/get-predicted-basket');

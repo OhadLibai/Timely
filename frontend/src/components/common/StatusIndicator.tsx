@@ -27,111 +27,111 @@ const statusConfigs: Record<StatusType, StatusConfig> = {
   // Order statuses
   pending: {
     icon: Clock,
-    color: 'text-yellow-600 dark:text-yellow-400',
-    bgColor: 'bg-yellow-100 dark:bg-yellow-900/20',
-    textColor: 'text-yellow-800 dark:text-yellow-200',
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-100/20',
+    textColor: 'text-yellow-800',
     label: 'Pending'
   },
   processing: {
     icon: RefreshCw,
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/20',
-    textColor: 'text-blue-800 dark:text-blue-200',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100/20',
+    textColor: 'text-blue-800',
     label: 'Processing'
   },
   confirmed: {
     icon: CheckCircle,
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/20',
-    textColor: 'text-blue-800 dark:text-blue-200',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100/20',
+    textColor: 'text-blue-800',
     label: 'Confirmed'
   },
   shipped: {
     icon: Truck,
-    color: 'text-indigo-600 dark:text-indigo-400',
-    bgColor: 'bg-indigo-100 dark:bg-indigo-900/20',
-    textColor: 'text-indigo-800 dark:text-indigo-200',
+    color: 'text-indigo-600',
+    bgColor: 'bg-indigo-100/20',
+    textColor: 'text-indigo-800',
     label: 'Shipped'
   },
   delivered: {
     icon: CheckCircle,
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-100 dark:bg-green-900/20',
-    textColor: 'text-green-800 dark:text-green-200',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100/20',
+    textColor: 'text-green-800',
     label: 'Delivered'
   },
   cancelled: {
     icon: XCircle,
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/20',
-    textColor: 'text-red-800 dark:text-red-200',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100/20',
+    textColor: 'text-red-800',
     label: 'Cancelled'
   },
   
   // General statuses
   completed: {
     icon: CheckCircle,
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-100 dark:bg-green-900/20',
-    textColor: 'text-green-800 dark:text-green-200',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100/20',
+    textColor: 'text-green-800',
     label: 'Completed'
   },
   failed: {
     icon: XCircle,
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/20',
-    textColor: 'text-red-800 dark:text-red-200',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100/20',
+    textColor: 'text-red-800',
     label: 'Failed'
   },
   active: {
     icon: Circle,
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-100 dark:bg-green-900/20',
-    textColor: 'text-green-800 dark:text-green-200',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100/20',
+    textColor: 'text-green-800',
     label: 'Active'
   },
   inactive: {
     icon: Circle,
-    color: 'text-gray-600 dark:text-gray-400',
-    bgColor: 'bg-gray-100 dark:bg-gray-900/20',
-    textColor: 'text-gray-800 dark:text-gray-200',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-100/20',
+    textColor: 'text-gray-800',
     label: 'Inactive'
   },
   draft: {
     icon: Circle,
-    color: 'text-gray-600 dark:text-gray-400',
-    bgColor: 'bg-gray-100 dark:bg-gray-900/20',
-    textColor: 'text-gray-800 dark:text-gray-200',
+    color: 'text-gray-600',
+    bgColor: 'bg-gray-100/20',
+    textColor: 'text-gray-800',
     label: 'Draft'
   },
   
   // Alert statuses
   success: {
     icon: CheckCircle,
-    color: 'text-green-600 dark:text-green-400',
-    bgColor: 'bg-green-100 dark:bg-green-900/20',
-    textColor: 'text-green-800 dark:text-green-200',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100/20',
+    textColor: 'text-green-800',
     label: 'Success'
   },
   warning: {
     icon: AlertCircle,
-    color: 'text-yellow-600 dark:text-yellow-400',
-    bgColor: 'bg-yellow-100 dark:bg-yellow-900/20',
-    textColor: 'text-yellow-800 dark:text-yellow-200',
+    color: 'text-yellow-600',
+    bgColor: 'bg-yellow-100/20',
+    textColor: 'text-yellow-800',
     label: 'Warning'
   },
   error: {
     icon: XCircle,
-    color: 'text-red-600 dark:text-red-400',
-    bgColor: 'bg-red-100 dark:bg-red-900/20',
-    textColor: 'text-red-800 dark:text-red-200',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100/20',
+    textColor: 'text-red-800',
     label: 'Error'
   },
   info: {
     icon: AlertCircle,
-    color: 'text-blue-600 dark:text-blue-400',
-    bgColor: 'bg-blue-100 dark:bg-blue-900/20',
-    textColor: 'text-blue-800 dark:text-blue-200',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100/20',
+    textColor: 'text-blue-800',
     label: 'Info'
   }
 };

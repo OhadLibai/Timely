@@ -105,7 +105,7 @@ const ModelPerformance: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Page Header */}
         <PageHeader
@@ -129,26 +129,26 @@ const ModelPerformance: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+            className="bg-white rounded-lg shadow-sm p-6"
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="text-xl font-semibold text-gray-900">
                   Run Model Evaluation
                 </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <p className="text-sm text-gray-600 mt-1">
                   Evaluate ML model performance against the Instacart dataset
                 </p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <label className="text-sm font-medium text-gray-700">
                     Sample Size:
                   </label>
                   <select
                     value={sampleSize}
                     onChange={(e) => setSampleSize(parseInt(e.target.value))}
-                    className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm"
                   >
                     <option value={50}>50 users</option>
                     <option value={100}>100 users</option>
@@ -169,14 +169,14 @@ const ModelPerformance: React.FC = () => {
             </div>
 
             {isEvaluating && (
-              <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <div className="mb-4 p-4 bg-blue-50/20 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <RefreshCw className="w-5 h-5 text-blue-600 dark:text-blue-400 animate-spin" />
+                  <RefreshCw className="w-5 h-5 text-blue-600 animate-spin" />
                   <div>
-                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                    <p className="text-sm font-medium text-blue-900">
                       Running evaluation on {sampleSize} users...
                     </p>
-                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                    <p className="text-xs text-blue-700">
                       This may take a few moments. Please wait.
                     </p>
                   </div>
@@ -188,12 +188,12 @@ const ModelPerformance: React.FC = () => {
 
         {/* No Metrics State */}
         {!metricsData && !isLoadingMetrics && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
               No Evaluation Results Yet
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 mb-6">
               Run your first model evaluation to see detailed performance metrics and analysis.
             </p>
             <Button
@@ -255,9 +255,9 @@ const ModelPerformance: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+                className="bg-white rounded-lg shadow-sm p-6"
               >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Performance vs Baseline
                 </h3>
                 <ResponsiveContainer width="100%" height={300}>
@@ -277,9 +277,9 @@ const ModelPerformance: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+                className="bg-white rounded-lg shadow-sm p-6"
               >
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">
                   Metrics Breakdown
                 </h3>
                 <ResponsiveContainer width="100%" height={300}>
@@ -306,17 +306,17 @@ const ModelPerformance: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+              className="bg-white rounded-lg shadow-sm p-6"
             >
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">
                 Evaluation Details
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="text-green-500" size={20} />
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Sample Size</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="text-sm text-gray-600">Sample Size</p>
+                    <p className="font-medium text-gray-900">
                       {metricsData.sampleSize || 'N/A'} users
                     </p>
                   </div>
@@ -324,8 +324,8 @@ const ModelPerformance: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <Clock className="text-blue-500" size={20} />
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Last Evaluation</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="text-sm text-gray-600">Last Evaluation</p>
+                    <p className="font-medium text-gray-900">
                       {metricsData.lastUpdated ? 
                         new Date(metricsData.lastUpdated).toLocaleDateString() : 
                         'Just now'
@@ -336,8 +336,8 @@ const ModelPerformance: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <Database className="text-purple-500" size={20} />
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Dataset</p>
-                    <p className="font-medium text-gray-900 dark:text-white">
+                    <p className="text-sm text-gray-600">Dataset</p>
+                    <p className="font-medium text-gray-900">
                       Instacart Market Basket
                     </p>
                   </div>

@@ -64,7 +64,7 @@ const AdminUserExperience = lazy(() => import('@/pages/admin/UserExperience'));
 
 // Global loading component
 const PageLoader: React.FC = () => (
-  <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+  <div className="min-h-screen flex items-center justify-center bg-gray-50">
     <LoadingSpinner size="large" />
   </div>
 );
@@ -134,7 +134,7 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <BrowserRouter>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="min-h-screen bg-gray-50">
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Public routes */}

@@ -5,9 +5,9 @@ import React from 'react';
 import { useMutation, useQueryClient } from 'react-query';
 import { useFavorites } from '@/hooks/api/useFavorites';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Heart, ShoppingCart, Package } from 'lucide-react';
+import { Heart, ShoppingCart, Package, Plus } from 'lucide-react';
 import { favoriteService } from '@/services/favorite.service';
-import { useCartStore } from '@/stores/cart.store';
+import { useCartOperations } from '@/hooks/api/useCartOperations';
 import { useAuthStore } from '@/stores/auth.store';
 import ProductCard from '@/components/products/ProductCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -16,7 +16,7 @@ import toast from 'react-hot-toast';
 
 const Favorites: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
-  const { addToCart } = useCartStore();
+  const { handleAddToCart, handleAddMultipleItems, isAdding, isAddingMultiple } = useCartOperations();
   const queryClient = useQueryClient();
 
   // Fetch favorites
@@ -36,22 +36,21 @@ const Favorites: React.FC = () => {
     }
   );
 
-  // Add to cart mutation
-  const addToCartMutation = useMutation(
-    (productId: string) => addToCart(productId),
-    {
-      onSuccess: () => {
-        toast.success('Added to cart');
-      },
-      onError: () => {
-        toast.error('Failed to add to cart');
-      },
-    }
-  );
+  // Add all favorites to cart handler
+  const handleAddAllToCart = () => {
+    if (!favorites || favorites.length === 0) return;
+    
+    const cartItems = favorites.map(favorite => ({
+      product: favorite.product,
+      quantity: 1
+    }));
+    
+    handleAddMultipleItems(cartItems);
+  };
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <EmptyState
           icon={Heart}
           title="Please Sign In"
@@ -67,7 +66,7 @@ const Favorites: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -75,7 +74,7 @@ const Favorites: React.FC = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <EmptyState
           icon={Package}
           title="Error Loading Favorites"
@@ -87,7 +86,7 @@ const Favorites: React.FC = () => {
 
   if (!favorites || favorites.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <EmptyState
           icon={Heart}
           title="No Favorites Yet"
@@ -102,21 +101,35 @@ const Favorites: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+    <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <Heart className="w-8 h-8 text-red-500" />
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <h1 className="text-3xl font-bold text-gray-900">
                 My Favorites
               </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-gray-600 mt-1">
                 {favorites.length} {favorites.length === 1 ? 'item' : 'items'} saved
               </p>
             </div>
           </div>
+          
+          {/* Add All to Cart Button */}
+          {favorites.length > 0 && (
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={handleAddAllToCart}
+              disabled={isAddingMultiple}
+              className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Plus className="w-5 h-5" />
+              {isAddingMultiple ? 'Adding...' : 'Add All to Cart'}
+            </motion.button>
+          )}
         </div>
 
         {/* Favorites Grid */}
@@ -145,7 +158,7 @@ const Favorites: React.FC = () => {
                     whileTap={{ scale: 0.9 }}
                     onClick={() => removeFromFavoritesMutation.mutate(favorite.product.id)}
                     disabled={removeFromFavoritesMutation.isLoading}
-                    className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="p-2 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-red-50/20 transition-colors"
                     title="Remove from favorites"
                   >
                     <Heart className="w-4 h-4 text-red-500 fill-current" />
@@ -155,12 +168,12 @@ const Favorites: React.FC = () => {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => addToCartMutation.mutate(favorite.product.id)}
-                    disabled={addToCartMutation.isLoading}
-                    className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg border border-gray-200 dark:border-gray-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+                    onClick={() => handleAddToCart(favorite.product)}
+                    disabled={isAdding}
+                    className="p-2 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-blue-50/20 transition-colors"
                     title="Add to cart"
                   >
-                    <ShoppingCart className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <ShoppingCart className="w-4 h-4 text-blue-600" />
                   </motion.button>
                 </div>
               </motion.div>
@@ -170,7 +183,7 @@ const Favorites: React.FC = () => {
 
         {/* Tips */}
         <div className="mt-12 text-center">
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
+          <p className="text-gray-600 text-sm">
             💡 Tip: Use favorites to quickly add frequently purchased items to your cart
           </p>
         </div>

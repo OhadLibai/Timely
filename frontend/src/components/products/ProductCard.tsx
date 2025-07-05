@@ -54,11 +54,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
       whileHover={{ y: -4 }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
+      className="group relative bg-white rounded-xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden"
     >
       <Link to={`/products/${product.id}`} className="block">
         {/* Image Container */}
-        <div className="relative aspect-square overflow-hidden bg-gray-100 dark:bg-gray-700">
+        <div className="relative aspect-square overflow-hidden bg-gray-100">
           <ProductImage
             src={product.imageUrl}
             alt={product.name}
@@ -121,13 +121,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
       {/* Product Info */}
       <div className="p-4">
         <Link to={`/products/${product.id}`}>
-          <h3 className="font-semibold text-gray-900 dark:text-white mb-1 line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          <h3 className="font-semibold text-gray-900 mb-1 line-clamp-2 group-hover:text-indigo-600 transition-colors">
             {product.name}
           </h3>
         </Link>
         
         {product.brand && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+          <p className="text-sm text-gray-500 mb-2">
             {product.brand}
           </p>
         )}
@@ -136,11 +136,11 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
         {product.rating && (
           <div className="flex items-center gap-1 mb-2">
             <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-            <span className="text-sm font-medium text-gray-900 dark:text-white">
+            <span className="text-sm font-medium text-gray-900">
               {product.rating.toFixed(1)}
             </span>
             {product.reviewCount && (
-              <span className="text-sm text-gray-500 dark:text-gray-400">
+              <span className="text-sm text-gray-500">
                 ({product.reviewCount})
               </span>
             )}
@@ -149,14 +149,14 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
 
         {/* Price - Using utility function */}
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg font-bold text-gray-900 dark:text-white">
+          <span className="text-lg font-bold text-gray-900">
             {formatPrice(product.price)}
           </span>
         </div>
 
         {/* Size/Unit */}
         {(product.size || product.unit) && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          <p className="text-xs text-gray-500 mb-3">
             {product.size} {product.unit}
           </p>
         )}
@@ -167,9 +167,9 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, variant = 'default' 
           disabled={product.stock === 0 || isUpdating}
           className={`w-full flex items-center justify-center gap-2 py-2 px-4 rounded-lg font-medium transition-all ${
             isInCart
-              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+              ? 'bg-green-100/30 text-green-700'
               : product.stock === 0
-              ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 cursor-not-allowed'
+              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
               : 'bg-indigo-600 hover:bg-indigo-700 text-white hover:shadow-md'
           }`}
         >

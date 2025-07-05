@@ -88,36 +88,36 @@ const MetricCard: React.FC<MetricCardProps> = ({
 
   const getChangeColor = () => {
     if (change === undefined) return 'text-gray-500';
-    if (change > 0) return 'text-green-600 dark:text-green-400';
-    if (change < 0) return 'text-red-600 dark:text-red-400';
-    return 'text-gray-600 dark:text-gray-400';
+    if (change > 0) return 'text-green-600';
+    if (change < 0) return 'text-red-600';
+    return 'text-gray-600';
   };
 
   const ChangeIcon = getChangeIcon();
   const classes = sizeClasses[size];
 
   const content = (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-200 hover:shadow-md ${
-      onClick ? 'cursor-pointer hover:border-gray-300 dark:hover:border-gray-600' : ''
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-200 hover:shadow-md ${
+      onClick ? 'cursor-pointer hover:border-gray-300' : ''
     } ${classes.container} ${className}`}>
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <p className={`font-medium text-gray-600 dark:text-gray-400 ${classes.title}`}>
+          <p className={`font-medium text-gray-600 ${classes.title}`}>
             {title}
           </p>
           
           {loading ? (
             <div className="flex items-center gap-2 mt-1">
-              <div className="animate-pulse bg-gray-200 dark:bg-gray-700 h-6 w-20 rounded"></div>
+              <div className="animate-pulse bg-gray-200 h-6 w-20 rounded"></div>
             </div>
           ) : (
-            <p className={`font-semibold text-gray-900 dark:text-white ${classes.value} mt-1`}>
+            <p className={`font-semibold text-gray-900 ${classes.value} mt-1`}>
               {formatValue(value)}
             </p>
           )}
           
           {subtitle && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               {subtitle}
             </p>
           )}

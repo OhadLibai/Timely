@@ -6,7 +6,7 @@ import { ShoppingCart } from 'lucide-react';
 
 const AuthLayout: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
       <div className="min-h-screen flex">
         {/* Left Side - Branding */}
         <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-20 xl:px-24">
@@ -20,14 +20,14 @@ const AuthLayout: React.FC = () => {
               <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl">
                 <ShoppingCart className="w-8 h-8 text-white" />
               </div>
-              <span className="text-3xl font-bold text-gray-900 dark:text-white">Timely</span>
+              <span className="text-3xl font-bold text-gray-900">Timely</span>
             </Link>
             
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
+            <h1 className="text-4xl font-bold text-gray-900 mb-6">
               AI-Powered Grocery Shopping
             </h1>
             
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
+            <p className="text-lg text-gray-600 mb-8">
               Let our machine learning algorithms predict your next grocery list based on your 
               shopping patterns and preferences. Save time and never forget an item again.
             </p>
@@ -35,15 +35,15 @@ const AuthLayout: React.FC = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-indigo-600 rounded-full"></div>
-                <span className="text-gray-700 dark:text-gray-300">Personalized predictions</span>
+                <span className="text-gray-700">Personalized predictions</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
-                <span className="text-gray-700 dark:text-gray-300">Smart shopping recommendations</span>
+                <span className="text-gray-700">Smart shopping recommendations</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 bg-pink-600 rounded-full"></div>
-                <span className="text-gray-700 dark:text-gray-300">Automated weekly cart generation</span>
+                <span className="text-gray-700">Automated weekly cart generation</span>
               </div>
             </div>
           </motion.div>
@@ -57,7 +57,7 @@ const AuthLayout: React.FC = () => {
               <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
                 <ShoppingCart className="w-6 h-6 text-white" />
               </div>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">Timely</span>
+              <span className="text-2xl font-bold text-gray-900">Timely</span>
             </Link>
           </div>
 
@@ -74,7 +74,7 @@ const AuthLayout: React.FC = () => {
           <div className="mt-8 text-center">
             <Link
               to="/"
-              className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 transition-colors"
+              className="text-sm text-indigo-600 hover:text-indigo-500 transition-colors"
             >
               ← Back to home
             </Link>

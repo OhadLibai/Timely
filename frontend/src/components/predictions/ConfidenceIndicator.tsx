@@ -28,9 +28,9 @@ const ConfidenceIndicator: React.FC<ConfidenceIndicatorProps> = ({
       return {
         level: 'High',
         color: 'green',
-        bgColor: 'bg-green-100 dark:bg-green-900/30',
-        textColor: 'text-green-700 dark:text-green-300',
-        borderColor: 'border-green-300 dark:border-green-700',
+        bgColor: 'bg-green-100/30',
+        textColor: 'text-green-700',
+        borderColor: 'border-green-300',
         icon: TrendingUp,
         description: 'Very likely to be needed'
       };
@@ -38,9 +38,9 @@ const ConfidenceIndicator: React.FC<ConfidenceIndicatorProps> = ({
       return {
         level: 'Medium',
         color: 'yellow',
-        bgColor: 'bg-yellow-100 dark:bg-yellow-900/30',
-        textColor: 'text-yellow-700 dark:text-yellow-300',
-        borderColor: 'border-yellow-300 dark:border-yellow-700',
+        bgColor: 'bg-yellow-100/30',
+        textColor: 'text-yellow-700',
+        borderColor: 'border-yellow-300',
         icon: Minus,
         description: 'Likely to be needed'
       };
@@ -48,9 +48,9 @@ const ConfidenceIndicator: React.FC<ConfidenceIndicatorProps> = ({
       return {
         level: 'Low',
         color: 'orange',
-        bgColor: 'bg-orange-100 dark:bg-orange-900/30',
-        textColor: 'text-orange-700 dark:text-orange-300',
-        borderColor: 'border-orange-300 dark:border-orange-700',
+        bgColor: 'bg-orange-100/30',
+        textColor: 'text-orange-700',
+        borderColor: 'border-orange-300',
         icon: TrendingDown,
         description: 'Possibly needed'
       };
@@ -100,7 +100,7 @@ const ConfidenceIndicator: React.FC<ConfidenceIndicatorProps> = ({
 
       {/* Progress bar */}
       {!compact && size !== 'small' && (
-        <div className="w-16 h-1.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: `${percentage}%` }}

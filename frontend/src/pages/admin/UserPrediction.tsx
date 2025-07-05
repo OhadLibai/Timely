@@ -101,17 +101,17 @@ const UserPrediction: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+          className="bg-white rounded-lg shadow-sm p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-              <Sparkles className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <div className="p-2 bg-blue-100/30 rounded-lg">
+              <Sparkles className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900">
                 ML Predicted Basket
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600">
                 {predictedBasket.length} items predicted
               </p>
             </div>
@@ -121,7 +121,7 @@ const UserPrediction: React.FC = () => {
             {predictedBasket.map((product, index) => (
               <div
                 key={index}
-                className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
               >
                 <ProductImage
                   src={product.image_url}
@@ -129,10 +129,10 @@ const UserPrediction: React.FC = () => {
                   className="w-12 h-12 rounded-lg"
                 />
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 dark:text-white">
+                  <h4 className="font-medium text-gray-900">
                     {product.name}
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600">
                     Product ID: {product.product_id}
                   </p>
                 </div>
@@ -142,7 +142,7 @@ const UserPrediction: React.FC = () => {
                       <Check className="w-4 h-4 text-white" />
                     </div>
                   ) : (
-                    <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
                       <X className="w-4 h-4 text-gray-500" />
                     </div>
                   )}
@@ -156,17 +156,17 @@ const UserPrediction: React.FC = () => {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6"
+          className="bg-white rounded-lg shadow-sm p-6"
         >
           <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-              <CheckCircle className="w-6 h-6 text-green-600 dark:text-green-400" />
+            <div className="p-2 bg-green-100/30 rounded-lg">
+              <CheckCircle className="w-6 h-6 text-green-600" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+              <h3 className="text-lg font-semibold text-gray-900">
                 Actual Ground Truth
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-gray-600">
                 {groundTruthBasket.length} items actually purchased
               </p>
             </div>
@@ -176,7 +176,7 @@ const UserPrediction: React.FC = () => {
             {groundTruthBasket.map((product, index) => (
               <div
                 key={index}
-                className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
               >
                 <ProductImage
                   src={product.image_url}
@@ -184,10 +184,10 @@ const UserPrediction: React.FC = () => {
                   className="w-12 h-12 rounded-lg"
                 />
                 <div className="flex-1">
-                  <h4 className="font-medium text-gray-900 dark:text-white">
+                  <h4 className="font-medium text-gray-900">
                     {product.name}
                   </h4>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600">
                     Product ID: {product.product_id}
                   </p>
                 </div>
@@ -197,7 +197,7 @@ const UserPrediction: React.FC = () => {
                       <Check className="w-4 h-4 text-white" />
                     </div>
                   ) : (
-                    <div className="w-6 h-6 bg-gray-300 dark:bg-gray-600 rounded-full flex items-center justify-center">
+                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
                       <X className="w-4 h-4 text-gray-500" />
                     </div>
                   )}
@@ -211,7 +211,7 @@ const UserPrediction: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+    <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-6xl mx-auto">
         {/* Page Header */}
         <PageHeader
@@ -243,14 +243,14 @@ const UserPrediction: React.FC = () => {
 
         {/* User Selection Interface */}
         {!selectedUserId && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 mb-8">
+          <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
             <div className="max-w-2xl mx-auto">
               <div className="text-center mb-8">
-                <Target className="w-16 h-16 text-indigo-600 dark:text-indigo-400 mx-auto mb-4" />
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+                <Target className="w-16 h-16 text-indigo-600 mx-auto mb-4" />
+                <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                   Select User for Prediction Analysis
                 </h2>
-                <p className="text-gray-600 dark:text-gray-400">
+                <p className="text-gray-600">
                   Enter any Instacart user ID to compare ML predictions with actual purchase history
                 </p>
               </div>
@@ -265,7 +265,7 @@ const UserPrediction: React.FC = () => {
                       value={userIdInput}
                       onChange={(e) => setUserIdInput(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleUserIdSubmit()}
-                      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                     />
                   </div>
                   <Button
@@ -282,7 +282,7 @@ const UserPrediction: React.FC = () => {
               {/* User Suggestions */}
               {showSuggestions && (
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">
                     Popular Test Users
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -293,21 +293,21 @@ const UserPrediction: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         whileHover={{ scale: 1.02 }}
                         onClick={() => handleSuggestionClick(user.id)}
-                        className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                        className="p-4 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-semibold text-gray-900 dark:text-white">
+                            <div className="font-semibold text-gray-900">
                               User {user.id}
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                            <div className="text-sm text-gray-600">
                               {user.description}
                             </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            <div className="text-xs text-gray-500 mt-1">
                               {user.orders} • Expected accuracy: {user.accuracy}
                             </div>
                           </div>
-                          <div className="text-indigo-600 dark:text-indigo-400">
+                          <div className="text-indigo-600">
                             <PlayCircle size={20} />
                           </div>
                         </div>
@@ -322,9 +322,9 @@ const UserPrediction: React.FC = () => {
 
         {/* Loading State */}
         {isAnalyzing && selectedUserId && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-12 text-center">
             <LoadingSpinner size="large" />
-            <p className="mt-4 text-gray-600 dark:text-gray-400">
+            <p className="mt-4 text-gray-600">
               Analyzing predictions for User {selectedUserId}...
             </p>
           </div>
@@ -332,12 +332,12 @@ const UserPrediction: React.FC = () => {
 
         {/* Error State */}
         {predictionError && selectedUserId && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-8 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Analysis Failed
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className="text-gray-600 mb-6">
               Unable to analyze User {selectedUserId}. This user may not exist in the dataset.
             </p>
             <Button
@@ -354,10 +354,10 @@ const UserPrediction: React.FC = () => {
         {predictionData && !isAnalyzing && (
           <>
             {/* Performance Metrics */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8">
+            <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
               <div className="flex items-center gap-3 mb-6">
-                <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                <TrendingUp className="w-6 h-6 text-green-600" />
+                <h3 className="text-lg font-semibold text-gray-900">
                   Prediction Performance for User {selectedUserId}
                 </h3>
               </div>
@@ -367,25 +367,25 @@ const UserPrediction: React.FC = () => {
                   <div className="text-3xl font-bold text-indigo-600">
                     {predictionData.metrics.precision.toFixed(3)}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Precision</div>
+                  <div className="text-sm text-gray-600">Precision</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-purple-600">
                     {predictionData.metrics.recall.toFixed(3)}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Recall</div>
+                  <div className="text-sm text-gray-600">Recall</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-green-600">
                     {predictionData.metrics.f1_score.toFixed(3)}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">F1 Score</div>
+                  <div className="text-sm text-gray-600">F1 Score</div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-orange-600">
                     {predictionData.matchingProducts.length}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">Matches</div>
+                  <div className="text-sm text-gray-600">Matches</div>
                 </div>
               </div>
             </div>

@@ -72,13 +72,13 @@ const MainLayout: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
           isScrolled
-            ? 'bg-white/95 dark:bg-gray-800/95 backdrop-blur-md shadow-md'
-            : 'bg-white dark:bg-gray-800'
+            ? 'bg-white/95/95 backdrop-blur-md shadow-md'
+            : 'bg-white'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -86,7 +86,7 @@ const MainLayout: React.FC = () => {
             {/* Logo */}
             <Link
               to="/"
-              className="flex items-center gap-2 text-xl font-bold text-gray-900 dark:text-white"
+              className="flex items-center gap-2 text-xl font-bold text-gray-900"
             >
               <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
                 <ShoppingCart className="w-6 h-6 text-white" />
@@ -105,8 +105,8 @@ const MainLayout: React.FC = () => {
                     to={link.path}
                     className={`flex items-center gap-2 text-sm font-medium transition-colors ${
                       location.pathname === link.path
-                        ? 'text-indigo-600 dark:text-indigo-400'
-                        : 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400'
+                        ? 'text-indigo-600'
+                        : 'text-gray-700 hover:text-indigo-600'
                     }`}
                   >
                     <link.icon size={18} />
@@ -121,7 +121,7 @@ const MainLayout: React.FC = () => {
               {/* Search */}
               <button
                 onClick={() => setIsSearchOpen(true)}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Search size={20} />
               </button>
@@ -129,7 +129,7 @@ const MainLayout: React.FC = () => {
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}
-                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
               </button>
@@ -143,7 +143,7 @@ const MainLayout: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => setIsCartOpen(!isCartOpen)}
-                  className="relative p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <ShoppingCart size={20} />
                   {cartItemCount > 0 && (
@@ -169,7 +169,7 @@ const MainLayout: React.FC = () => {
                 <div className="relative">
                   <button
                     onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                   >
                     <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-full flex items-center justify-center">
                       <span className="text-white font-bold">
@@ -185,13 +185,13 @@ const MainLayout: React.FC = () => {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden"
+                        className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden"
                       >
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-                          <p className="font-medium text-gray-900 dark:text-white">
+                        <div className="p-4 border-b border-gray-200">
+                          <p className="font-medium text-gray-900">
                             {user?.firstName} {user?.lastName}
                           </p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                          <p className="text-sm text-gray-500">
                             {user?.email}
                           </p>
                         </div>
@@ -200,7 +200,7 @@ const MainLayout: React.FC = () => {
                           <Link
                             to="/profile"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <User size={16} />
                             My Profile
@@ -208,7 +208,7 @@ const MainLayout: React.FC = () => {
                           <Link
                             to="/orders"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <Package size={16} />
                             My Orders
@@ -216,7 +216,7 @@ const MainLayout: React.FC = () => {
                           <Link
                             to="/favorites"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
                             <Heart size={16} />
                             Favorites
@@ -225,7 +225,7 @@ const MainLayout: React.FC = () => {
                             <Link
                               to="/admin"
                               onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
                               <Settings size={16} />
                               Admin Dashboard
@@ -233,13 +233,13 @@ const MainLayout: React.FC = () => {
                           )}
                         </div>
 
-                        <div className="border-t border-gray-200 dark:border-gray-700 py-2">
+                        <div className="border-t border-gray-200 py-2">
                           <button
                             onClick={() => {
                               setIsUserMenuOpen(false);
                               handleLogout();
                             }}
-                            className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                            className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50/20"
                           >
                             <LogOut size={16} />
                             Sign Out
@@ -253,7 +253,7 @@ const MainLayout: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+                    className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
                   >
                     Sign In
                   </Link>
@@ -269,7 +269,7 @@ const MainLayout: React.FC = () => {
               {/* Mobile Menu Toggle */}
               <button
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
@@ -302,7 +302,7 @@ const MainLayout: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-20">
+      <footer className="bg-white border-t border-gray-200 mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Company Info */}
@@ -311,29 +311,29 @@ const MainLayout: React.FC = () => {
                 <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
                   <ShoppingCart className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">Timely</span>
+                <span className="text-xl font-bold text-gray-900">Timely</span>
               </div>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-600">
                 Your AI-powered grocery shopping assistant. Save time, shop smarter.
               </p>
             </div>
 
             {/* Quick Links */}
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Quick Links</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/about" className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                  <Link to="/about" className="text-gray-600 hover:text-indigo-600">
                     About Us
                   </Link>
                 </li>
                 <li>
-                  <Link to="/contact" className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                  <Link to="/contact" className="text-gray-600 hover:text-indigo-600">
                     Contact
                   </Link>
                 </li>
                 <li>
-                  <Link to="/faq" className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                  <Link to="/faq" className="text-gray-600 hover:text-indigo-600">
                     FAQ
                   </Link>
                 </li>
@@ -342,25 +342,25 @@ const MainLayout: React.FC = () => {
 
             {/* Customer Service */}
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Customer Service</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">Customer Service</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link to="/shipping" className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                  <Link to="/shipping" className="text-gray-600 hover:text-indigo-600">
                     Shipping Info
                   </Link>
                 </li>
                 <li>
-                  <Link to="/returns" className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                  <Link to="/returns" className="text-gray-600 hover:text-indigo-600">
                     Returns
                   </Link>
                 </li>
                 <li>
-                  <Link to="/privacy" className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                  <Link to="/privacy" className="text-gray-600 hover:text-indigo-600">
                     Privacy Policy
                   </Link>
                 </li>
                 <li>
-                  <Link to="/terms" className="text-gray-600 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400">
+                  <Link to="/terms" className="text-gray-600 hover:text-indigo-600">
                     Terms of Service
                   </Link>
                 </li>
@@ -369,15 +369,15 @@ const MainLayout: React.FC = () => {
 
             {/* Newsletter */}
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">Stay Updated</h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-4">
+              <h3 className="font-semibold text-gray-900 mb-4">Stay Updated</h3>
+              <p className="text-gray-600 mb-4">
                 Get the latest updates on new features and special offers.
               </p>
               <form className="flex gap-2">
                 <input
                   type="email"
                   placeholder="Your email"
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-700 dark:text-white"
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                 />
                 <button
                   type="submit"
@@ -389,8 +389,8 @@ const MainLayout: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
-            <p className="text-center text-gray-600 dark:text-gray-400">
+          <div className="mt-8 pt-8 border-t border-gray-200">
+            <p className="text-center text-gray-600">
               © 2025 Timely. All rights reserved.
             </p>
           </div>

@@ -49,7 +49,7 @@ const Home: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 opacity-10"></div>
@@ -60,13 +60,13 @@ const Home: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="text-center"
           >
-            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
               Smart Grocery Shopping with{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
                 AI Predictions
               </span>
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
               Let our TIFU-KNN algorithm predict your next grocery basket based on your shopping patterns. 
               Save time and never forget your essentials again.
             </p>
@@ -84,13 +84,13 @@ const Home: React.FC = () => {
                 <div className="flex justify-center gap-4 mt-6">
                   <button
                     onClick={() => navigate('/products')}
-                    className="px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                    className="px-6 py-3 bg-gray-200 text-gray-900 rounded-lg hover:bg-gray-300 transition-colors"
                   >
                     Browse Products
                   </button>
                   <button
                     onClick={() => navigate('/orders')}
-                    className="px-6 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
                   >
                     View Past Orders
                   </button>
@@ -106,7 +106,7 @@ const Home: React.FC = () => {
                 </button>
                 <button
                   onClick={() => navigate('/login')}
-                  className="px-8 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  className="px-8 py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
                 >
                   Sign In
                 </button>
@@ -122,7 +122,7 @@ const Home: React.FC = () => {
               transition={{ delay: 0.5 }}
               className="mt-8 text-center"
             >
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 rounded-full text-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100/30 text-green-800 rounded-full text-sm">
                 <Sparkles size={16} />
                 <span>Demo User: Instacart ID {user.metadata.instacart_user_id}</span>
               </div>
@@ -132,14 +132,14 @@ const Home: React.FC = () => {
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-white dark:bg-gray-800">
+      <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
               Why Choose Timely?
             </h2>
             
@@ -159,14 +159,14 @@ const Home: React.FC = () => {
                       '--tw-gradient-to': feature.color.split(' ')[3]
                     } as any}
                   />
-                  <div className="relative p-6 bg-gray-50 dark:bg-gray-900 rounded-xl hover:shadow-lg transition-shadow">
+                  <div className="relative p-6 bg-gray-50 rounded-xl hover:shadow-lg transition-shadow">
                     <div className={`inline-flex p-3 rounded-lg bg-gradient-to-r ${feature.color} mb-4`}>
                       <feature.icon className="w-6 h-6 text-white" />
                     </div>
-                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                    <h3 className="text-xl font-semibold text-gray-900 mb-2">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-300">
+                    <p className="text-gray-600">
                       {feature.description}
                     </p>
                   </div>
@@ -178,14 +178,14 @@ const Home: React.FC = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-gray-100 dark:bg-gray-900">
+      <section className="py-16 bg-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">
+            <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
               Powered by Real Data
             </h2>
             
@@ -198,13 +198,13 @@ const Home: React.FC = () => {
                   transition={{ delay: 0.1 * index }}
                   className="text-center"
                 >
-                  <div className="inline-flex p-3 bg-white dark:bg-gray-800 rounded-full shadow-md mb-4">
-                    <stat.icon className="w-8 h-8 text-indigo-600 dark:text-indigo-400" />
+                  <div className="inline-flex p-3 bg-white rounded-full shadow-md mb-4">
+                    <stat.icon className="w-8 h-8 text-indigo-600" />
                   </div>
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                  <div className="text-3xl font-bold text-gray-900 mb-1">
                     {stat.value}
                   </div>
-                  <div className="text-gray-600 dark:text-gray-400">
+                  <div className="text-gray-600">
                     {stat.label}
                   </div>
                 </motion.div>

@@ -31,7 +31,7 @@ export const Card: React.FC<CardProps> = ({
     lg: 'p-8'
   };
 
-  const baseClasses = `bg-white dark:bg-gray-800 rounded-xl shadow-sm ${paddingClasses[padding]} ${className}`;
+  const baseClasses = `bg-white rounded-xl shadow-sm ${paddingClasses[padding]} ${className}`;
   const hoverClasses = hover ? 'hover:shadow-xl transition-shadow duration-300' : '';
   const combinedClasses = `${baseClasses} ${hoverClasses}`;
 
@@ -56,7 +56,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
   title,
   description,
   iconColor = 'text-indigo-600',
-  iconBg = 'bg-indigo-100 dark:bg-indigo-900/20',
+  iconBg = 'bg-indigo-100/20',
   className = '',
   animated = true,
   hover = true,
@@ -73,10 +73,10 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
         <div className={`w-16 h-16 ${iconBg} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
           <Icon className={`w-8 h-8 ${iconColor}`} />
         </div>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+        <h3 className="text-xl font-semibold text-gray-900 mb-3">
           {title}
         </h3>
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+        <p className="text-gray-600 leading-relaxed">
           {description}
         </p>
       </div>

@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { ShoppingCart, Heart, Star, Package, Zap } from 'lucide-react';
 import { Product } from '@/services/product.service';
 import ProductImage from '@/components/products/ProductImage';
-import { useCartOperations } from '@/hooks/api/useCartOperations';
+import { useCartStore } from '@/stores/cart.store';
 import { useFavoriteToggle } from '@/hooks/api/useFavoriteToggle';
 import { useProductDisplay } from '@/hooks/ui/useProductDisplay';
 import { formatPrice } from '@/utils/formatters';
@@ -25,12 +25,8 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
   showRating = true,
   className = ''
 }) => {
-  // Use our custom hooks for all operations
-  const {
-    handleAddToCart,
-    isAdding,
-    isUpdating
-  } = useCartOperations();
+  // Use cart store for cart operations
+  const { addToCart, isProductInCart, isUpdating } = useCartStore();
 
   const {
     isFavorite,
@@ -51,7 +47,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
 
   const handleAddToCartClick = () => {
     if (!isOutOfStock && !isUpdating) {
-      handleAddToCart(product.id);
+      addToCart(product, 1);
     }
   };
 
@@ -62,7 +58,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ${
+      className={`bg-white rounded-lg shadow-sm hover:shadow-md transition-all duration-300 ${
         isCompact ? 'p-3' : 'p-4'
       } ${className}`}
     >
@@ -86,14 +82,14 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
         {/* Product Details */}
         <div className="flex-1 min-w-0">
           <Link to={`/products/${product.id}`} className="block">
-            <h3 className={`font-semibold text-gray-900 dark:text-white hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors ${
+            <h3 className={`font-semibold text-gray-900 hover:text-indigo-600 transition-colors ${
               isCompact ? 'text-sm' : 'text-base'
             } line-clamp-2`}>
               {product.name}
             </h3>
             
             {product.description && !isCompact && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-1">
+              <p className="text-sm text-gray-600 mt-1 line-clamp-1">
                 {product.description}
               </p>
             )}
@@ -102,13 +98,13 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
           {/* Price and Rating */}
           <div className="flex items-center gap-3 mt-2">
             <div className="flex items-center gap-2">
-              <span className={`font-bold text-gray-900 dark:text-white ${
+              <span className={`font-bold text-gray-900 ${
                 isCompact ? 'text-sm' : 'text-base'
               }`}>
                 {formatPrice(displayPrice)}
               </span>
               {pricing.originalPrice && pricing.originalPrice > displayPrice && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 line-through">
+                <span className="text-xs text-gray-500 line-through">
                   {formatPrice(pricing.originalPrice)}
                 </span>
               )}
@@ -117,7 +113,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             {showRating && product.rating && (
               <div className="flex items-center gap-1">
                 <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                <span className="text-sm text-gray-600 dark:text-gray-400">
+                <span className="text-sm text-gray-600">
                   {product.rating.toFixed(1)}
                 </span>
               </div>
@@ -145,8 +141,8 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             icon={Heart}
             className={`${
               isFavorite 
-                ? 'text-red-600 dark:text-red-400' 
-                : 'text-gray-400 hover:text-red-600 dark:hover:text-red-400'
+                ? 'text-red-600' 
+                : 'text-gray-400 hover:text-red-600'
             }`}
             title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           />
@@ -156,7 +152,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             variant={isOutOfStock ? 'ghost' : 'primary'}
             size={isCompact ? 'sm' : 'md'}
             onClick={handleAddToCartClick}
-            loading={isAdding || isUpdating}
+            loading={isUpdating}
             disabled={isOutOfStock}
             icon={isOutOfStock ? Package : ShoppingCart}
             className={isCompact ? 'px-2' : undefined}

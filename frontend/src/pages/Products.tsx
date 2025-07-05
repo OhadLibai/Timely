@@ -94,7 +94,7 @@ const Products: React.FC = () => {
   const pagination = data?.pagination || {};
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
         <PageHeader
           title="Products"
@@ -112,7 +112,7 @@ const Products: React.FC = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search for products..."
-                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
             </div>
             <Button
@@ -158,13 +158,13 @@ const Products: React.FC = () => {
               />
               
               {/* View Mode Toggle */}
-              <div className="flex bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg">
+              <div className="flex bg-white border border-gray-300 rounded-lg">
                 <button
                   onClick={() => setViewMode('grid')}
                   className={`p-2 rounded-l-lg transition-colors ${
                     viewMode === 'grid'
                       ? 'bg-indigo-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <Grid size={16} />
@@ -174,7 +174,7 @@ const Products: React.FC = () => {
                   className={`p-2 rounded-r-lg transition-colors ${
                     viewMode === 'list'
                       ? 'bg-indigo-600 text-white'
-                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      : 'text-gray-600 hover:bg-gray-50'
                   }`}
                 >
                   <List size={16} />
@@ -206,8 +206,8 @@ const Products: React.FC = () => {
                   />
                   
                   {/* Stock Filter */}
-                  <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-3">Availability</h3>
+                  <div className="bg-white border border-gray-200 rounded-lg p-4">
+                    <h3 className="font-medium text-gray-700 mb-3">Availability</h3>
                     <label className="flex items-center">
                       <input
                         type="checkbox"
@@ -217,7 +217,7 @@ const Products: React.FC = () => {
                         }
                         className="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                       />
-                      <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                      <span className="ml-2 text-sm text-gray-600">
                         In Stock Only
                       </span>
                     </label>
@@ -236,7 +236,7 @@ const Products: React.FC = () => {
             emptyDescription="No products found matching your criteria."
             emptyState={
               <div className="text-center py-12">
-                <p className="text-gray-500 dark:text-gray-400 text-lg">
+                <p className="text-gray-500 text-lg">
                   No products found matching your criteria.
                 </p>
                 <button
@@ -252,7 +252,7 @@ const Products: React.FC = () => {
               <>
                 {/* Results Summary */}
                 <div className="mb-6 flex items-center justify-between">
-                  <p className="text-gray-600 dark:text-gray-400">
+                  <p className="text-gray-600">
                     {pagination.total} products found
                     {searchQuery && (
                       <span className="ml-1">for "{searchQuery}"</span>

@@ -48,10 +48,10 @@ export const AsyncStateWrapper: React.FC<AsyncStateWrapperProps> = ({
     return (
       <div className={`max-w-4xl mx-auto px-4 py-8 ${className}`}>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
             {errorTitle}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-600 mb-6">
             {errorDescription}
           </p>
           {showRetryButton && onRetry && (
@@ -79,10 +79,10 @@ export const AsyncStateWrapper: React.FC<AsyncStateWrapperProps> = ({
     
     return (
       <div className={`max-w-4xl mx-auto px-4 py-8 text-center ${className}`}>
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
           {emptyTitle}
         </h3>
-        <p className="text-gray-600 dark:text-gray-400">
+        <p className="text-gray-600">
           {emptyDescription}
         </p>
       </div>
