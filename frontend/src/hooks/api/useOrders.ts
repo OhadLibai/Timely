@@ -1,5 +1,6 @@
 import { useQuery, UseQueryResult } from 'react-query';
 import { orderService, Order, OrdersResponse, OrderFilters } from '@/services/order.service';
+import { QUERY_CONFIGS } from '@/utils/queryConfig';
 
 export const useOrders = (
   filters: OrderFilters = {}
@@ -7,10 +8,7 @@ export const useOrders = (
   return useQuery(
     ['orders', filters],
     () => orderService.getOrders(filters),
-    {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
-    }
+    QUERY_CONFIGS.FREQUENT_DATA
   );
 };
 
@@ -22,8 +20,7 @@ export const useOrder = (
     () => orderService.getOrder(orderId),
     {
       enabled: !!orderId,
-      staleTime: 2 * 60 * 1000, // 2 minutes - order details might change
-      refetchOnWindowFocus: false,
+      ...QUERY_CONFIGS.ADMIN_DATA, // Order details might change
     }
   );
 };

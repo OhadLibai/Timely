@@ -5,7 +5,14 @@ export { useMutationWithToast } from './api/useMutationWithToast';
 export { useProducts, useProduct, useCategories } from './api/useProducts';
 export { useOrders, useOrder } from './api/useOrders';
 export { useFavorites } from './api/useFavorites';
-export { useDashboardData, useModelMetrics, useMetrics, useDemoUserMetadata } from './api/useAdmin';
+export { 
+  useDashboardOverview, 
+  useDemoUserSeeding, 
+  useModelPerformance, 
+  useUserPredictionAnalysis, 
+  useSystemStatus, 
+  useAdminDataViews 
+} from './api/useAdmin';
 export { usePredictedBasket } from './api/usePredictions';
 
 // Auth Hooks

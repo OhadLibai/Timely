@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { productService } from '@/services/product.service';
+// Note: Uses configurable staleTime (default 30s) for search-specific caching needs
 
 interface UseSearchWithHistoryOptions {
   storageKey?: string;

@@ -108,6 +108,9 @@ yarn.lock
 .env.local.override
 docker-compose.local.yml
 
+# API Agreement Screenshot
+/API_Agreement_Screenshot
+
 
 #################
 # Temporary files

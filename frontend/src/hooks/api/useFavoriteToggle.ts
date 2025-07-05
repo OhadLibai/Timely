@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from 'react-query';
 import toast from 'react-hot-toast';
 import { favoriteService } from '@/services/favorite.service';
 import { useAuthStore } from '@/stores/auth.store';
+// Note: Uses staleTime: Infinity - special case for favorite status that only changes on user click
 
 export const useFavoriteToggle = (productId: string) => {
   const { isAuthenticated } = useAuthStore();

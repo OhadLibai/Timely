@@ -7,12 +7,10 @@ import { Product } from '@/services/product.service';
 export interface OrderItem {
   id: string;
   orderId: string;
-  productId: string;
   product: Product;
   quantity: number;
   price: number;
   total: number;
-  createdAt: string;
 
   // ML fields
   addToCartOrder?: number;

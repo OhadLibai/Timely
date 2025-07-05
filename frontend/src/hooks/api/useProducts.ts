@@ -1,5 +1,6 @@
 import { useQuery, UseQueryResult } from 'react-query';
 import { productService, Product, ProductsResponse, ProductFilters } from '@/services/product.service';
+import { QUERY_CONFIGS } from '@/utils/queryConfig';
 
 export const useProducts = (
   filters: ProductFilters = {}
@@ -9,8 +10,7 @@ export const useProducts = (
     () => productService.getProducts(filters),
     {
       keepPreviousData: true,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      refetchOnWindowFocus: false,
+      ...QUERY_CONFIGS.FREQUENT_DATA,
     }
   );
 };
@@ -23,8 +23,7 @@ export const useProduct = (
     () => productService.getProduct(productId),
     {
       enabled: !!productId,
-      staleTime: 10 * 60 * 1000, // 10 minutes
-      refetchOnWindowFocus: false,
+      ...QUERY_CONFIGS.STABLE_DATA,
     }
   );
 };
@@ -33,9 +32,6 @@ export const useCategories = (): UseQueryResult<string[]> => {
   return useQuery(
     'categories',
     productService.getCategories,
-    {
-      staleTime: 10 * 60 * 1000, // 10 minutes - categories don't change often
-      refetchOnWindowFocus: false,
-    }
+    QUERY_CONFIGS.STABLE_DATA // Categories don't change often
   );
 };

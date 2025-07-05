@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { predictionService } from '@/services/prediction.service';
 import { cartService } from '@/services/cart.service';
+import { QUERY_CONFIGS } from '@/utils/queryConfig';
 import { useCartStore } from '@/stores/cart.store';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ProductImage from '@/components/products/ProductImage';
@@ -32,7 +33,7 @@ const PredictedBasket: React.FC = () => {
     'predicted-basket',
     predictionService.getCurrentPredictedBasket,
     {
-      staleTime: 5 * 60 * 1000,
+      ...QUERY_CONFIGS.FREQUENT_DATA,
       retry: 1
     }
   );
