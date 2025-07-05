@@ -21,7 +21,7 @@ export interface Cart {
   id: string;
   items: CartItem[];
   itemCount: number;
-  subtotal: number;
+  total: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,7 +39,7 @@ interface CartState {
   
   // Computed Values
   getItemCount: () => number;
-  getSubtotal: () => number;
+  getTotal: () => number;
   isProductInCart: (productId: string) => boolean;
   getCartItem: (productId: string) => CartItem | undefined;
   
@@ -61,7 +61,7 @@ export const useCartStore = create<CartState>()(
           id: generateId(),
           items: [],
           itemCount: 0,
-          subtotal: 0,
+          total: 0,
           createdAt: new Date(),
           updatedAt: new Date()
         },
@@ -89,7 +89,7 @@ export const useCartStore = create<CartState>()(
               ...currentCart,
               items: updatedItems,
               itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-              subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+              total: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
               updatedAt: new Date()
             };
             
@@ -110,7 +110,7 @@ export const useCartStore = create<CartState>()(
               ...currentCart,
               items: updatedItems,
               itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-              subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+              total: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
               updatedAt: new Date()
             };
             
@@ -137,7 +137,7 @@ export const useCartStore = create<CartState>()(
             ...currentCart,
             items: updatedItems,
             itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-            subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            total: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
             updatedAt: new Date()
           };
           
@@ -163,7 +163,7 @@ export const useCartStore = create<CartState>()(
             ...currentCart,
             items: updatedItems,
             itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-            subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            total: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
             updatedAt: new Date()
           };
           
@@ -181,7 +181,7 @@ export const useCartStore = create<CartState>()(
             ...currentCart,
             items: updatedItems,
             itemCount: updatedItems.reduce((sum, item) => sum + item.quantity, 0),
-            subtotal: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
+            total: updatedItems.reduce((sum, item) => sum + (item.price * item.quantity), 0),
             updatedAt: new Date()
           };
           
@@ -198,7 +198,7 @@ export const useCartStore = create<CartState>()(
               id: generateId(),
               items: [],
               itemCount: 0,
-              subtotal: 0,
+              total: 0,
               createdAt: new Date(),
               updatedAt: new Date()
             },
@@ -216,9 +216,9 @@ export const useCartStore = create<CartState>()(
           return cart.itemCount;
         },
 
-        getSubtotal: () => {
+        getTotal: () => {
           const { cart } = get();
-          return cart.subtotal;
+          return cart.total;
         },
 
         isProductInCart: (productId: string) => {

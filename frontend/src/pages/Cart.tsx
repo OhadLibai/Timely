@@ -30,7 +30,7 @@ const Cart: React.FC = () => {
     updateQuantity, 
     removeItem, 
     clearCart,
-    getSubtotal,
+    getTotal,
   } = useCartStore();
 
   useEffect(() => {
@@ -88,8 +88,7 @@ const Cart: React.FC = () => {
     );
   }
 
-  const subtotal = getSubtotal();
-  const total = subtotal
+  const total = getTotal();
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -152,16 +151,6 @@ const Cart: React.FC = () => {
                                 {item.product.category?.name}
                               </p>
                               
-                              {item.product.originalPrice > item.product.price && (
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className="text-sm line-through text-gray-400">
-                                    {formatPrice(item.product.originalPrice)}
-                                  </span>
-                                  <span className="text-sm font-medium text-green-600">
-                                    Save {formatPrice(item.product.originalPrice - item.product.price)}
-                                  </span>
-                                </div>
-                              )}
                             </div>
                             
                             <button
@@ -233,16 +222,9 @@ const Cart: React.FC = () => {
               </h3>
 
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">{formatPrice(subtotal)}</span>
-                </div>
-                
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="flex justify-between font-semibold text-lg">
-                    <span className="text-gray-900">Total</span>
-                    <span className="text-gray-900">{formatPrice(total)}</span>
-                  </div>
+                <div className="flex justify-between font-semibold text-lg">
+                  <span className="text-gray-900">Total</span>
+                  <span className="text-gray-900">{formatPrice(total)}</span>
                 </div>
               </div>
 

@@ -101,13 +101,8 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
               <span className={`font-bold text-gray-900 ${
                 isCompact ? 'text-sm' : 'text-base'
               }`}>
-                {formatPrice(displayPrice)}
+                {formatPrice(product.price)}
               </span>
-              {pricing.originalPrice && pricing.originalPrice > displayPrice && (
-                <span className="text-xs text-gray-500 line-through">
-                  {formatPrice(pricing.originalPrice)}
-                </span>
-              )}
             </div>
 
             {showRating && product.rating && (

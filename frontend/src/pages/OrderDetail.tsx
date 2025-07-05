@@ -10,7 +10,7 @@ import {
   DollarSign, Calendar, RefreshCcw, ShoppingCart
 } from 'lucide-react';
 import { useOrder } from '@/hooks';
-import { AsyncStateWrapper, StatusIndicator } from '@/components/common';
+import { AsyncStateWrapper, StatusIndicator, LoadingSpinner } from '@/components/common';
 import toast from 'react-hot-toast';
 import { useCartStore } from '@/stores/cart.store';
 import { formatOrderNumber, formatPrice } from '@/utils/formatters';
@@ -158,28 +158,9 @@ const OrderDetail: React.FC = () => {
             </h3>
             
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="font-medium">{formatPrice(order.subtotal)}</span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tax</span>
-                <span className="font-medium">{formatPrice(order.tax)}</span>
-              </div>
-              
-              {order.discount > 0 && (
-                <div className="flex justify-between text-green-600">
-                  <span>Discount</span>
-                  <span>-{formatPrice(order.discount)}</span>
-                </div>
-              )}
-              
-              <div className="border-t border-gray-200 pt-2 mt-2">
-                <div className="flex justify-between text-lg font-semibold">
-                  <span>Total</span>
-                  <span>{formatPrice(order.total)}</span>
-                </div>
+              <div className="flex justify-between text-lg font-semibold">
+                <span>Total</span>
+                <span>{formatPrice(order.total)}</span>
               </div>
             </div>
           </div>

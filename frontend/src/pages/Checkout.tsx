@@ -42,7 +42,7 @@ interface CheckoutFormData {
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuthStore();
-  const { cart, getSubtotal, clearCart } = useCartStore();
+  const { cart, getTotal, clearCart } = useCartStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -74,9 +74,7 @@ const Checkout: React.FC = () => {
     return <LoadingSpinner fullScreen />;
   }
 
-  const subtotal = getSubtotal();
-  const deliveryFee = subtotal > 50 ? 0 : 5.99;
-  const total = subtotal + deliveryFee;
+  const total = getTotal();
 
   const onSubmit = async (data: CheckoutFormData) => {
     setIsProcessing(true);
@@ -487,31 +485,11 @@ const Checkout: React.FC = () => {
 
               {/* Order Totals */}
               <div className="space-y-2 text-sm border-t border-gray-200 pt-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-900">{formatPrice(subtotal)}</span>
-                </div>
-                
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Delivery</span>
-                  <span className={deliveryFee === 0 ? 'text-green-600' : 'text-gray-900'}>
-                    {deliveryFee === 0 ? 'FREE' : formatPrice(deliveryFee)}
-                  </span>
-                </div>
-                
-                <div className="flex justify-between text-lg font-semibold border-t border-gray-200 pt-2">
+                <div className="flex justify-between text-lg font-semibold">
                   <span className="text-gray-900">Total</span>
                   <span className="text-gray-900">{formatPrice(total)}</span>
                 </div>
               </div>
-              
-              {deliveryFee === 0 && (
-                <div className="mt-4 p-3 bg-green-50/20 border border-green-200 rounded-lg">
-                  <p className="text-sm text-green-700">
-                    🎉 You qualify for free delivery!
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>
