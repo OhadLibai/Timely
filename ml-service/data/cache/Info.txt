@@ -1,3 +1,0 @@
-├── instacart_history.json     # ✅ TIFU-KNN input data
-├── instacart_future.json      # ✅ Evaluation ground truth  
-├── instacart_keyset_0.json    # ✅ Frequency groups

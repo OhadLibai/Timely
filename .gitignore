@@ -55,12 +55,10 @@ jspm_packages/
 .yarn-integrity
 
 # ML/Data files (keep structure but ignore large files)
-/ml-service/dataset/*.csv
+**/dataset/*.csv
 /ml-service/models/*.pkl
 /ml-service/models/*.joblib
 /ml-service/models/*.h5
-/ml-service/mlruns/
-/ml-service/.mlflow/
 
 # Python specific
 /ml-service/__pycache__/
