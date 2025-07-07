@@ -11,15 +11,16 @@ We will demonstrate like this:
 - Then the ML prediction model will predict/generate for that user his next basket, by lets say auto basket generation button (or similar name or user request). This meant to fully achieve convincing working mechanism of the app.
 The idea is that after the admin seed a user with his past purchases (pumped by the csv dataset) to the database - we have a "real" user that used the app for monthes. This simulates using the app for long period of time. We want to show how helpfull the app could be, assisting him with automated basket creation, driven by the ML model of the app. With several past orders the user can benefit from the gadget of auto basket generation.
 
-## #2 - Model Performance Stats:
+## #2 - Model Performance Stats and Metrics:
 The goal is to present our ML model prediction scores with dataset of Instacart we were given, with respect to well known next basket recommendation analysis and criteria.
-The evaluations are done by evaluation module, which responsible for testing the ML model predictions.
-The performance measurements are taken over all users of Instacart dataset (or part of it, this is configuarble).
+The evaluations are done by evaluation module, which responsible for testing the ML model predictions and provide metrics upon that.
+The performance measurements are taken over all users of Instacart dataset or part of it.
 It should look like this:
-- The admin has something like 'Evaluate Model Performance'.
+- The admin has something like 'Evaluate Model'.
 - He can choose a number of users evalutions can be performed on or run it on all users.
-- When he trigger a request to see the model performance, calculations start to take place by ml-service.
+- When he trigger a request to see the model performance, model stats and metrics- calculations start to take place by the evaluation module.
 - Once the scores are ready they are sent to be rendered to admin.
+There are numerous evaluation aspects that can take place here and be rendered. Each aspect can be related with the files in the evaluation module.
 
 ## #3 - Individual User Prediction Performance
 It will go like this:
