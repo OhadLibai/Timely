@@ -31,7 +31,7 @@ class PredictionService {
    * This is the ONLY method needed for the entire prediction feature.
    * The backend endpoint '/predictions/get-predicted-basket' is responsible for:
    * 1. Returning a user's existing, active prediction if one is available.
-   * 2. Automatically generating a NEW prediction if one does not exist. (backend resposibility)
+   * 2. Automatically generating a NEW prediction if one does not exist (_force flag)
    *
    * This simplifies the frontend logic immensely—it just has to call one
    * function and display the result.
