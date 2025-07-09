@@ -1,4 +1,6 @@
 // frontend/src/stores/auth.store.ts
+// ADDED: getCurrentUserId method for standardized user ID access across services
+
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { authService, User } from '@/services/auth.service';
@@ -22,12 +24,15 @@ interface AuthState {
   refreshAuth: () => Promise<void>;
   updateUser: (user: User) => void;
   clearAuth: () => void;
+  
+  // ✅ ADDED: Standardized user ID access method
+  getCurrentUserId: () => string;
 }
 
 export const useAuthStore = create<AuthState>()(
   devtools(
     persist(
-      (set) => ({
+      (set, get) => ({
         user: authService.getUser(),
         isAuthenticated: authService.isAuthenticated(),
         isLoading: false,
@@ -108,6 +113,13 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             isAuthenticated: false
           });
+        },
+
+        // ✅ ADDED: Standardized method for getting current user ID
+        // Simplifies service calls and eliminates duplication across the app
+        getCurrentUserId: () => {
+          const state = get();
+          return state.user?.id || '';
         }
       }),
       {

@@ -1,12 +1,12 @@
 // frontend/src/services/prediction.service.ts
-// FINAL REFACTORED VERSION: Radically simplified to a single, powerful method.
+// MINIMAL CHANGES: Only necessary fixes for error handling and missing method
 
 import { api } from '@/services/api.client';
 import { Product } from '@/services/product.service';
+import { useAuthStore } from '@/stores/auth.store';
 
 /**
  * Defines the structure of a single item within the AI's prediction.
- * This is the blueprint for the data received from the backend.
  */
 export interface PredictedBasketItem {
   product: Product;
@@ -17,13 +17,15 @@ export interface PredictedBasketItem {
  * Defines the structure for the entire predicted basket.
  */
 export interface PredictedBasket {
-  id: string; // The unique ID for this specific prediction.
+  id: string;
   items: PredictedBasketItem[];
 }
 
-// NEW: Define the structured response interface
+/**
+ * Backend response structure - UPDATED: basket can be empty object for business logic errors
+ */
 export interface PredictionResponse {
-  basket: PredictedBasket | null;
+  basket: PredictedBasket | {}; // Empty object for prediction faults (< 3 orders)
   error?: string;
   success: boolean;
 }
@@ -33,39 +35,63 @@ export interface PredictionResponse {
 // ============================================================================
 class PredictionService {
   /**
-   * Fetches the latest predicted basket for the user.
-   *
-   * This is the ONLY method needed for the entire prediction feature.
-   * The backend endpoint '/predictions/get-predicted-basket-db' is responsible for:
-   * 1. Returning a user's existing, active prediction if one is available.
-   * 2. Automatically generating a NEW prediction if one does not exist 
-   * 
-   * This simplifies the frontend logic immensely—it just has to call one
-   * function and display the result.
+   * ADDED: Missing method that components actually call
+   * Normal user flow for predictions (Demand 1)
    */
-  async getPredictedBasketDB(userID: string): Promise<PredictedBasket | null> {
+  async getPredictedBasket(): Promise<PredictionResponse> {
     try {
-      // This single endpoint handles both fetching and generation.
-      const response = await api.post<PredictionResponse>('/predictions/get-predicted-basket');
+      const userId = useAuthStore.getState().getCurrentUserId();
+      const response = await api.post<PredictionResponse>(`/predictions/get-predicted-basket/${userId}`);
       return response;
     } catch (error: any) {
       console.error('Failed to get or generate prediction:', error);
-      // If the API fails for any reason, return null so the UI can show an error.
-      return null;
+      
+      // MINIMAL FIX: Extract error message before returning
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to generate predictions';
+      return { 
+        basket: {}, // Empty object for errors
+        error: errorMessage, 
+        success: false 
+      };
     }
   }
 
-  async getPredictedBasketCSV(userID: string): Promise<PredictedBasket | null> {
+  /**
+   * UPDATED: Admin function for Demand 3 - CSV-based predictions
+   * Return type changed to PredictionResponse for consistency
+   */
+  async getPredictedBasketCSV(userID: string): Promise<PredictionResponse> {
     try {
-      // This single endpoint handles both fetching and generation.
-      const response = await api.post<PredictionResponse>('/predictions/get-predicted-basket');
+      const response = await api.post<PredictionResponse>(`/predictions/get-predicted-basket-csv/${userID}`);
       return response;
     } catch (error: any) {
       console.error('Failed to get or generate prediction:', error);
-      // If the API fails for any reason, return null so the UI can show an error.
-      return null;
+      
+      // MINIMAL FIX: Extract error message before returning
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to generate predictions';
+      return { 
+        basket: {}, // Empty object for errors
+        error: errorMessage, 
+        success: false 
+      };
     }
   }
+
+  // REMOVED: getPredictedBasketDB - overlaps with getPredictedBasket
 }
 
 export const predictionService = new PredictionService();
+
+// ============================================================================
+// MINIMAL CHANGES SUMMARY:
+// 
+// ✅ ADDED: Missing getPredictedBasket() method that components call
+// ✅ UPDATED: PredictionResponse interface - basket can be empty object {}
+// ✅ UPDATED: Return types from PredictedBasket|null to PredictionResponse  
+// ✅ ADDED: Option B implementation - userId in URL path
+// ✅ FIXED: Error message extraction before returning structured response
+// ✅ REMOVED: getPredictedBasketDB to avoid overlap with getPredictedBasket
+// ✅ PRESERVED: All existing patterns and minimal code changes only
+// 
+// Now components will receive both basket data and error messages cleanly
+// ============================================================================
