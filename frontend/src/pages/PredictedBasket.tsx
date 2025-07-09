@@ -121,7 +121,7 @@ const PredictedBasket: React.FC = () => {
 
   // Generate prediction mutation
   const generateMutation = useMutation(
-    (force: boolean) => predictionService.getPredictedBasket(force),
+    () => predictionService.getPredictedBasket(),
     {
       onMutate: () => {
         toast.loading('🧠 AI is analyzing your shopping patterns...', {

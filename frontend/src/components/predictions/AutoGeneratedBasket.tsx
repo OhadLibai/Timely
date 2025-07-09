@@ -31,7 +31,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
 
   // Generate prediction mutation
   const generateMutation = useMutation(
-    () => predictionService.getPredictedBasket(false), // Use the correct API contract
+    () => predictionService.getPredictedBasket(), // Use the correct API contract
     {
       onMutate: () => {
         setShowResult(false);
