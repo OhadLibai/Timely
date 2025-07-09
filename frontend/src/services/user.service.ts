@@ -1,4 +1,9 @@
-import { apiClient } from './api.client';
+// frontend/src/services/user.service.ts
+// MINIMAL FIX: Updated for Option B consistency and getCurrentUserId pattern
+// CONSISTENCY: Aligned with other services structure and URL patterns
+
+import { api } from '@/services/api.client';
+import { useAuthStore } from '@/stores/auth.store';
 
 interface UserProfile {
   id: string;
@@ -16,18 +21,38 @@ interface UpdateProfileData {
   address?: string;
 }
 
-export const userService = {
+class UserService {
+  
+  // ============================================================================
+  // USER PROFILE OPERATIONS 
+  // ============================================================================
+
+  /**
+   * Get user profile
+   * UPDATED: Uses userId in URL path for Option B consistency
+   */
   async getProfile(): Promise<UserProfile> {
-    const response = await apiClient.get('/user/profile');
-    return response.data;
-  },
+    const userId = useAuthStore.getState().getCurrentUserId();
+    return api.get<UserProfile>(`/user/${userId}/profile`);
+  }
 
+  /**
+   * Update user profile
+   * UPDATED: Uses userId in URL path for Option B consistency
+   */
   async updateProfile(data: UpdateProfileData): Promise<UserProfile> {
-    const response = await apiClient.put('/user/profile', data);
-    return response.data;
-  },
+    const userId = useAuthStore.getState().getCurrentUserId();
+    return api.put<UserProfile>(`/user/${userId}/profile`, data);
+  }
 
+  /**
+   * Delete user account
+   * UPDATED: Uses userId in URL path for Option B consistency
+   */
   async deleteAccount(): Promise<void> {
-    await apiClient.delete('/user/account');
-  },
-};
+    const userId = useAuthStore.getState().getCurrentUserId();
+    return api.delete(`/user/${userId}/account`);
+  }
+}
+
+export const userService = new UserService();

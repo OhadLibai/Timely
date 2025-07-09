@@ -1,7 +1,9 @@
 // frontend/src/services/order.service.ts
-// CLEANED: Removed all tracking/delivery functionality - Focus on ML basket prediction
+// COMPLETE FIX: Minimal implementation with consistent getCurrentUserId pattern
+// FOCUS: Correctness and adequate implementation, not security
 
 import { api } from '@/services/api.client';
+import { useAuthStore } from '@/stores/auth.store';
 import { Product } from '@/services/product.service';
 
 export interface OrderItem {
@@ -21,7 +23,7 @@ export interface Order {
   id: string;
   orderNumber: string;
   userId: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled'; // Simplified statuses
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
   items: OrderItem[];
   total: number;
   paymentMethod: string;
@@ -36,8 +38,7 @@ export interface Order {
   instacartOrderId?: number;
 }
 
-
-// Simplified order creation - no delivery address needed
+// Simplified order creation
 export interface CreateOrderData {
   cartId: string;
   paymentMethod: string;
@@ -51,26 +52,33 @@ export interface OrdersResponse {
   hasMore: boolean;
 }
 
-export interface OrderFilters {
-  page?: number;
-  limit?: number;
-  status?: string;
-  startDate?: string;
-  endDate?: string;
-  sort?: string;
-}
-
-// --- SERVICE CLASS (API communication only) ---
+// ============================================================================
+// ORDER SERVICE CLASS - MINIMAL IMPLEMENTATION
+// ============================================================================
 class OrderService {
+  
+  /**
+   * Create order - Backend needs userId to know which user is creating the order
+   * Uses Option B pattern: userId in URL path
+   */
   async createOrder(data: CreateOrderData): Promise<Order> {
-    return api.post<Order>('/orders/create', data);
+    const userId = useAuthStore.getState().getCurrentUserId();
+    return api.post<Order>(`/orders/create/${userId}`, data);
   }
 
-  async getOrders(_filters: OrderFilters = {}): Promise<OrdersResponse> {
-    const params = new URLSearchParams();
-    return api.get<OrdersResponse>(`/orders?${params.toString()}`);
+  /**
+   * Get user's orders - Backend needs userId to return correct user's orders
+   * MINIMAL: No complex filtering logic, components handle filtering
+   */
+  async getOrders(): Promise<OrdersResponse> {
+    const userId = useAuthStore.getState().getCurrentUserId();
+    return api.get<OrdersResponse>(`/orders/user/${userId}`);
   }
 
+  /**
+   * Get single order - OrderIds are globally unique, no userId needed
+   * SIMPLE: Direct order lookup by globally unique orderId
+   */
   async getOrder(orderId: string): Promise<Order> {
     return api.get<Order>(`/orders/${orderId}`);
   }
