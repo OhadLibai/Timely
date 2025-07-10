@@ -22,8 +22,8 @@ class AdminService {
    * DEMAND 3: Get live demo prediction comparison
    * FIXED: Now accepts ANY user ID - no client-side validation
    */
-  async getUserPredictionComparison(userId: string): Promise<DemoUserPrediction> {
-    return api.get<DemoUserPrediction>(`/admin/demo/user-prediction/${userId}`);
+  async getUserPredictionComparison(userId: string): Promise<DemoPredictionComparison> {
+    return api.get<DemoPredictionComparison>(`/admin/demo/user-prediction/${userId}`);
   }
 
   /**

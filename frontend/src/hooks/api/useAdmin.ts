@@ -26,7 +26,7 @@ export const useDashboardOverview = (dateRange?: any) => {
 
   const mlMetrics = useApiQuery(
     QUERY_KEYS.mlMetrics(),
-    () => metricsService.getModelPerformance(100),
+    () => metricsService.getModelMetricsScores(100),
     { staleTime: 'stable' }
   );
 
@@ -92,12 +92,12 @@ export const useModelPerformance = () => {
 
   const metrics = useApiQuery(
     QUERY_KEYS.mlMetrics(),
-    () => metricsService.getModelPerformance(100),
+    () => metricsService.getModelMetricsScores(100),
     { staleTime: 'stable' }
   );
 
   const runEvaluation = useMutationWithToast({
-    mutationFn: (sampleSize?: number) => metricsService.getModelPerformance(sampleSize || 100),
+    mutationFn: (sampleSize?: number) => metricsService.getModelMetricsScores(sampleSize || 100),
     successMessage: 'Model evaluation completed successfully',
     errorMessage: 'Failed to run model evaluation',
     onSuccess: () => {

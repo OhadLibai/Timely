@@ -37,7 +37,7 @@ const ModelPerformance: React.FC = () => {
     refetch: refetchMetrics 
   } = useQuery(
     'modelPerformanceMetrics',
-    () => metricsService.getModelPerformance(sampleSize),
+    () => metricsService.getModelMetricsScores(sampleSize),
     {
       ...QUERY_CONFIGS.STABLE_DATA,
       cacheTime: 30 * 60 * 1000
@@ -52,7 +52,7 @@ const ModelPerformance: React.FC = () => {
         id: 'evaluation'
       });
       
-      await metricsService.getModelPerformance(size);
+      await metricsService.getModelMetricsScores(size);
       
       toast.dismiss('evaluation');
       toast.success('✅ Model evaluation completed!', {

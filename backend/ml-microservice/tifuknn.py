@@ -10,7 +10,7 @@ import json
 from sklearn.neighbors import NearestNeighbors
 from tqdm import tqdm
 
-topk = 10
+topk = 20
 
 def group_history_list(his_list, group_size):
     grouped_vec_list = []

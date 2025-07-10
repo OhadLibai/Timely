@@ -41,7 +41,7 @@ class PredictionService {
   async getPredictedBasket(): Promise<PredictionResponse> {
     try {
       const userId = useAuthStore.getState().getCurrentUserId();
-      const response = await api.post<PredictionResponse>(`/predictions/get-predicted-basket/${userId}`);
+      const response = await api.post<PredictionResponse>(`/predictions/predicted-basket/${userId}`);
       return response;
     } catch (error: any) {
       console.error('Failed to get or generate prediction:', error);
@@ -56,13 +56,12 @@ class PredictionService {
     }
   }
 
-  /**
-   * UPDATED: Admin function for Demand 3 - CSV-based predictions
-   * Return type changed to PredictionResponse for consistency
-   */
+  /*
+    --- Irelavent. We need only getUserPredictionComparison ---
+
   async getPredictedBasketCSV(userID: string): Promise<PredictionResponse> {
     try {
-      const response = await api.post<PredictionResponse>(`/predictions/get-predicted-basket-csv/${userID}`);
+      const response = await api.post<PredictionResponse>(`/predictions/predicted-basket-csv/${userID}`);
       return response;
     } catch (error: any) {
       console.error('Failed to get or generate prediction:', error);
@@ -77,21 +76,7 @@ class PredictionService {
     }
   }
 
-  // REMOVED: getPredictedBasketDB - overlaps with getPredictedBasket
+  */
 }
 
 export const predictionService = new PredictionService();
-
-// ============================================================================
-// MINIMAL CHANGES SUMMARY:
-// 
-// ✅ ADDED: Missing getPredictedBasket() method that components call
-// ✅ UPDATED: PredictionResponse interface - basket can be empty object {}
-// ✅ UPDATED: Return types from PredictedBasket|null to PredictionResponse  
-// ✅ ADDED: Option B implementation - userId in URL path
-// ✅ FIXED: Error message extraction before returning structured response
-// ✅ REMOVED: getPredictedBasketDB to avoid overlap with getPredictedBasket
-// ✅ PRESERVED: All existing patterns and minimal code changes only
-// 
-// Now components will receive both basket data and error messages cleanly
-// ============================================================================

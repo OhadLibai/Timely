@@ -36,7 +36,7 @@ const AdminDashboard: React.FC = () => {
 
   // Quick Model Evaluation Mutation - Using existing metricsService
   const evaluationMutation = useMutation(
-    () => metricsService.getModelPerformance(process.env.EVALUATION_SAMPLE_SIZE),
+    () => metricsService.getModelMetricsScores(),
     {
       onMutate: () => {
         setIsEvaluating(true);
