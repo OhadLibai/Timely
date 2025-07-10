@@ -16,7 +16,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   Cell, PieChart, Pie, AreaChart, Area
 } from 'recharts';
-import { metricsService } from '@/services/metrics.service';
+import { evaluationService } from '@/services/evaluation.service';
 import { QUERY_CONFIGS } from '@/utils/queryConfig';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import MetricCard from '@/components/admin/MetricCard';
@@ -27,7 +27,7 @@ import toast from 'react-hot-toast';
 const ModelPerformance: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [sampleSize, setSampleSize] = useState(100);
+  const [sampleSize, setSampleSize] = useState(100); 
   const [isEvaluating, setIsEvaluating] = useState(false);
   
   // Fetch existing metrics using metricsService
@@ -37,37 +37,43 @@ const ModelPerformance: React.FC = () => {
     refetch: refetchMetrics 
   } = useQuery(
     'modelPerformanceMetrics',
-    () => metricsService.getModelMetricsScores(sampleSize),
+    () => evaluationService.getModelMetricsScores(sampleSize),
     {
       ...QUERY_CONFIGS.STABLE_DATA,
       cacheTime: 30 * 60 * 1000
     }
   );
 
-  // Trigger new evaluation using metricsService
-  const handleRunEvaluation = async (size: number) => {
-    try {
-      setIsEvaluating(true);
-      toast.loading('🧠 Running model evaluation... This may take a minute.', {
-        id: 'evaluation'
-      });
-      
-      await metricsService.getModelMetricsScores(size);
-      
-      toast.dismiss('evaluation');
-      toast.success('✅ Model evaluation completed!', {
-        duration: 6000,
-        icon: '🎉'
-      });
-      
-      // Refresh metrics
-      refetchMetrics();
-    } catch (error: any) {
-      toast.dismiss('evaluation');
-      toast.error(`❌ Evaluation failed: ${error.message}`, { duration: 8000 });
-    } finally {
-      setIsEvaluating(false);
+  // UPDATED: The mutation now updates the dashboard's cache on success
+  const evaluationMutation = useMutation(
+    (size: number) => evaluationService.getModelMetricsScores(size),
+    {
+      onMutate: (size) => {
+        setIsEvaluating(true);
+        toast.loading(`🧠 Running model evaluation on ${size} users...`, { id: 'evaluation' });
+      },
+      onSuccess: (newData, size) => {
+        toast.dismiss('evaluation');
+        toast.success(`✅ Evaluation for ${size} users complete!`, { duration: 4000 });
+
+        // Manually update the data for the dashboard's query key.
+        // This ensures the dashboard now shows these new results.
+        queryClient.setQueryData(QUERY_KEYS.mlMetrics(), newData);
+
+        // Also, invalidate and refetch the data for this current page to be consistent.
+        queryClient.invalidateQueries('modelPerformanceMetrics');
+        setIsEvaluating(false);
+      },
+      onError: (error: any) => {
+        toast.dismiss('evaluation');
+        toast.error(`❌ Evaluation failed: ${error.message}`, { duration: 6000 });
+        setIsEvaluating(false);
+      }
     }
+  );
+
+  const handleRunEvaluation = (size: number) => {
+    evaluationMutation.mutate(size);
   };
 
   // Prepare chart data

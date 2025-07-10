@@ -1,18 +1,17 @@
+# backend/endpoints/evaluations.py
+
+from flask import Blueprint, jsonify, current_app
 
 
+evaluations_bp = Blueprint('evaluations', __name__)
 
-metrics_bp = Blueprint('metrics', __name__)
 
-
-@admin_bp.route('/ml/evaluate', methods=['POST'])
-def evaluate_model():
+@admin_bp.route('metrics/<int:sample_size>', methods=['POST'])
+def evaluate_metrics():
     """
     Evaluate model performance (Demand #2)
     """
     try:
-        data = request.json or {}
-        sample_size = data.get('sampleSize', 1000)
-        
         # For now, return mock metrics
         # TODO: Implement actual evaluation using evaluation module
         

@@ -352,43 +352,6 @@ const UserPrediction: React.FC = () => {
         {/* Results */}
         {predictionData && !isAnalyzing && (
           <>
-            {/* Performance Metrics */}
-            <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-              <div className="flex items-center gap-3 mb-6">
-                <TrendingUp className="w-6 h-6 text-green-600" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Prediction Performance for User {selectedUserId}
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-indigo-600">
-                    {predictionData.metrics.precision.toFixed(3)}
-                  </div>
-                  <div className="text-sm text-gray-600">Precision</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600">
-                    {predictionData.metrics.recall.toFixed(3)}
-                  </div>
-                  <div className="text-sm text-gray-600">Recall</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600">
-                    {predictionData.metrics.f1_score.toFixed(3)}
-                  </div>
-                  <div className="text-sm text-gray-600">F1 Score</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-orange-600">
-                    {predictionData.matchingProducts.length}
-                  </div>
-                  <div className="text-sm text-gray-600">Matches</div>
-                </div>
-              </div>
-            </div>
-
             {/* Product Comparison */}
             {renderProductComparison()}
           </>

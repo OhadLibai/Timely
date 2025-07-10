@@ -1,4 +1,4 @@
-// frontend/src/services/metrics.service.ts
+// frontend/src/services/evaluation.service.ts
 
 import { api } from '@/services/api.client';
 
@@ -20,16 +20,14 @@ export interface ModelMetrics {
 // METRICS SERVICE CLASS
 // ============================================================================
 
-class MetricsService {
+class EvaluationService {
   /**
    * DEMAND 2: Get model performance metrics
    * Used by admin to evaluate ML model quality
    */
   async getModelMetricsScores(sampleSize?: number): Promise<ModelMetrics> {
     try {
-      const response = await api.post<ModelMetrics>('/admin/ml/evaluate', {
-        sampleSize: sampleSize || process.env.EVALUATION_SAMPLE_SIZE
-      });
+      const response = await api.post<ModelMetrics>(`/evaluations/metrics/${sampleSize||100}`);
       return response;
     } catch (error) {
       console.error('Failed to get model metrics:', error);
@@ -38,4 +36,4 @@ class MetricsService {
   }
 }
 
-export const metricsService = new MetricsService();
+export const evaluationService = new EvaluationService();

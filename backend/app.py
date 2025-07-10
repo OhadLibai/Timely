@@ -42,7 +42,7 @@ app.ml_engine = get_engine()
 from endpoints.auth import auth_bp
 from endpoints.predictions import predictions_bp
 from endpoints.admin import admin_bp
-from endpoints.metrics import metrics_bp
+from endpoints.evaluations import evaluations_bp
 from endpoints.products import products_bp
 from endpoints.orders import orders_bp
 from endpoints.user import user_bp
@@ -52,7 +52,7 @@ from endpoints.favorites import favorites_bp
 app.register_blueprint(auth_bp, url_prefix='/api/auth')
 app.register_blueprint(predictions_bp, url_prefix='/api/predictions')
 app.register_blueprint(admin_bp, url_prefix='/api/admin')
-app.register_blueprint(metrics_bp, url_prefix='/api/metrics')
+app.register_blueprint(evaluations_bp, url_prefix='/api/evaluations')
 app.register_blueprint(products_bp, url_prefix='/api/products')
 app.register_blueprint(orders_bp, url_prefix='/api/orders')
 app.register_blueprint(user_bp, url_prefix='/api/user')

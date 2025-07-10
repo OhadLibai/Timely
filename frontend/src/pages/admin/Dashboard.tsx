@@ -13,7 +13,7 @@ import {
   BarChart3, Activity, Package, DollarSign, 
   PlayCircle, Settings, Eye, Sparkles, Clock
 } from 'lucide-react';
-import { metricsService } from '@/services/metrics.service';
+import { evaluationService } from '@/services/evaluation.service';
 import { useDashboardOverview } from '@/hooks/api/useAdmin';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import MetricCard from '@/components/admin/MetricCard';
@@ -34,9 +34,10 @@ const AdminDashboard: React.FC = () => {
   // Use consolidated dashboard hook instead of individual queries
   const { dashboardStats, mlMetrics, demoStats, isLoading, error } = useDashboardOverview();
 
+  /* 
   // Quick Model Evaluation Mutation - Using existing metricsService
   const evaluationMutation = useMutation(
-    () => metricsService.getModelMetricsScores(),
+    () => evaluationService.getModelMetricsScores(),
     {
       onMutate: () => {
         setIsEvaluating(true);
@@ -59,6 +60,7 @@ const AdminDashboard: React.FC = () => {
   const handleQuickEvaluation = () => {
     evaluationMutation.mutate();
   };
+  */
 
   // Loading state
   if (isLoading) {
@@ -85,20 +87,11 @@ const AdminDashboard: React.FC = () => {
               ML Model Performance
             </h2>
             <p className="text-sm text-gray-600">
-              Real-time ML metrics and evaluation results
+              Displaying the latest evaluation results.
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleQuickEvaluation}
-            disabled={isEvaluating}
-            icon={isEvaluating ? RefreshCw : PlayCircle}
-          >
-            {isEvaluating ? 'Evaluating...' : 'Quick Evaluation'}
-          </Button>
           <Button
             variant="primary"
             size="sm"
@@ -106,7 +99,7 @@ const AdminDashboard: React.FC = () => {
             icon={ArrowRight}
             iconPosition="right"
           >
-            View Detailed Performance
+            Run New Evaluation
           </Button>
         </div>
       </div>

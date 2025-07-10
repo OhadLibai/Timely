@@ -27,7 +27,6 @@ class FavoriteService {
 
   /**
    * Add product to favorites
-   * UPDATED: Uses userId in URL path for Option B consistency
    */
   async addFavorite(productId: string): Promise<Favorite> {
     const userId = useAuthStore.getState().getCurrentUserId();
@@ -36,7 +35,6 @@ class FavoriteService {
 
   /**
    * Remove product from favorites
-   * UPDATED: Uses userId in URL path for Option B consistency
    */
   async removeFavorite(productId: string): Promise<void> {
     const userId = useAuthStore.getState().getCurrentUserId();
@@ -45,7 +43,6 @@ class FavoriteService {
 
   /**
    * Check if product is favorited
-   * UPDATED: Uses userId in URL path for Option B consistency
    */
   async isProductFavorited(productId: string): Promise<boolean> {
     try {

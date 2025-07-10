@@ -101,33 +101,3 @@ def get_predicted_basket(user_id):
             'success': False
         }), 500
 
-
-@predictions_bp.route('/predicted-basket-csv/<int:user_id>', methods=['POST'])
-def get_predicted_basket_csv(user_id):
-    """
-    Get prediction directly from CSV for demo/testing (Demand #3)
-    """
-    try:
-        # Generate prediction from CSV data
-        ml_engine = current_app.ml_engine
-        prediction = ml_engine.predict_basket(str(user_id), use_csv_data=True)
-        
-        # Format response
-        response = format_prediction_response(prediction, user_id)
-        
-        # Add ground truth if available
-        if response['success']:
-            ground_truth = get_ground_truth(user_id)
-            response['groundTruth'] = ground_truth
-        
-        return jsonify(response)
-        
-    except Exception as e:
-        print(f"CSV prediction error: {str(e)}")
-        return jsonify({
-            'basket': {},
-            'error': 'Failed to generate prediction from CSV',
-            'success': False
-        }), 500
-
-
