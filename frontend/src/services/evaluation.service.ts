@@ -11,7 +11,7 @@ export interface ModelMetrics {
   RecallAt20: number;
   F1ScoreAt20: number;
   NDCGAt20: number;
-  Jaccard: number;
+  JaccardSimilarity: number;
   sampleSize?: number;
 }
 
@@ -22,7 +22,7 @@ export interface ModelMetrics {
 class EvaluationService {
   /**
    * DEMAND 2: Get model performance metrics
-   * Used by admin to evaluate ML model quality
+   * Used to evaluate ML model quality
    */
   async getModelMetricsScores(sampleSize?: number): Promise<ModelMetrics> {
     try {
