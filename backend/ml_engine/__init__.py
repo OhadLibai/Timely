@@ -2,6 +2,7 @@
 """
 ML Engine - TIFUKNN Implementation adapted for Timely
 Implements the exact TIFUKNN algorithm logic, optimized for single-user predictions
+Updated paths for new project structure
 """
 
 import numpy as np
@@ -22,12 +23,12 @@ ALPHA = 0.9
 GROUP_SIZE = 3
 TOPK = 20
 TOP_CANDIDATES = 100  # Top candidates before final selection
-KNN_NEIGHBOR_LOADING_SAMPLE = 5000
+KNN_NEIGHBOR_LOADING_SAMPLE = 5000 # K
 
-# Paths
+# Updated paths for new structure
 DATA_PATH = Path('/app/data')
 VECTORS_PATH = DATA_PATH / 'vectors'
-DATASET_PATH = DATA_PATH / 'dataset'
+DATASET_PATH = DATA_PATH / 'dataset'  # Local copy in backend container
 
 # Database config
 DATABASE_CONFIG = {
@@ -59,6 +60,9 @@ class TifuKnnEngine:
         if history_path.exists():
             with open(history_path, 'r') as f:
                 self.csv_data = json.load(f)
+            print(f"✅ Loaded CSV data for {len(self.csv_data)} users")
+        else:
+            print(f"⚠️  CSV data not found at {history_path}")
         
         # Load keyset (train/val/test splits)
         keyset_path = DATASET_PATH / 'instacart_keyset_0.json'
@@ -66,179 +70,141 @@ class TifuKnnEngine:
             with open(keyset_path, 'r') as f:
                 self.keyset = json.load(f)
                 self.item_count = self.keyset.get('item_num', 0)
+            print(f"✅ Loaded keyset with {self.item_count} items")
+            print(f"   Train users: {len(self.keyset.get('train', []))}")
+            print(f"   Val users: {len(self.keyset.get('val', []))}")
+            print(f"   Test users: {len(self.keyset.get('test', []))}")
+        else:
+            print(f"⚠️  Keyset not found at {keyset_path}")
     
     def _group_history_list(self, his_list: List[np.ndarray], group_size: int) -> Tuple[List[np.ndarray], int]:
         """
         Group user's basket sequence into blocks for temporal modeling
-        Exact implementation from tifuknn.py
+        Exact implementation from TIFUKNN paper
         """
-        grouped_vec_list = []
+        if len(his_list) <= group_size:
+            return [his_list], 1
         
-        if len(his_list) < group_size:
-            return his_list, len(his_list)
+        grouped = []
+        for i in range(0, len(his_list), group_size):
+            group = his_list[i:i + group_size]
+            grouped.append(group)
         
-        est_num_vec_each_block = len(his_list) / group_size
-        base_num_vec_each_block = int(np.floor(len(his_list) / group_size))
-        residual = est_num_vec_each_block - base_num_vec_each_block
+        return grouped, len(grouped)
+    
+    def _temporal_decay_sum_history(self, history_list: List[List[int]]) -> np.ndarray:
+        """
+        Apply temporal decay to user's purchase history
+        Implements the core TIFUKNN temporal modeling
+        """
+        if not history_list or not self.item_count:
+            return np.zeros(self.item_count)
         
-        num_vec_has_extra_vec = int(np.round(residual * group_size))
+        # Skip first element (user_id) and convert to numpy arrays
+        basket_arrays = [np.array(basket) for basket in history_list[1:]]
         
-        if residual == 0:
-            # Even distribution
-            for i in range(group_size):
-                sum_vec = np.zeros(len(his_list[0]))
-                for j in range(base_num_vec_each_block):
-                    sum_vec += his_list[i * base_num_vec_each_block + j]
-                grouped_vec_list.append(sum_vec / base_num_vec_each_block)
-        else:
-            # Uneven distribution - some groups get extra vectors
-            # First groups without extra
-            for i in range(group_size - num_vec_has_extra_vec):
-                sum_vec = np.zeros(len(his_list[0]))
-                for j in range(base_num_vec_each_block):
-                    sum_vec += his_list[i * base_num_vec_each_block + j]
-                    last_idx = i * base_num_vec_each_block + j
-                grouped_vec_list.append(sum_vec / base_num_vec_each_block)
+        if not basket_arrays:
+            return np.zeros(self.item_count)
+        
+        # Group baskets into temporal blocks
+        grouped_baskets, group_count = self._group_history_list(basket_arrays, GROUP_SIZE)
+        
+        # Initialize final vector
+        final_vector = np.zeros(self.item_count)
+        
+        # Apply group-level decay (more recent groups weighted higher)
+        for group_idx, group in enumerate(grouped_baskets):
+            # Group decay: more recent groups get higher weights
+            group_weight = (GROUP_DECAY_RATE ** (group_count - group_idx - 1))
             
-            # Remaining groups with extra vectors
-            est_num = int(np.ceil(est_num_vec_each_block))
-            start_group_idx = group_size - num_vec_has_extra_vec
+            # Initialize group vector
+            group_vector = np.zeros(self.item_count)
             
-            for i in range(start_group_idx, group_size):
-                sum_vec = np.zeros(len(his_list[0]))
-                for j in range(est_num):
-                    idx = last_idx + 1 + (i - start_group_idx) * est_num + j
-                    if idx < len(his_list):
-                        sum_vec += his_list[idx]
-                grouped_vec_list.append(sum_vec / est_num)
+            # Apply within-group decay (more recent baskets in group weighted higher)
+            for basket_idx, basket in enumerate(group):
+                basket_weight = (WITHIN_DECAY_RATE ** (len(group) - basket_idx - 1))
+                
+                # Add items to group vector
+                for item_id in basket:
+                    if 0 <= item_id < self.item_count:
+                        group_vector[item_id] += basket_weight
+            
+            # Add group vector to final vector
+            final_vector += group_vector * group_weight
         
-        return grouped_vec_list, group_size
+        return final_vector
     
     def _compute_user_vector(self, user_history: List[List[int]]) -> Optional[np.ndarray]:
         """
-        Compute TIFUKNN vector for a single user
-        Implements temporal_decay_sum_history for one user
+        Compute user vector from purchase history
         """
-        # Skip first element (user_id) and require at least 2 baskets
-        if len(user_history) < 3:
+        try:
+            return self._temporal_decay_sum_history(user_history)
+        except Exception as e:
+            print(f"Error computing user vector: {e}")
             return None
-        
-        vec_list = user_history  # Full history including user_id
-        num_vec = len(vec_list) - 2  # Exclude user_id and last basket
-        his_list = []
-        
-        # Create temporal decay vectors for each basket
-        for idx in range(1, num_vec + 1):
-            his_vec = np.zeros(self.item_count)
-            decayed_val = np.power(WITHIN_DECAY_RATE, num_vec - idx)
-            
-            # Apply decay to each item in basket
-            for item in vec_list[idx]:
-                if item < self.item_count:
-                    his_vec[item] = decayed_val
-            
-            his_list.append(his_vec)
-        
-        # Group the vectors
-        grouped_list, real_group_size = self._group_history_list(his_list, GROUP_SIZE)
-        
-        # Apply group-level decay
-        final_vec = np.zeros(self.item_count)
-        for idx in range(real_group_size):
-            decayed_val = np.power(GROUP_DECAY_RATE, GROUP_SIZE - 1 - idx)
-            if idx < len(grouped_list):
-                final_vec += grouped_list[idx] * decayed_val
-        
-        # Normalize by group size
-        return final_vec / real_group_size
     
-    def _get_user_history_from_db(self, user_id: int) -> Optional[List[List[int]]]:
+    def _get_user_history_from_db(self, user_id: int) -> List[List[int]]:
         """
-        Fetch user's purchase history from database
+        Get user's order history from database
         Format: [[user_id], [basket1], [basket2], ...]
         """
         try:
             conn = psycopg2.connect(**DATABASE_CONFIG)
             cur = conn.cursor(cursor_factory=RealDictCursor)
             
+            # Get user's orders in chronological order
             cur.execute("""
-                SELECT o.id, o.order_sequence, oi.product_id
+                SELECT o.id as order_id, o.created_at, 
+                       array_agg(oi.product_id ORDER BY oi.created_at) as products
                 FROM orders o
                 JOIN order_items oi ON o.id = oi.order_id
-                WHERE o.user_id = %s AND o.status = 'completed'
-                ORDER BY o.order_sequence, oi.add_to_cart_order
-            """, [user_id])
+                WHERE o.user_id = %s
+                GROUP BY o.id, o.created_at
+                ORDER BY o.created_at
+            """, (user_id,))
             
             orders = cur.fetchall()
             cur.close()
             conn.close()
             
             if not orders:
-                return None
+                return []
             
-            # Format as TIFUKNN expects
-            history = [[user_id]]
-            current_order_id = None
-            current_basket = []
-            
-            for row in orders:
-                if row['id'] != current_order_id:
-                    if current_basket:
-                        history.append(current_basket)
-                    current_basket = []
-                    current_order_id = row['id']
-                
-                current_basket.append(int(row['product_id']))
-            
-            if current_basket:
-                history.append(current_basket)
+            # Format as expected by TIFUKNN: [user_id, basket1, basket2, ...]
+            history = [user_id]  # First element is user_id
+            for order in orders:
+                history.append(list(order['products']))
             
             return history
             
         except Exception as e:
-            print(f"DB error: {str(e)}")
-            return None
+            print(f"Database error getting user history: {e}")
+            return []
     
     def _knn_search(self, query_vector: np.ndarray, k: int) -> Tuple[List[str], np.ndarray]:
         """
-        Find K nearest neighbors using pre-computed training vectors
-        Returns user IDs and distances
+        Find k nearest neighbors for query vector
         """
-        # Load or use cached training vectors
         if not self.training_vectors:
             self._load_training_vectors()
         
         if not self.training_vectors:
             return [], np.array([])
         
-        # Sample training users for efficiency
-        all_training_users = list(self.training_vectors.keys())
-        if len(all_training_users) > KNN_NEIGHBOR_LOADING_SAMPLE:
-            sampled_users = random.sample(all_training_users, KNN_NEIGHBOR_LOADING_SAMPLE)
-        else:
-            sampled_users = all_training_users
+        # Convert training vectors to matrix
+        user_ids = list(self.training_vectors.keys())
+        vectors_matrix = np.array([self.training_vectors[uid] for uid in user_ids])
         
-        # Build matrix for KNN
-        training_matrix = []
-        user_indices = []
+        # Use sklearn NearestNeighbors for efficiency
+        nbrs = NearestNeighbors(n_neighbors=min(k, len(user_ids)), metric='cosine')
+        nbrs.fit(vectors_matrix)
         
-        for user_id in sampled_users:
-            if user_id in self.training_vectors:
-                training_matrix.append(self.training_vectors[user_id])
-                user_indices.append(user_id)
-        
-        if not training_matrix:
-            return [], np.array([])
-        
-        # Run KNN
-        training_matrix = np.array(training_matrix)
-        nbrs = NearestNeighbors(n_neighbors=min(k, len(training_matrix)), algorithm='brute')
-        nbrs.fit(training_matrix)
-        
+        # Find neighbors
         distances, indices = nbrs.kneighbors([query_vector])
         
-        # Map indices back to user IDs
-        neighbor_ids = [user_indices[idx] for idx in indices[0]]
+        # Convert indices back to user IDs
+        neighbor_ids = [user_ids[idx] for idx in indices[0]]
         
         return neighbor_ids, distances[0]
     
@@ -353,8 +319,9 @@ class TifuKnnEngine:
         if vectors_file.exists():
             with open(vectors_file, 'rb') as f:
                 self.training_vectors = pickle.load(f)
+            print(f"✅ Loaded {len(self.training_vectors)} pre-computed training vectors")
         else:
-            print("No pre-computed training vectors found")
+            print(f"⚠️  No pre-computed training vectors found at {vectors_file}")
     
     def precompute_all_vectors(self):
         """
@@ -362,11 +329,11 @@ class TifuKnnEngine:
         This enables fast KNN search during predictions
         """
         if not self.csv_data or not self.keyset:
-            print("No data for pre-computation")
+            print("❌ No data available for pre-computation")
             return
         
         training_users = [str(uid) for uid in self.keyset.get('train', [])]
-        print(f"Pre-computing vectors for {len(training_users)} training users...")
+        print(f"🧮 Pre-computing vectors for {len(training_users)} training users...")
         
         computed_vectors = {}
         computed = 0
@@ -399,7 +366,8 @@ class TifuKnnEngine:
             pickle.dump(computed_vectors, f)
         
         self.training_vectors = computed_vectors
-        print(f"Pre-computation complete: {computed} vectors saved, {skipped} skipped")
+        print(f"✅ Pre-computation complete: {computed} vectors saved, {skipped} skipped")
+        print(f"📁 Vectors saved to: {vectors_file}")
 
 
 # Singleton instance

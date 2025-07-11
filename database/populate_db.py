@@ -1,4 +1,4 @@
-# backend/populate_db.py
+# database/populate_db.py
 """
 Database Population Script
 Seeds the database with Instacart products and categories.
@@ -15,16 +15,16 @@ import json
 
 # Database configuration
 DATABASE_CONFIG = {
-    'host': 'database',
+    'host': 'localhost',  # Connect locally within container
     'port': 5432,
     'database': 'timely_db',
     'user': 'timely_user',
     'password': 'timely_password'
 }
 
-# Data paths
-DATA_PATH = 'ml_microservice/dataset'
-# INSTACART_PATH = os.path.join(DATA_PATH, 'instacart')
+# Data paths - Updated for new structure
+DATA_PATH = '/shared/dataset'  # Shared volume mount
+CATEGORY_DETAILS_PATH = '/app/category_details.csv'  # Local to container
 
 # Price ranges by department (in dollars)
 PRICE_RANGES = {
@@ -66,13 +66,19 @@ class DatabasePopulator:
         """Load all necessary CSV files"""
         print("Loading CSV data...")
         
-        # Load Instacart data
+        # Load Instacart data from shared dataset volume
         self.departments = pd.read_csv(os.path.join(DATA_PATH, 'departments.csv'))
         self.aisles = pd.read_csv(os.path.join(DATA_PATH, 'aisles.csv'))
         self.products = pd.read_csv(os.path.join(DATA_PATH, 'products.csv'))
         
-        # Load category details for images
-        self.category_details = pd.read_csv('database/category_details.csv')
+        # Load category details from local container path
+        self.category_details = pd.read_csv(CATEGORY_DETAILS_PATH)
+        
+        # Create department name to image URL mapping for products
+        self.image_map = {}
+        for _, row in self.category_details.iterrows():
+            dept_name = row['department_name'].lower()
+            self.image_map[dept_name] = row['imageUrl']
         
         print(f"Loaded {len(self.departments)} departments")
         print(f"Loaded {len(self.aisles)} aisles")
@@ -101,17 +107,11 @@ class DatabasePopulator:
         cur = conn.cursor()
         
         try:
-            # Create a mapping of department names to image URLs
-            image_map = {}
-            for _, row in self.category_details.iterrows():
-                dept_name = row['department_name'].lower()
-                image_map[dept_name] = row['imageUrl']
-            
             for _, dept in self.departments.iterrows():
                 dept_name_lower = dept['department'].lower()
                 
                 # Get image URL or use placeholder
-                image_url = image_map.get(dept_name_lower, '/images/categories/default.jpg')
+                image_url = self.image_map.get(dept_name_lower, '/images/categories/default.jpg')
                 
                 # Get description from category_details
                 desc_row = self.category_details[
@@ -176,8 +176,8 @@ class DatabasePopulator:
                     elif product_name.startswith(('Organic ', 'Fresh ', 'Frozen ')):
                         brand = product_name.split()[0]
                     
-                    # Use category image as fallback for product image
-                    image_url = None  # Products don't have individual images
+                    # Use department image for product (inherit from category)
+                    image_url = self.image_map.get(dept_name.lower(), '/images/categories/default.jpg')
                     
                     cur.execute("""
                         INSERT INTO products (

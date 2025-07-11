@@ -11,6 +11,8 @@ services:
       POSTGRES_PASSWORD: timely_password
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./dataset:/shared/dataset:ro  # Dataset shared as read-only
+      - initialization_flags:/shared/flags  # Shared flag storage
     ports:
       - "5432:5432"
     healthcheck:
@@ -29,7 +31,8 @@ services:
       - "5000:5000"
     volumes:
       - ml_data:/app/data
-      - ./data:/app/data/source:ro
+      - ./dataset:/shared/dataset:ro  # Dataset shared as read-only
+      - initialization_flags:/shared/flags  # Shared flag storage
     environment:
       - PYTHONUNBUFFERED=1
 
@@ -48,3 +51,4 @@ services:
 volumes:
   postgres_data:
   ml_data:
+  initialization_flags:  # New shared volume for initialization flags

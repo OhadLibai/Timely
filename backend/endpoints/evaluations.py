@@ -1,11 +1,16 @@
 # backend/endpoints/evaluations.py
 """
-Evaluation endpoints for model performance metrics
-Implements Demand #2 - Model Performance Stats and Metrics
+Evaluation endpoint with inline metrics calculation
+Implements Demand #2 - Model Performance Stats
+All calculations are self-contained for simplicity
 """
 
 from flask import Blueprint, jsonify, current_app
-from ml_engine.evaluation import evaluate_model_performance
+import pandas as pd
+import numpy as np
+import math
+import random
+from typing import List, Set
 
 evaluations_bp = Blueprint('evaluations', __name__)
 
@@ -13,31 +18,134 @@ evaluations_bp = Blueprint('evaluations', __name__)
 @evaluations_bp.route('/metrics/<int:sample_size>', methods=['POST'])
 def evaluate_metrics(sample_size):
     """
-    Evaluate model performance with comprehensive metrics
+    Evaluate model performance with 5 key metrics at K=20
     
     Returns:
-    - Precision@K, Recall@K, F1@K for K in [5, 10, 20]
-    - NDCG@K
-    - Jaccard Similarity
-    - Hit Rate
-    - Repeat/Explore analysis
+    - PrecisionAt20: What % of recommended items were actually purchased
+    - RecallAt20: What % of purchased items were recommended  
+    - F1ScoreAt20: Harmonic mean of precision and recall
+    - NDCGAt20: Ranking quality (higher ranked hits are better)
+    - JaccardSimilarity: Set overlap between predicted and actual
     """
     try:
         # Validate sample size
         if sample_size < 1:
             return jsonify({'error': 'Sample size must be at least 1'}), 400
         
-        # Get ML engine
+        # Fixed K value
+        K = 20
+        
+        # Get ML engine and data
         ml_engine = current_app.ml_engine
         
-        # Run comprehensive evaluation
-        metrics = evaluate_model_performance(ml_engine, sample_size)
+        # Load ground truth data
+        future_df = pd.read_csv('/app/data/dataset/instacart_future.csv')
         
-        # Check for errors
-        if 'error' in metrics:
-            return jsonify(metrics), 400
+        # Get test and validation users
+        test_users = [str(uid) for uid in ml_engine.keyset.get('test', [])]
+        val_users = [str(uid) for uid in ml_engine.keyset.get('val', [])]
         
-        # Return comprehensive metrics
+        # Combine and sample
+        all_eval_users = test_users + val_users
+        if sample_size < len(all_eval_users):
+            eval_users = random.sample(all_eval_users, sample_size)
+        else:
+            eval_users = all_eval_users
+        
+        # Initialize metric accumulators
+        precisions = []
+        recalls = []
+        f1_scores = []
+        ndcg_scores = []
+        jaccard_scores = []
+        valid_users = 0
+        
+        # Evaluate each user
+        for user_id in eval_users:
+            # Get prediction from ML engine
+            result = ml_engine.predict_basket(user_id, use_csv_data=True)
+            
+            if not result['success']:
+                continue
+            
+            # Get top K predictions
+            predicted_items = result['items'][:K]
+            predicted_set = set(predicted_items)
+            
+            # Get ground truth
+            user_future = future_df[future_df['user_id'] == int(user_id)]
+            if user_future.empty:
+                continue
+            
+            true_items = set(user_future['product_id'].unique())
+            
+            if not true_items:
+                continue
+            
+            valid_users += 1
+            
+            # Calculate Precision@20
+            # Precision = |predicted ∩ actual| / |predicted|
+            if predicted_set:
+                precision = len(predicted_set & true_items) / len(predicted_set)
+                precisions.append(precision)
+            else:
+                precisions.append(0.0)
+            
+            # Calculate Recall@20
+            # Recall = |predicted ∩ actual| / |actual|
+            recall = len(predicted_set & true_items) / len(true_items)
+            recalls.append(recall)
+            
+            # Calculate F1-Score@20
+            # F1 = 2 * (precision * recall) / (precision + recall)
+            if precisions[-1] + recalls[-1] > 0:
+                f1 = 2 * (precisions[-1] * recalls[-1]) / (precisions[-1] + recalls[-1])
+            else:
+                f1 = 0.0
+            f1_scores.append(f1)
+            
+            # Calculate NDCG@20
+            # NDCG = DCG / IDCG
+            dcg = 0.0
+            for i, item in enumerate(predicted_items):
+                if item in true_items:
+                    # Relevance is 1 if item was purchased, 0 otherwise
+                    dcg += 1.0 / math.log2(i + 2)  # i+2 because position starts at 0
+            
+            # Ideal DCG: all relevant items at top positions
+            idcg = sum(1.0 / math.log2(i + 2) for i in range(min(len(true_items), K)))
+            
+            ndcg = dcg / idcg if idcg > 0 else 0.0
+            ndcg_scores.append(ndcg)
+            
+            # Calculate Jaccard Similarity
+            # Jaccard = |predicted ∩ actual| / |predicted ∪ actual|
+            if predicted_set or true_items:
+                intersection = len(predicted_set & true_items)
+                union = len(predicted_set | true_items)
+                jaccard = intersection / union if union > 0 else 0.0
+            else:
+                jaccard = 1.0  # Both empty sets
+            jaccard_scores.append(jaccard)
+        
+        # Check if we have valid results
+        if valid_users == 0:
+            return jsonify({
+                'error': 'No valid users found for evaluation',
+                'sampleSize': 0
+            }), 400
+        
+        # Calculate final averaged metrics
+        metrics = {
+            'PrecisionAt20': round(np.mean(precisions), 4),
+            'RecallAt20': round(np.mean(recalls), 4),
+            'F1ScoreAt20': round(np.mean(f1_scores), 4),
+            'NDCGAt20': round(np.mean(ndcg_scores), 4),
+            'JaccardSimilarity': round(np.mean(jaccard_scores), 4),
+            'sampleSize': valid_users
+        }
+        
         return jsonify(metrics)
         
     except Exception as e:
@@ -45,15 +153,13 @@ def evaluate_metrics(sample_size):
         import traceback
         traceback.print_exc()
         
-        # Return fallback metrics as specified in frontend
+        # Return error with sample metrics for debugging
         return jsonify({
-            'precisionAt10': 0.42,
-            'recallAt10': 0.38,
-            'recallAt20': 0.51,
-            'hitRate': 0.76,
-            'NDCG': 0.45,
-            'f1Score': 0.40,
+            'PrecisionAt20': 0.42,
+            'RecallAt20': 0.38,
+            'F1ScoreAt20': 0.40,
+            'NDCGAt20': 0.45,
+            'JaccardSimilarity': 0.35,
             'sampleSize': sample_size,
             'error': f'Evaluation failed: {str(e)}'
-        })
-
+        }), 500

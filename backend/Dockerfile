@@ -16,8 +16,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Copy ML microservice code
-COPY ml_microservice /app/ml_microservice
+# Copy ML engine code (fixed naming)
+COPY ml_engine /app/ml_engine
 
 # Make initialization script executable
 RUN chmod +x init_backend.sh
@@ -27,4 +27,3 @@ RUN mkdir -p /app/data/vectors /app/data/dataset
 
 # Run initialization and start server
 CMD ["./init_backend.sh"]
-

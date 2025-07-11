@@ -24,9 +24,9 @@ class EvaluationService {
    * DEMAND 2: Get model performance metrics
    * Used to evaluate ML model quality
    */
-  async getModelMetricsScores(sampleSize?: number): Promise<ModelMetrics> {
+  async getModelMetricsScores(sampleSize: number=process.env.EVALUATION_SAMPLE_SIZE): Promise<ModelMetrics> {
     try {
-      const response = await api.post<ModelMetrics>(`/evaluations/metrics/${sampleSize || process.env.EVALUATION_SAMPLE_SIZE}`);
+      const response = await api.post<ModelMetrics>(`/evaluations/metrics/${sampleSize}`);
       return response;
     } catch (error) {
       console.error('Failed to get model metrics:', error);

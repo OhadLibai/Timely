@@ -1,100 +1,83 @@
+# backend/ml_engine/build/preprocess.py
+"""
+Preprocess Instacart dataset for TIFUKNN model
+Updated paths for new project structure
+"""
+
 import pandas as pd
+import os
 
-user_order_d = pd.read_csv('../DataSource/instcart/orders.csv',
-                         usecols=['user_id', 'order_number', 'order_id', 'eval_set'])
-order_item_train = pd.read_csv('../DataSource/instcart/order_products__train.csv',
-                               usecols=['order_id', 'product_id'])
-order_item_prior = pd.read_csv('../DataSource/instcart/order_products__prior.csv',
-                               usecols=['order_id', 'product_id'])
-order_item = pd.concat([order_item_prior, order_item_train], ignore_index=True)
+# Updated data paths for new structure
+DATA_DIR = "/app/data/dataset"  # Local copy in backend container
+OUTPUT_DIR = "/app/data/dataset"
 
-user_order = pd.merge(user_order_d, order_item, on='order_id', how='left')
+def preprocess_instacart():
+    """
+    Preprocess the raw Instacart CSV files into a single clean dataset
+    """
+    print("Starting Instacart dataset preprocessing...")
+    
+    # Load all CSV files
+    print("Loading CSV files...")
+    orders = pd.read_csv(os.path.join(DATA_DIR, 'orders.csv'))
+    order_products_prior = pd.read_csv(os.path.join(DATA_DIR, 'order_products__prior.csv'))
+    order_products_train = pd.read_csv(os.path.join(DATA_DIR, 'order_products__train.csv'))
+    products = pd.read_csv(os.path.join(DATA_DIR, 'products.csv'))
+    aisles = pd.read_csv(os.path.join(DATA_DIR, 'aisles.csv'))
+    departments = pd.read_csv(os.path.join(DATA_DIR, 'departments.csv'))
+    
+    print(f"Loaded {len(orders)} orders")
+    print(f"Loaded {len(order_products_prior)} prior order products")
+    print(f"Loaded {len(order_products_train)} train order products")
+    print(f"Loaded {len(products)} products")
+    
+    # Combine prior and train order products
+    print("Combining order products...")
+    order_products_prior['eval_set'] = 'prior'
+    order_products_train['eval_set'] = 'train'
+    
+    all_order_products = pd.concat([
+        order_products_prior,
+        order_products_train
+    ], ignore_index=True)
+    
+    print(f"Combined total: {len(all_order_products)} order products")
+    
+    # Merge with orders to get user and order information
+    print("Merging with orders data...")
+    merged = all_order_products.merge(orders, on='order_id', how='left')
+    
+    print(f"After merging: {len(merged)} records")
+    
+    # Select and rename columns for model format
+    print("Formatting for model...")
+    instacart_data = merged[[
+        'user_id', 
+        'order_id', 
+        'order_number',
+        'product_id',
+        'add_to_cart_order',
+        'reordered',
+        'eval_set'
+    ]].copy()
+    
+    # Sort by user, then order number, then cart order
+    instacart_data = instacart_data.sort_values([
+        'user_id', 
+        'order_number', 
+        'add_to_cart_order'
+    ]).reset_index(drop=True)
+    
+    # Save the processed dataset
+    output_path = os.path.join(OUTPUT_DIR, 'instacart.csv')
+    instacart_data.to_csv(output_path, index=False)
+    
+    print(f"✅ Preprocessing complete!")
+    print(f"📊 Processed dataset saved to: {output_path}")
+    print(f"📈 Final dataset shape: {instacart_data.shape}")
+    print(f"👥 Number of unique users: {instacart_data['user_id'].nunique()}")
+    print(f"🛒 Number of unique orders: {instacart_data['order_id'].nunique()}")
+    print(f"📦 Number of unique products: {instacart_data['product_id'].nunique()}")
 
-user_order = user_order.dropna(how='any')
-
-user_num = len(set(user_order['user_id'].tolist()))
-user_num = int(user_num*0.1)
-user_order = user_order[user_order['user_id'] <= user_num]
-
-baskets = None
-for user, user_data in user_order.groupby('user_id'):
-    date_list = list(set(user_data['order_number'].tolist()))
-    date_list = sorted(date_list)
-    print(date_list)
-    if len(date_list)>=3 and len(date_list)<=50:
-        date_num = 1
-        for date in date_list:
-            date_data = user_data[user_data['order_number'].isin([date])]
-            date_item = list(set(date_data['product_id'].tolist()))
-            item_num = len(date_item)
-            if baskets is None:
-                baskets = pd.DataFrame({'user_id': pd.Series([user for i in range(item_num)]),
-                                        'order_number': pd.Series([date_num for i in range(item_num)]),
-                                        'product_id': pd.Series(date_item),
-                                        'eval_set': pd.Series(['prior' for i in range(item_num)])})
-                date_num += 1
-            else:
-                if date == date_list[-1]:#if date is the last. then add a tag here
-                    temp = pd.DataFrame({'user_id': pd.Series([user for i in range(item_num)]),
-                                            'order_number': pd.Series([date_num for i in range(item_num)]),
-                                            'product_id': pd.Series(date_item),
-                                            'eval_set': pd.Series(['train' for i in range(item_num)])})
-                    date_num += 1
-                    baskets = pd.concat([baskets, temp], ignore_index=True)
-                else:
-                    temp = pd.DataFrame({'user_id': pd.Series([user for i in range(item_num)]),
-                                            'order_number': pd.Series([date_num for i in range(item_num)]),
-                                            'product_id': pd.Series(date_item),
-                                            'eval_set': pd.Series(['prior' for i in range(item_num)])})
-                    date_num += 1
-                    baskets = pd.concat([baskets, temp], ignore_index=True)
-
-
-# print('Filter the data by seq length(user)')
-# user_set = set()
-# for user, user_data in baskets.groupby('user_id'):
-#     basket_num = len(set(user_data['order_number']))
-#     if basket_num>=3 and basket_num<=50:
-#         user_set.add(user)
-#
-# baskets = baskets[baskets['user_id'].isin(user_set)].reset_index()
-print('total transcations:', len(baskets))
-
-item_set_all = set()
-item_filter_dict = dict()
-history_baskets = baskets[baskets['eval_set'].isin(['prior'])].reset_index()
-
-for ind in range(len(history_baskets)):
-    product_id = history_baskets['product_id'].iloc[ind]
-    if product_id not in item_filter_dict:
-        item_filter_dict[product_id] = 1
-    else:
-        item_filter_dict[product_id] += 1
-
-for key in item_filter_dict.keys():
-    if item_filter_dict[key]>=17:
-        item_set_all.add(key)
-
-print('Filter data use the training items.')
-baskets = baskets[baskets['product_id'].isin(item_set_all)].reset_index()
-print('After transcations:', len(baskets))
-
-#### Filter by user
-item_dict = dict()
-item_ind = 1
-user_dict = dict()
-user_ind = 1
-for ind in range(len(baskets)):
-    product_id = baskets.at[ind, 'product_id']
-    if product_id not in item_dict:
-        item_dict[product_id] = item_ind
-        item_ind += 1
-    baskets.at[ind, 'product_id'] = item_dict[product_id]
-
-    user_id = baskets.at[ind, 'user_id']
-    if user_id not in user_dict:
-        user_dict[user_id] = user_ind
-        user_ind += 1
-    baskets.at[ind, 'user_id'] = user_dict[user_id]
-baskets = baskets.loc[:, ['user_id', 'order_number', 'product_id', 'eval_set']]
-baskets.to_csv('dataset/instacart.csv', index=False)
+if __name__ == "__main__":
+    preprocess_instacart()
