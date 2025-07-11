@@ -65,10 +65,7 @@ const MainLayout: React.FC = () => {
               to="/"
               className="flex items-center gap-2 text-xl font-bold text-gray-900"
             >
-              <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
-                <ShoppingCart className="w-6 h-6 text-white" />
-              </div>
-              <span>Timely</span>
+              <img src="/public/timely-logo.svg" alt="Timely Logo" className="h-8" />
             </Link>
 
             {/* Desktop Navigation */}
@@ -261,10 +258,7 @@ const MainLayout: React.FC = () => {
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg">
-                  <ShoppingCart className="w-6 h-6 text-white" />
-                </div>
-                <span className="text-xl font-bold text-gray-900">Timely</span>
+                <img src="/public/timely-logo.svg" alt="Timely Logo" className="h-8" />
               </div>
               <p className="text-gray-600">
                 Your AI-powered grocery shopping assistant. Save time, shop smarter.

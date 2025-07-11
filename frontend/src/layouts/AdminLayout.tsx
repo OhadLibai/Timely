@@ -7,7 +7,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu, X, Brain, Target, UserPlus,
-  Home, LogOut, Sparkles,
+  Home, LogOut,
   Palette
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
@@ -146,10 +146,7 @@ const AdminLayout: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
         <Link to="/admin" className="flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg">
-            <Sparkles className="text-white" size={20} />
-          </div>
-          <span className="font-bold text-gray-900">Timely Admin</span>
+          <img src="/public/timely-logo.svg" alt="Timely Admin Logo" className="h-8" />
         </Link>
         <button
           onClick={() => setIsSidebarOpen(false)}

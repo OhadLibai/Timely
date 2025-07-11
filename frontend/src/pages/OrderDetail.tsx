@@ -1,9 +1,10 @@
+// frontend/src/pages/OrderDetail.tsx
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Package, CheckCircle, Clock, 
-  DollarSign, Calendar, ShoppingCart
+  Package, ShoppingCart, Calendar, DollarSign
 } from 'lucide-react';
 import { useOrder } from '@/hooks';
 import { StatusIndicator } from '@/components/common';
@@ -11,27 +12,26 @@ import { useCartStore } from '@/stores/cart.store';
 import { formatOrderNumber, formatPrice } from '@/utils/formatters';
 import DetailPage from '@/components/common/DetailPage';
 import toast from 'react-hot-toast';
+// ✅ ADDED: Import the ProductImage component
+import ProductImage from '@/components/products/ProductImage';
 
 const OrderDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addItem } = useCartStore();
+  // ✅ FIXED: Use the correct 'addToCart' function from the store
+  const { addToCart } = useCartStore();
 
   const { data: order, isLoading, error, refetch } = useOrder(id!);
 
   const handleReorder = () => {
     if (!order) return;
     
+    // ✅ FIXED: Pass the whole product object to addToCart
     order.items.forEach(item => {
-      addItem({
-        id: item.product.id,
-        name: item.product.name,
-        price: item.product.price,
-        image: item.product.imageUrl || '/placeholder.jpg'
-      }, item.quantity);
+      addToCart(item.product, item.quantity);
     });
     
-    toast.success(`${order.items.length} items added to cart from order ${order.orderNumber}`);
+    toast.success(`${order.items.length} items added to cart from order ${formatOrderNumber(order.orderNumber)}`);
     navigate('/cart');
   };
 
@@ -49,10 +49,11 @@ const OrderDetail: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="flex items-center gap-4 p-4 border border-gray-200 rounded-lg"
           >
-            <img
-              src={item.product.imageUrl || '/placeholder.jpg'}
+            {/* ✅ FIXED: Replaced raw <img> with the ProductImage component */}
+            <ProductImage
+              src={item.product.imageUrl}
               alt={item.product.name}
-              className="w-16 h-16 object-cover rounded-lg"
+              className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
             />
             
             <div className="flex-1">
@@ -145,18 +146,6 @@ const OrderDetail: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Order Notes */}
-      {order.notes && (
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Notes
-          </h3>
-          <p className="text-sm text-gray-600">
-            {order.notes}
-          </p>
-        </div>
-      )}
     </div>
   );
 
