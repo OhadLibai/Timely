@@ -24,8 +24,6 @@ export const QUERY_KEYS = {
   adminDashboardStats: (dateRange?: any) => ['admin', 'dashboard', 'stats', dateRange],
   adminDemoStats: () => ['admin', 'demo', 'stats'],
   adminUserPrediction: (userId: string) => ['admin', 'user', 'prediction', userId],
-  adminSystemHealth: () => ['admin', 'system', 'health'],
-  adminArchitectureStatus: () => ['admin', 'architecture', 'status'],
   
   // ML/Prediction queries
   predictions: () => ['predictions'],

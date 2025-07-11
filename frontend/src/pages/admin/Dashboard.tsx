@@ -1,5 +1,5 @@
 // frontend/src/pages/admin/Dashboard.tsx
-// RESTRUCTURED: Overview Hub Dashboard with real metrics and quick actions
+// UPDATED: Using new ModelMetrics interface with PascalCase properties
 // ARCHITECTURE: Option C (both quick actions + detailed workflows)
 // UPDATES: Manual refresh (Option A) with real ML metrics consumption
 
@@ -34,7 +34,6 @@ const AdminDashboard: React.FC = () => {
   // Use consolidated dashboard hook instead of individual queries
   const { dashboardStats, mlMetrics, demoStats, isLoading, error } = useDashboardOverview();
 
-  /* 
   // Quick Model Evaluation Mutation - Using existing metricsService
   const evaluationMutation = useMutation(
     () => evaluationService.getModelMetricsScores(),
@@ -45,24 +44,23 @@ const AdminDashboard: React.FC = () => {
       },
       onSuccess: () => {
         toast.dismiss('evaluation');
-        toast.success('✅ Model evaluation completed!', { duration: 4000 });
-        queryClient.invalidateQueries('admin-ml-metrics');
-        setIsEvaluating(false);
+        toast.success('✅ Model evaluation completed!', {
+          duration: 6000,
+          icon: '🎉'
+        });
+        // Invalidate and refetch metrics
+        queryClient.invalidateQueries('modelPerformanceMetrics');
       },
       onError: (error: any) => {
         toast.dismiss('evaluation');
-        toast.error(`❌ Evaluation failed: ${error.message}`, { duration: 6000 });
+        toast.error(`❌ Evaluation failed: ${error.message}`, { duration: 8000 });
+      },
+      onSettled: () => {
         setIsEvaluating(false);
       }
     }
   );
 
-  const handleQuickEvaluation = () => {
-    evaluationMutation.mutate();
-  };
-  */
-
-  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -84,7 +82,7 @@ const AdminDashboard: React.FC = () => {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-gray-900">
-              ML Model Performance
+              ML Analytics Hub
             </h2>
             <p className="text-sm text-gray-600">
               Displaying the latest evaluation results.
@@ -104,36 +102,44 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Real ML Metrics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* UPDATED: ML Metrics using new interface properties */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <MetricCard
-          title="Precision@10"
-          value={mlMetrics ? `${(mlMetrics.precisionAt10 * 100).toFixed(1)}%` : 'N/A'}
-          subtitle="Product relevance"
+          title="Precision@20"
+          value={mlMetrics.data ? `${(mlMetrics.data.PrecisionAt20 * 100).toFixed(1)}%` : 'N/A'}
+          subtitle="Accuracy at top 20"
           icon={Target}
           color="blue"
           size="sm"
         />
         <MetricCard
-          title="Recall@10"
-          value={mlMetrics ? `${(mlMetrics.recallAt10 * 100).toFixed(1)}%` : 'N/A'}
+          title="Recall@20"
+          value={mlMetrics.data ? `${(mlMetrics.data.RecallAt20 * 100).toFixed(1)}%` : 'N/A'}
           subtitle="Coverage accuracy"
           icon={Activity}
           color="green"
           size="sm"
         />
         <MetricCard
-          title="F1 Score"
-          value={mlMetrics ? mlMetrics.f1Score?.toFixed(3) : 'N/A'}
+          title="F1 Score@20"
+          value={mlMetrics.data ? mlMetrics.data.F1ScoreAt20?.toFixed(3) : 'N/A'}
           subtitle="Harmonic mean"
           icon={TrendingUp}
           color="purple"
           size="sm"
         />
         <MetricCard
-          title="Hit Rate"
-          value={mlMetrics ? `${(mlMetrics.hitRate * 100).toFixed(1)}%` : 'N/A'}
-          subtitle="Successful predictions"
+          title="NDCG@20"
+          value={mlMetrics.data ? mlMetrics.data.NDCGAt20?.toFixed(3) : 'N/A'}
+          subtitle="Ranking quality"
+          icon={BarChart3}
+          color="indigo"
+          size="sm"
+        />
+        <MetricCard
+          title="Jaccard Similarity"
+          value={mlMetrics.data ? `${(mlMetrics.data.JaccardSimilarity * 100).toFixed(1)}%` : 'N/A'}
+          subtitle="Set similarity"
           icon={Zap}
           color="orange"
           size="sm"
@@ -241,12 +247,11 @@ const AdminDashboard: React.FC = () => {
             icon={ArrowRight}
             iconPosition="right"
           >
-            View Test History
+            Prediction Lab
           </Button>
         </div>
       </div>
 
-      {/* Prediction Testing Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard
           title="Last Test"
