@@ -87,7 +87,7 @@ def get_predicted_basket(user_id):
         
         # Generate prediction using ML engine
         ml_engine = current_app.ml_engine
-        prediction = ml_engine.predict_basket(str(user_id))
+        prediction = ml_engine.predict_basket(str(user_id), use_csv_data=False)
         
         # Format and return response
         response = format_prediction_response(prediction, user_id)

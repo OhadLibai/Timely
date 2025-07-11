@@ -1,0 +1,79 @@
+group_history_list
+Role: This function takes a user's sequence of past baskets and groups them into a smaller, fixed number of "blocks." This is a key part of the "Temporal Item Frequency" aspect, as it helps the model understand a user's shopping habits over different time periods rather than treating every single basket individually.
+
+Input:
+his_list: A list where each element is a NumPy array representing a single basket.
+group_size: The target number of groups to consolidate the baskets into.
+
+Output:
+A tuple containing grouped_vec_list (a list of the new, grouped basket vectors) and real_group_size (the number of groups actually created, which can be less than group_size if the user has a short history).
+
+# 
+temporal_decay_sum_history
+Role: This is a crucial function that computes the "TIFU" vector for each user. It creates a single vector representing a user's entire purchase history by applying two forms of time decay: first to the items within each basket, and then to the groups of baskets. More recent purchases are given a higher weight, reflecting that a user's recent habits are more predictive of their next basket.
+
+Input:
+data_set: The complete purchase history for all users.
+key_set: A list of user IDs for whom to compute the vectors.
+output_size: The total number of unique items in the dataset.
+group_size, within_decay_rate, group_decay_rate: Parameters that control the grouping and time decay calculations.
+
+Output:
+A dictionary sum_history where each key is a user ID and the value is their final, time-decayed history vector.
+
+#
+KNN (K-Nearest Neighbors)
+Role: This function performs the "neighbor" search. For a given user, it finds the k other users in the dataset whose purchase histories (as represented by their TIFU vectors) are the most similar.
+
+Input:
+query_set: The user(s) for whom we want to find neighbors
+target_set: The pool of all other users to search through.
+k: The number of neighbors to find.
+
+Output:
+A tuple containing the indices (a list of the k most similar user IDs) and their corresponding distances.
+
+#
+vec2label_list
+Role: A simple utility function to convert the final prediction vector, which contains a score for every item, into a clean, ranked list of product recommendations.
+
+Input:
+pred_vec: A NumPy array of item scores.
+Output:
+A sorted list of the top 100 recommended product IDs.
+
+#
+merge_history
+Role: This function generates the final recommendation by blending a user's own purchase history with the histories of their nearest neighbors. The alpha parameter controls the balance between personalization (user's own habits) and collaboration (neighbors' habits).
+
+Input:
+sum_history_test, test_key_set: The history vectors and IDs for the user(s) needing a prediction.
+training_sum_history_test, training_key_set: The history vectors and IDs for the entire training set of users.
+index: The list of nearest neighbors found by the KNN function.
+alpha: The weighting factor to balance the user's history against the neighbors' history.
+
+Output:
+A dictionary merged_history where each key is a user ID and the value is their final list of recommended products.
+
+#
+evaluate
+Role: This is the main pipeline function that orchestrates the entire prediction process for a given set of users. It calls the other functions in sequence: it computes the TIFU vectors, finds the nearest neighbors, merges the histories, and returns the final predictions.
+Input:
+data_history: The complete user purchase history.
+training_key_set, test_key_set: The user IDs for the training and test sets.
+All the other parameters needed for the TIFU-KNN algorithm (input_size, group_size, num_nearest_neighbors, etc.).
+
+Output:
+A dictionary sum_history containing the final basket predictions for every user in the test_key_set.
+
+#
+main
+Role: This is the script's entry point when executed from the command line. It's responsible for parsing command-line arguments, loading the necessary data files, running the evaluate function on the test and validation sets, and saving the final predictions to a JSON file.
+
+Input:
+
+argv: A list of command-line arguments, including file paths and model parameters.
+
+Output:
+
+It does not return a value but writes the final predictions to a JSON file named <dataset_name>_pred<fold_id>.json.

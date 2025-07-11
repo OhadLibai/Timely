@@ -7,12 +7,11 @@ import { api } from '@/services/api.client';
 // ============================================================================
 
 export interface ModelMetrics {
-  precisionAt10: number;
-  recallAt10: number;
-  recallAt20: number;
-  hitRate: number;
-  NDCG: number;
-  f1Score: number;
+  PrecisionAt20: number;
+  RecallAt20: number;
+  F1ScoreAt20: number;
+  NDCGAt20: number;
+  Jaccard: number;
   sampleSize?: number;
 }
 

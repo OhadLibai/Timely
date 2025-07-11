@@ -2,7 +2,7 @@
 
 ### The Setup Phase (Done Once Before Launching the App)
 
-This is the foundational work required to prepare the data for your TIFU-KNN model. Think of this as a one-time data engineering task.
+This is the foundational work required to prepare the data for our TIFU-KNN model. Think of this as a one-time data engineering task.
 
 Step 1: Raw Data Processing. The preprocess.py script is run to process the original Instacart CSV files into a single, clean instacart.csv file.
 
@@ -17,7 +17,7 @@ Step 4: Pre-computation of User Vectors. When the ML microservice starts up, it 
 ### The Single Prediction Workflow (What Happens in Real-Time)
 This is the flow that occurs every time a user requests a new predicted basket.
 
-Step 1: User Request. A user logs into the app and clicks the "Generate My Basket" button. This action sends a request to your backend, which then forwards it to the ML microservice.
+Step 1: User Request. A user logs into the app and clicks the "Generate My Basket" button. This action sends a request to our backend, which then forwards it to the ML microservice.
 
 Step 2: K-Nearest Neighbors (KNN) Search. The ML microservice takes the pre-computed vector for the requesting user (the "query" vector) and performs a KNN search against all the other pre-computed user vectors in memory to find the most similar users. This is a very fast operation because the heavy lifting of vector calculation has already been done.
 
@@ -28,9 +28,9 @@ Step 4: Prediction Generation. The final merged vector is sorted, and the top 10
 Step 5: Display to User. The list of predicted products is sent back to the frontend and displayed to the user on the "Predicted Basket" page, where they can edit it or add it to their cart.
 
 #
-### Handling New Orders: Not Necessary for Testing
-For the purpose of demonstrating the app on the static Instacart dataset, you do not need to dynamically handle "new" orders.
+### Handling New Orders
+For the purpose of demonstrating the app on the static Instacart dataset, we do not need to dynamically handle "new" orders.
 
-Static Dataset: Your goal is to prove the model works based on the provided historical data. When you "seed" a user with an Instacart ID, you are creating a user whose entire purchase history is already known and fixed within the dataset.
+Static Dataset: Our goal is to prove the model works based on the provided historical data. When we "seed" a user with an Instacart ID, we are creating a user whose entire purchase history is already known and fixed within the dataset.
 
-Simulating "Next Basket": The model's task is to predict the train basket based on the prior baskets. The on-demand approach handles this perfectly. When you run a prediction for user_id: 42, your service simply reads all of that user's past orders and uses them to predict their known "next" order. There are no new orders being created that the model needs to adapt to in real-time.
+Simulating "Next Basket": The model's task is to predict the train basket based on the prior baskets. The on-demand approach handles this perfectly. When we run a prediction for user_id: 42, our service simply reads all of that user's past orders and uses them to predict their known "next" order. There are no new orders being created that the model needs to adapt to in real-time.

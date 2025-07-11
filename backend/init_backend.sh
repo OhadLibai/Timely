@@ -49,7 +49,7 @@ fi
 
 # Pre-compute user vectors
 if [ ! -f "$VECTORS_FLAG" ]; then
-    echo "Pre-computing user vectors..."
+    echo "Pre-computing training user vectors..."
     python -c "
 from ml_engine import get_engine
 engine = get_engine()
