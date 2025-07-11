@@ -11,7 +11,6 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
 import CartDropdown from '@/components/cart/CartDropdown';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
-import MobileMenu from '@/components/navigation/MobileMenu';
 import SearchModal from '@/components/search/SearchModal';
 
 const MainLayout: React.FC = () => {
@@ -21,7 +20,6 @@ const MainLayout: React.FC = () => {
   const { getItemCount } = useCartStore();
   
   const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -238,28 +236,11 @@ const MainLayout: React.FC = () => {
                 </div>
               )}
 
-              {/* Mobile Menu Toggle */}
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="md:hidden p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-              </button>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <MobileMenu
-            isOpen={isMobileMenuOpen}
-            onClose={() => setIsMobileMenuOpen(false)}
-            navLinks={navLinks}
-          />
-        )}
-      </AnimatePresence>
 
       {/* Search Modal */}
       <AnimatePresence>

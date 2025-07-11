@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Sparkles } from 'lucide-react';
 
 const Hero: React.FC = () => {
   return (
@@ -18,10 +17,7 @@ const Hero: React.FC = () => {
             className="text-center lg:text-left"
           >
             <div className="flex items-center justify-center lg:justify-start mb-6">
-              <Sparkles className="h-8 w-8 text-blue-600 mr-3" />
-              <span className="text-sm font-medium text-blue-600 bg-blue-100 px-3 py-1 rounded-full">
-                AI-Powered Shopping
-              </span>
+              <img src="/public/timely-logo.svg" alt="Timely Logo" className="h-10" />
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
@@ -43,7 +39,6 @@ const Hero: React.FC = () => {
                 to="/products"
                 className="inline-flex items-center px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
               >
-                <ShoppingCart className="h-5 w-5 mr-2" />
                 Start Shopping
               </Link>
               
@@ -68,7 +63,7 @@ const Hero: React.FC = () => {
               <div className="relative bg-white rounded-3xl shadow-2xl p-8">
                 <div className="text-center">
                   <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center">
-                    <ShoppingCart className="h-12 w-12 text-white" />
+                    <img src="/public/timely-favicon.svg" alt="Timely Icon" className="h-12 w-12" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">Smart Predictions</h3>
                   <p className="text-gray-600">AI analyzes your shopping history to predict your next basket</p>

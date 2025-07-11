@@ -1,0 +1,12 @@
+<!-- timely-favicon.svg -->
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none"
+     xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="timely-favicon-gradient" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#8B5CF6"/>
+    </linearGradient>
+  </defs>
+  <path d="M4 8H28V24H12L8 28V24H4V8Z" fill="url(#timely-favicon-gradient)"/>
+  <path d="M16 12V16H20" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

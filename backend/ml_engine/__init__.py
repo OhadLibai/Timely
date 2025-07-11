@@ -22,8 +22,8 @@ GROUP_DECAY_RATE = 0.7
 ALPHA = 0.9
 GROUP_SIZE = 3
 TOPK = 20
-TOP_CANDIDATES = 100  # Top candidates before final selection
-KNN_NEIGHBOR_LOADING_SAMPLE = 5000 # K
+TOP_CANDIDATES = 100  # Top candidates (products) before final selection
+KNN_NEIGHBOR_LOADING_SAMPLE = 5000 # KNN search optimization (accuracy-time tradeoff)
 
 # Updated paths for new structure
 DATA_PATH = Path('/app/data')

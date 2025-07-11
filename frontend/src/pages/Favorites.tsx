@@ -7,7 +7,7 @@ import { useFavorites } from '@/hooks/api/useFavorites';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, Package, Plus } from 'lucide-react';
 import { favoriteService } from '@/services/favorite.service';
-import { useCartOperations } from '@/hooks/api/useCartOperations';
+import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
 import ProductCard from '@/components/products/ProductCard';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
@@ -17,7 +17,7 @@ import { QUERY_KEYS } from '@/utils/queryKeys';
 
 const Favorites: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
-  const { handleAddToCart, handleAddMultipleItems, isAdding, isAddingMultiple } = useCartOperations();
+  const { addToCart, addMultipleItems, isUpdating } = useCartStore();
   const queryClient = useQueryClient();
 
   // Fetch favorites
@@ -42,7 +42,7 @@ const Favorites: React.FC = () => {
       quantity: 1
     }));
     
-    handleAddMultipleItems(cartItems);
+    addMultipleItems(cartItems);
   };
 
   if (!isAuthenticated) {
@@ -120,11 +120,11 @@ const Favorites: React.FC = () => {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               onClick={handleAddAllToCart}
-              disabled={isAddingMultiple}
+              disabled={isUpdating}
               className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Plus className="w-5 h-5" />
-              {isAddingMultiple ? 'Adding...' : 'Add All to Cart'}
+              {isUpdating ? 'Adding...' : 'Add All to Cart'}
             </motion.button>
           )}
         </div>
@@ -165,8 +165,8 @@ const Favorites: React.FC = () => {
                   <motion.button
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
-                    onClick={() => handleAddToCart(favorite.product)}
-                    disabled={isAdding}
+                    onClick={() => addToCart(favorite.product)}
+                    disabled={isUpdating}
                     className="p-2 bg-white rounded-full shadow-lg border border-gray-200 hover:bg-blue-50/20 transition-colors"
                     title="Add to cart"
                   >

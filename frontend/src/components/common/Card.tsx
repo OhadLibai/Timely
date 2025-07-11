@@ -10,14 +10,6 @@ interface CardProps {
   padding?: 'sm' | 'md' | 'lg';
 }
 
-interface FeatureCardProps extends Omit<CardProps, 'children'> {
-  icon: LucideIcon;
-  title: string;
-  description: string;
-  iconColor?: string;
-  iconBg?: string;
-}
-
 export const Card: React.FC<CardProps> = ({ 
   children, 
   className = '', 
@@ -49,37 +41,4 @@ export const Card: React.FC<CardProps> = ({
   }
 
   return <div className={combinedClasses}>{children}</div>;
-};
-
-export const FeatureCard: React.FC<FeatureCardProps> = ({
-  icon: Icon,
-  title,
-  description,
-  iconColor = 'text-indigo-600',
-  iconBg = 'bg-indigo-100/20',
-  className = '',
-  animated = true,
-  hover = true,
-  padding = 'lg'
-}) => {
-  return (
-    <Card 
-      className={className} 
-      animated={animated} 
-      hover={hover} 
-      padding={padding}
-    >
-      <div className="text-center">
-        <div className={`w-16 h-16 ${iconBg} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
-          <Icon className={`w-8 h-8 ${iconColor}`} />
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-3">
-          {title}
-        </h3>
-        <p className="text-gray-600 leading-relaxed">
-          {description}
-        </p>
-      </div>
-    </Card>
-  );
 };

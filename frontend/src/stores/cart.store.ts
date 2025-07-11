@@ -258,22 +258,3 @@ useCartStore.subscribe(
     }
   }
 );
-
-// ============================================================================
-// ARCHITECTURE NOTES:
-// 
-// ✅ PURE LOCAL STATE: No backend calls until checkout
-// ✅ ZUSTAND PERSIST: Cart survives page refresh
-// ✅ BULK OPERATIONS: addMultipleItems for predicted basket
-// ✅ OPTIMISTIC UPDATES: Instant UI feedback
-// ✅ DRY PRINCIPLE: Single source of truth for cart logic
-// ✅ CODE REUSABILITY: Can be used by any component
-// ✅ DEMAND 4: Smooth user experience with instant updates
-// 
-// The cart store is now a pure local state manager that:
-// 1. Handles all cart operations without backend calls
-// 2. Persists data across sessions
-// 3. Provides bulk operations for predicted basket integration
-// 4. Maintains computed values for UI components
-// 5. Integrates seamlessly with order.service.ts at checkout
-// ============================================================================
