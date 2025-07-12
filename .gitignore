@@ -2,19 +2,11 @@
 node_modules/
 /backend/node_modules/
 /frontend/node_modules/
-/ml-service/__pycache__/
 
 # Build outputs
 /backend/dist/
 /frontend/dist/
 /frontend/build/
-
-# Environment files
-# .env
-# .env.local
-# .env.development.local
-# .env.test.local
-# .env.production.local
 
 # Logs
 logs/
@@ -56,17 +48,7 @@ jspm_packages/
 
 # ML/Data files (keep structure but ignore large files)
 **/dataset/*.csv
-/ml-service/models/*.pkl
-/ml-service/models/*.joblib
-/ml-service/models/*.h5
-
-# Python specific
-/ml-service/__pycache__/
-/ml-service/**/*.py[cod]
-/ml-service/**/*$py.class
-/ml-service/.pytest_cache/
-/ml-service/.coverage
-/ml-service/htmlcov/
+**/*.pkl
 
 # IDE files
 .vscode/
@@ -89,26 +71,15 @@ Thumbs.db
 # Docker
 .docker/
 docker-compose.override.yml
+docker-compose.local.yml
 
 # Frontend specific
-/frontend/.vite/
 /frontend/storybook-static/
 /frontend/.parcel-cache/
-
-# Backend specific  
-/backend/dist/
 
 # Package lock files (use npm ci in containers)
 **/package-lock.json
 yarn.lock
-
-# Local development overrides
-.env.local.override
-docker-compose.local.yml
-
-# API Agreement Screenshot
-/API_Agreement_Screenshot
-
 
 #################
 # Temporary files
