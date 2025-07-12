@@ -1,0 +1,80 @@
+[1mdiff --git a/database/init_db.sh b/database/init_db.sh[m
+[1mindex 0c90cc6..c3ff508 100644[m
+[1m--- a/database/init_db.sh[m
+[1m+++ b/database/init_db.sh[m
+[36m@@ -28,9 +28,15 @@[m [mif [ -f "$FLAG_FILE" ]; then[m
+ else[m
+     echo "📊 Starting database population with Instacart products..."[m
+     [m
+[31m-    # Wait a moment for database to be fully ready[m
+[31m-    sleep 2[m
+[31m-    [m
+[32m+[m[32m    # === ADDED: Wait for PostgreSQL to be fully ready for connections ===[m
+[32m+[m[32m    echo "Waiting for PostgreSQL to accept connections..."[m
+[32m+[m[32m    until pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do[m
+[32m+[m[32m      echo "PostgreSQL is unavailable - sleeping"[m
+[32m+[m[32m      sleep 5[m
+[32m+[m[32m    done[m
+[32m+[m[32m    echo "✅ PostgreSQL is ready and accepting connections!"[m
+[32m+[m[32m    # ===================================================================[m
+[32m+[m
+     # Run the population script[m
+     cd /app[m
+     python3 "$POPULATE_SCRIPT"[m
+[1mdiff --git a/docker-compose.yml b/docker-compose.yml[m
+[1mindex 20597e5..1879f5f 100644[m
+[1m--- a/docker-compose.yml[m
+[1m+++ b/docker-compose.yml[m
+[36m@@ -1,5 +1,4 @@[m
+ # docker-compose.yml[m
+[31m-version: '3.8'[m
+ [m
+ services:[m
+   database:[m
+[1mdiff --git a/frontend/.dockerignore b/frontend/.dockerignore[m
+[1mindex 83e36e5..ab3adb0 100644[m
+[1m--- a/frontend/.dockerignore[m
+[1m+++ b/frontend/.dockerignore[m
+[36m@@ -30,10 +30,7 @@[m [mvite.config.ts.timestamp-*[m
+ # Development files[m
+ .eslintrc*[m
+ .prettierrc*[m
+[31m-tsconfig.json[m
+ tsconfig.node.json[m
+[31m-tailwind.config.js[m
+[31m-postcss.config.js[m
+ [m
+ # IDE and editor files[m
+ .vscode/[m
+[36m@@ -66,8 +63,7 @@[m [mdocs/[m
+ .storybook/[m
+ storybook-static/[m
+ [m
+[31m-# Package lock files (npm ci will handle)[m
+[31m-package-lock.json[m
+[32m+[m[32m# Package lock files (keep package-lock.json for npm ci)[m
+ yarn.lock[m
+ [m
+ # Public folder items that shouldn't be copied (handled by build)[m
+[1mdiff --git a/frontend/src/hooks/index.ts b/frontend/src/hooks/index.ts[m
+[1mindex 6d33c46..05d6efc 100644[m
+[1m--- a/frontend/src/hooks/index.ts[m
+[1m+++ b/frontend/src/hooks/index.ts[m
+[36m@@ -1,6 +1,5 @@[m
+ // API Hooks[m
+ export { useFavoriteToggle } from './api/useFavoriteToggle';[m
+[31m-export { useCartOperations } from './api/useCartOperations';[m
+ export { useMutationWithToast } from './api/useMutationWithToast';[m
+ export { useProducts, useProduct, useCategories } from './api/useProducts';[m
+ export { useOrders, useOrder } from './api/useOrders';[m
+[36m@@ -22,9 +21,6 @@[m [mexport { useAuthenticatedAction } from './auth/useAuthenticatedAction';[m
+ export { useModal } from './ui/useModal';[m
+ export { useProductDisplay } from './ui/useProductDisplay';[m
+ [m
+[31m-// State Hooks[m
+[31m-export { useLocalStorage } from './state/useLocalStorage';[m
+[31m-export { useFilters } from './state/useFilters';[m
+ [m
+ // Search Hooks[m
+ export { useSearchWithHistory } from './search/useSearchWithHistory';[m
+\ No newline at end of file[m

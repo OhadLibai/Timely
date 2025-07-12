@@ -28,9 +28,15 @@ if [ -f "$FLAG_FILE" ]; then
 else
     echo "📊 Starting database population with Instacart products..."
     
-    # Wait a moment for database to be fully ready
-    sleep 2
-    
+    # === ADDED: Wait for PostgreSQL to be fully ready for connections ===
+    echo "Waiting for PostgreSQL to accept connections..."
+    until pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do
+      echo "PostgreSQL is unavailable - sleeping"
+      sleep 5
+    done
+    echo "✅ PostgreSQL is ready and accepting connections!"
+    # ===================================================================
+
     # Run the population script
     cd /app
     python3 "$POPULATE_SCRIPT"

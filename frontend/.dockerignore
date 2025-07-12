@@ -30,10 +30,7 @@ vite.config.ts.timestamp-*
 # Development files
 .eslintrc*
 .prettierrc*
-tsconfig.json
 tsconfig.node.json
-tailwind.config.js
-postcss.config.js
 
 # IDE and editor files
 .vscode/
@@ -66,8 +63,7 @@ docs/
 .storybook/
 storybook-static/
 
-# Package lock files (npm ci will handle)
-package-lock.json
+# Package lock files (keep package-lock.json for npm ci)
 yarn.lock
 
 # Public folder items that shouldn't be copied (handled by build)
