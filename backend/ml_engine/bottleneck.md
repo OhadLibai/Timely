@@ -1,29 +1,54 @@
+# Optimization Blocks
 
-Under the implementation of __init__.py, if we use this dataset for computing the vectors, is not it be heavy on the memory? how it affects the KNN search?
----
+## Optimization 1: K-NN Search Sampling
+In the _knn_search function, instead of loading all training vectors to find neighbors, it randomly samples a smaller subset. This drastically reduces the search space and speeds up prediction time.
 
-### Vector Computation & Memory Impact 💾
-The main issue is the size and number of the user vectors that are generated and held in memory.
+```
+// From: __init__2.py
 
-Massive Vector Size (Dimensionality): The full Instacart dataset has 49,688 unique products. In the __init__.py implementation, every single user vector is an array of this length (the item_count). If each item's score is a 64-bit float (8 bytes), each vector would require approximately:
-49,688 items * 8 bytes/item ≈ 397.5 KB
-This means a single user's preference vector takes up almost 400 KB of RAM.
+def _knn_search(self, query_vector: np.ndarray, k: int) -> Tuple[List[str], np.ndarray]:
+    # ...
+    user_ids = list(self.training_vectors.keys())
+    
+    # THIS IS THE OPTIMIZATION BLOCK
+    # It limits the search to a random sample of 5000 neighbors
+    if len(user_ids) > KNN_NEIGHBOR_LOADING_SAMPLE:
+        sampled_ids = random.sample(user_ids, KNN_NEIGHBOR_LOADING_SAMPLE)
+    else:
+        sampled_ids = user_ids
+    
+    vectors_matrix = np.array([self.training_vectors[uid] for uid in sampled_ids])
+    
+    # The search is then performed only on this smaller matrix
+    nbrs = NearestNeighbors(n_neighbors=k_actual, metric='cosine')
+    nbrs.fit(vectors_matrix)
+    # ...
+```
 
-Large Number of Vectors: The full dataset contains over 200,000 users. Even after filtering, you would likely have tens of thousands of training users. If you pre-compute vectors for just 50,000 training users, the total memory required to hold them all in the self.training_vectors dictionary would be:
-50,000 users * 397.5 KB/user ≈ 19.87 GB
+## Optimization 2: Pre-computation Limiting
+During the one-time precompute_all_vectors step, this version limits the number of vectors it generates and saves. This prevents out-of-memory errors on systems with limited RAM and keeps the resulting training_vectors.pkl file from becoming excessively large.
 
-The pre-computation step would consume nearly 20 GB of RAM and the resulting training_vectors.pkl file would be that large on disk. Loading this file into memory when the engine starts would be a major bottleneck.
+```
+// From: __init__2.py
 
-### Impact on KNN Search 🧠
-This is where the second major problem occurs. The __init__.py implementation finds neighbors by comparing a user's vector to all pre-computed training vectors.
+def precompute_all_vectors(self):
+    # ...
+    training_users = [str(uid) for uid in self.keyset.get('train', [])]
+    
+    # THIS IS THE OPTIMIZATION BLOCK
+    max_vectors = 10000  # A hard limit on vectors to compute
+    if len(training_users) > max_vectors:
+        training_users = random.sample(training_users, max_vectors)
+        print(f"⚡ Limiting vector computation to {max_vectors} users for performance")
+    # ...
+```
 
-Brute-Force Search: The sklearn.neighbors.NearestNeighbors tool, when used with a high-dimensional dataset and the cosine metric, often performs a brute-force search. This means for a single prediction, it calculates the distance between the query user's vector and every single one of the 50,000 training vectors.
+## Recommended Optimization Parameters
+The ideal values for these parameters depend on a trade-off between speed, accuracy, and available resources (CPU/RAM).
 
-High Query Latency: This process is computationally expensive. A single prediction request would trigger tens of thousands of high-dimensional vector calculations, making the predict_basket function slow. This is not suitable for a real-time recommendation system where users expect instant results.
+* KNN_NEIGHBOR_LOADING_SAMPLE (Default: 5,000): This parameter controls the real-time prediction speed.
+    - Attitude: Start with the default of 5000. If predictions are too slow, you can lower it (e.g., to 2500), but this may slightly reduce recommendation quality. If you have a powerful server and need maximum accuracy, you could increase it (e.g., to 10000), but monitor the impact on response time. A value between 5% and 10% of your total training user count is a good rule of thumb.
 
-The "Curse of Dimensionality": In a space with ~50,000 dimensions, the concept of distance can become less meaningful. The distance between any two random points can be surprisingly similar, making it harder to identify truly "near" neighbors. This can impact the quality and relevance of the recommendations.
-
-The Solution: Approximate Nearest Neighbor (ANN) 🚀
-This memory and performance problem is why production-level recommendation systems rarely use exact KNN. Instead, they use Approximate Nearest Neighbor (ANN) algorithms.
-
-Libraries like Faiss (from Meta), Annoy (from Spotify), or ScaNN (from Google) are built for this purpose. They work by creating a clever, compressed index of the vectors. When searching, they can find a set of very close neighbors (though not guaranteed to be the exact nearest ones) in a fraction of the time and with much lower memory overhead. This is the standard approach for scaling KNN-based models to millions of users.
+* max_vectors (in precompute_all_vectors, Default: 20,000): This parameter is about managing memory during the build process.
+    - Attitude: This should be set based on the available RAM of the machine performing the pre-computation. Each vector's size is determined by item_count (e.g., 49,688 floats).
+    - Calculation: If one vector is ~200KB (49,688 * 4 bytes), then 20,000 vectors will consume about 4GB of RAM. You should set this to a number that fits comfortably in your build environment's memory, leaving room for the OS and other processes. The default of 20000 is a safe and reasonable choice for most environments.

@@ -1,7 +1,4 @@
-Unpacking the Instacart Dataset: A Bookshelf of Grocery Shopping Habits
-The Instacart Market Basket Analysis dataset, a popular resource on Kaggle, offers a granular look into the purchasing patterns of over 200,000 users across more than 3 million grocery orders. This rich dataset is segmented into several CSV files, each acting as a distinct chapter in the story of a customer's shopping journey. Understanding the role of each file is crucial for any data analysis or machine learning task, especially for developing next-basket recommendation systems, a primary application of this data as explored in research like "A Next-Basket Recommendation Reality Check."
-
-Here's a breakdown of each CSV file and its significance:
+Instacart Dataset:
 
 The Core Files: Orders and Products
 orders.csv: This file is the backbone of the dataset, chronicling every order placed by each user. Each row represents a single order and contains the following key information:

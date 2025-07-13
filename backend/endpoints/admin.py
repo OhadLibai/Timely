@@ -150,7 +150,7 @@ def import_order_history(user_id):
             return 0
         
         orders_created = 0
-        current_date = datetime.utcnow()
+        current_date = datetime.now()
         
         with get_db_cursor() as cur:
             # Group by order number

@@ -20,5 +20,7 @@ COPY category_details.csv /app/category_details.csv
 # Copy orchestration script to entrypoint directory
 COPY init_db.sh /docker-entrypoint-initdb.d/init_db.sh
 
-# Ensure proper permissions
-RUN chmod +x /docker-entrypoint-initdb.d/init_db.sh
+# Ensure proper permissions and create shared directories
+RUN chmod +x /docker-entrypoint-initdb.d/init_db.sh && \
+    mkdir -p /shared/flags && \
+    chown -R postgres:postgres /shared

@@ -27,22 +27,14 @@ if [ -f "$FLAG_FILE" ]; then
     echo "✅ Database already populated, skipping population step."
 else
     echo "📊 Starting database population with Instacart products..."
-    
-    # === ADDED: Wait for PostgreSQL to be fully ready for connections ===
-    echo "Waiting for PostgreSQL to accept connections..."
-    until pg_isready -h localhost -p 5432 -U "$POSTGRES_USER" -d "$POSTGRES_DB"; do
-      echo "PostgreSQL is unavailable - sleeping"
-      sleep 5
-    done
-    echo "✅ PostgreSQL is ready and accepting connections!"
-    # ===================================================================
 
     # Run the population script
     cd /app
     python3 "$POPULATE_SCRIPT"
     
     # Set the flag to indicate population is complete
-    touch "$FLAG_FILE"
+    mkdir -p /shared/flags
+    echo "populated" > "$FLAG_FILE" || touch "$FLAG_FILE" 2>/dev/null || echo "populated" > /tmp/db_populated.flag
     echo "✅ Database population completed successfully!"
 fi
 

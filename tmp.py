@@ -1,7 +1,6 @@
 # backend/ml_engine/build/preprocess.py
 """
 Preprocess Instacart dataset for TIFUKNN model
-This file outputs `instacart.csv`
 Updated paths for new project structure
 """
 
@@ -11,8 +10,6 @@ import os
 # Updated data paths for new structure
 DATA_DIR = "/app/data/dataset"  # Local copy in backend container
 OUTPUT_DIR = "/app/data/dataset"
-
-USER_FRACTION = 0.1
 
 def preprocess_instacart():
     """
@@ -40,9 +37,9 @@ def preprocess_instacart():
     # Sample the data to reduce processing time and memory usage
     print("Sampling data for deployment...")
     
-    # Take a sample of orders
+    # Take a sample of orders (1% of users)
     unique_users = orders['user_id'].unique()
-    sample_users = pd.Series(unique_users).sample(frac=USER_FRACTION, random_state=42)
+    sample_users = pd.Series(unique_users).sample(frac=0.01, random_state=42)
     sample_orders = orders[orders['user_id'].isin(sample_users)]
     
     print(f"Sampled {len(sample_orders)} orders from {len(sample_users)} users")
@@ -57,8 +54,6 @@ def preprocess_instacart():
     print(f"Filtered to {len(order_products_prior_sample)} prior + {len(order_products_train_sample)} train order products")
     
     # Combine sampled data
-    order_products_prior_sample = order_products_prior_sample.copy()
-    order_products_train_sample = order_products_train_sample.copy()
     order_products_prior_sample['eval_set'] = 'prior'
     order_products_train_sample['eval_set'] = 'train'
     
@@ -71,8 +66,7 @@ def preprocess_instacart():
     
     # Merge with orders to get user and order information
     print("Merging with orders data...")
-    # Use suffixes to avoid column conflicts
-    merged = all_order_products.merge(sample_orders, on='order_id', how='left', suffixes=('', '_order'))
+    merged = all_order_products.merge(sample_orders, on='order_id', how='left')
     
     print(f"After merging: {len(merged)} records")
     

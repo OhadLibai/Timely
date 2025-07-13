@@ -12,11 +12,11 @@ from datetime import datetime
 import psycopg2
 from psycopg2.pool import SimpleConnectionPool
 import json
+import time
 
 # Database configuration
 DATABASE_CONFIG = {
-    'host': 'localhost',  # Connect locally within container
-    'port': 5432,
+    'host': '/var/run/postgresql',  # Use Unix socket during init
     'database': 'timely_db',
     'user': 'timely_user',
     'password': 'timely_password'
@@ -54,7 +54,28 @@ PRICE_RANGES = {
 
 class DatabasePopulator:
     def __init__(self):
-        self.pool = SimpleConnectionPool(1, 5, **DATABASE_CONFIG)
+        self.pool = None
+        self._initialize_connection_pool()
+        
+    def _initialize_connection_pool(self):
+        """Initialize connection pool with retry logic"""
+        retry_count = 0
+        max_retries = 30
+        
+        while retry_count < max_retries:
+            try:
+                print(f"Attempting to connect to database (attempt {retry_count + 1}/{max_retries})...")
+                self.pool = SimpleConnectionPool(1, 5, **DATABASE_CONFIG)
+                print("✅ Database connection pool initialized successfully!")
+                return
+            except Exception as e:
+                retry_count += 1
+                if retry_count >= max_retries:
+                    print(f"❌ Failed to connect to database after {max_retries} attempts")
+                    raise e
+                print(f"⚠️  Database connection failed: {e}")
+                print(f"Retrying in 5 seconds... (attempt {retry_count}/{max_retries})")
+                time.sleep(5)
         
     def get_connection(self):
         return self.pool.getconn()
@@ -83,6 +104,7 @@ class DatabasePopulator:
         print(f"Loaded {len(self.departments)} departments")
         print(f"Loaded {len(self.aisles)} aisles")
         print(f"Loaded {len(self.products)} products")
+        print(f"Loaded {len(self.category_details)} category details")
         
     def generate_price(self, department_name):
         """Generate a realistic price based on department"""
@@ -211,6 +233,26 @@ class DatabasePopulator:
             cur.close()
             self.put_connection(conn)
     
+    def check_population_status(self):
+        """Check if both products and categories tables have data"""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        
+        try:
+            # Check categories count
+            cur.execute("SELECT COUNT(*) FROM categories")
+            categories_count = cur.fetchone()[0]
+            
+            # Check products count
+            cur.execute("SELECT COUNT(*) FROM products")
+            products_count = cur.fetchone()[0]
+            
+            return categories_count, products_count
+            
+        finally:
+            cur.close()
+            self.put_connection(conn)
+    
     def run(self):
         """Run the complete population process"""
         print("="*60)
@@ -219,23 +261,33 @@ class DatabasePopulator:
         
         try:
             # Check if already populated
-            conn = self.get_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT COUNT(*) FROM products")
-            count = cur.fetchone()[0]
-            cur.close()
-            self.put_connection(conn)
+            categories_count, products_count = self.check_population_status()
             
-            if count > 0:
-                print(f"\nDatabase already has {count} products. Skipping population.")
+            if categories_count > 0 and products_count > 0:
+                print(f"\nDatabase already populated:")
+                print(f"  - Categories: {categories_count}")
+                print(f"  - Products: {products_count}")
+                print("Skipping population.")
                 return
+            
+            print(f"\nCurrent population status:")
+            print(f"  - Categories: {categories_count}")
+            print(f"  - Products: {products_count}")
+            print("Starting population process...")
             
             # Load data
             self.load_csv_data()
             
             # Populate in order
-            self.populate_categories()
-            self.populate_products()
+            if categories_count == 0:
+                self.populate_categories()
+            else:
+                print("Categories already populated, skipping...")
+                
+            if products_count == 0:
+                self.populate_products()
+            else:
+                print("Products already populated, skipping...")
             
             print("\n✅ Database population complete!")
             
@@ -243,7 +295,8 @@ class DatabasePopulator:
             print(f"\n❌ Error during population: {e}")
             raise
         finally:
-            self.pool.closeall()
+            if self.pool:
+                self.pool.closeall()
 
 
 if __name__ == "__main__":

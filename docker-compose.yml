@@ -34,6 +34,12 @@ services:
       - initialization_flags:/shared/flags  # Shared flag storage
     environment:
       - PYTHONUNBUFFERED=1
+    deploy:
+      resources:
+        limits:
+          memory: 12g 
+        reservations:
+          memory: 2g 
 
   frontend:
     build: ./frontend
