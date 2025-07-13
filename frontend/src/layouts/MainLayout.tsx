@@ -12,6 +12,7 @@ import { useCartStore } from '@/stores/cart.store';
 import CartDropdown from '@/components/cart/CartDropdown';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import SearchModal from '@/components/search/SearchModal';
+import timelyLogo from '@/assets/timely-logo.png';
 
 const MainLayout: React.FC = () => {
   const location = useLocation();
@@ -65,7 +66,7 @@ const MainLayout: React.FC = () => {
               to="/"
               className="flex items-center gap-2 text-xl font-bold text-gray-900"
             >
-              <img src="/public/timely-logo.svg" alt="Timely Logo" className="h-8" />
+              <img src={timelyLogo} alt="Timely Logo" className="h-8" />
             </Link>
 
             {/* Desktop Navigation */}
@@ -258,7 +259,7 @@ const MainLayout: React.FC = () => {
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <img src="/public/timely-logo.svg" alt="Timely Logo" className="h-8" />
+                <img src="/timely-logo.png" alt="Timely Logo" className="h-8" />
               </div>
               <p className="text-gray-600">
                 Your AI-powered grocery shopping assistant. Save time, shop smarter.

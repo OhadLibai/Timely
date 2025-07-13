@@ -5,7 +5,7 @@ import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosR
 import toast from 'react-hot-toast';
 import { authService } from '@/services/auth.service';
 
-const API_URL = process.env.API_URL || 'http://localhost:5000/api';
+const API_URL = (typeof process !== 'undefined' && process.env.API_URL) || 'http://localhost:5000/api';
 
 // ============================================================================
 // SINGLE API CLIENT - Backend Gateway Only

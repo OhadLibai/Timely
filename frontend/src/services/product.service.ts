@@ -38,7 +38,7 @@ class ProductService {
     if (filters.limit) params.append('limit', filters.limit.toString());
     if (filters.sort) params.append('sort', filters.sort);
     if (filters.search) params.append('search', filters.search);
-    if (filters.categories?.length) {
+    if (filters.categories && Array.isArray(filters.categories) && filters.categories.length > 0) {
       filters.categories.forEach((cat: string) => params.append('categories[]', cat));
     }
     if (filters.inStock) params.append('inStock', 'true');

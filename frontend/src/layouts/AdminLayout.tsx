@@ -11,6 +11,7 @@ import {
   Palette
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
+import timelyLogo from '@/assets/timely-logo.png';
 
 const AdminLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -146,7 +147,7 @@ const AdminLayout: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
         <Link to="/admin" className="flex items-center gap-3">
-          <img src="/public/timely-logo.svg" alt="Timely Admin Logo" className="h-8" />
+          <img src={timelyLogo} alt="Timely Admin Logo" className="h-8" />
         </Link>
         <button
           onClick={() => setIsSidebarOpen(false)}

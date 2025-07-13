@@ -2,6 +2,7 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import timelyLogo from '@/assets/timely-logo.png';
 
 const AuthLayout: React.FC = () => {
   return (
@@ -16,7 +17,7 @@ const AuthLayout: React.FC = () => {
             className="max-w-sm mx-auto"
           >
             <Link to="/" className="flex items-center gap-3 mb-8">
-              <img src="/public/timely-logo.svg" alt="Timely Logo" className="h-10" />
+              <img src={timelyLogo} alt="Timely Logo" className="h-10" />
             </Link>
             
             <h1 className="text-4xl font-bold text-gray-900 mb-6">
@@ -50,7 +51,7 @@ const AuthLayout: React.FC = () => {
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8">
             <Link to="/" className="flex items-center justify-center gap-2">
-              <img src="/public/timely-logo.svg" alt="Timely Logo" className="h-9" />
+              <img src={timelyLogo} alt="Timely Logo" className="h-9" />
             </Link>
           </div>
 

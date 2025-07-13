@@ -27,7 +27,7 @@ import toast from 'react-hot-toast';
 const ModelPerformance: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [sampleSize, setSampleSize] = useState(process.env.EVALUATION_SAMPLE_SIZE); 
+  const [sampleSize, setSampleSize] = useState((typeof process !== 'undefined' && process.env.EVALUATION_SAMPLE_SIZE) || 100); 
   const [isEvaluating, setIsEvaluating] = useState(false);
   
   // Fetch existing metrics using metricsService

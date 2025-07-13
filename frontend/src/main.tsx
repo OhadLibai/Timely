@@ -25,6 +25,20 @@ declare const module: {
   };
 };
 
+declare const process: {
+  env: {
+    NODE_ENV: string;
+    [key: string]: string | undefined;
+  };
+};
+
+// React JSX runtime declaration for Parcel
+declare module 'react/jsx-runtime' {
+  export const jsx: any;
+  export const jsxs: any;
+  export const Fragment: any;
+}
+
 // ============================================================================
 // GLOBAL ERROR HANDLING
 // ============================================================================
@@ -40,7 +54,7 @@ window.addEventListener('error', (event) => {
   });
   
   // In development, show more details
-  if (process.env.NODE_ENV === 'development') {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.error('Full error event:', event);
   }
 });
@@ -53,7 +67,7 @@ window.addEventListener('unhandledrejection', (event) => {
   });
   
   // In development, show more details
-  if (process.env.NODE_ENV === 'development') {
+  if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
     console.error('Full rejection event:', event);
   }
 });
@@ -95,8 +109,11 @@ const queryClient = new QueryClient({
 // ============================================================================
 
 const initializeDevelopmentTools = () => {
-  if (process.env.NODE_ENV !== 'development') return;
+  if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'development') return;
 
+  console.log("==========================================");
+  console.log("🚀 Starting React frontend app...");
+  console.log("==========================================");
   console.log('🔧 Timely Development Mode Initialized');
   console.log('📊 Core App Demands:');
   console.log('  1. Demo User Creation & ML Prediction Showcase');
@@ -111,7 +128,7 @@ const initializeDevelopmentTools = () => {
   // Add debugging helpers to window object
   (window as any).__TIMELY_DEBUG__ = {
     queryClient,
-    env: process.env,
+    env: typeof process !== 'undefined' ? process.env : {},
     version: '1.0.0-dev',
     stage: 'development-testing',
     buildTool: 'parcel'
@@ -211,7 +228,7 @@ const initializationLoader = {
       setTimeout(() => {
         loader.remove();
         // Mark initialization complete for performance monitoring
-        if (process.env.NODE_ENV === 'development' && 'performance' in window) {
+        if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development' && 'performance' in window) {
           performance.mark('timely-app-ready');
           performance.measure('timely-initialization', 'timely-app-start', 'timely-app-ready');
         }
@@ -254,7 +271,7 @@ const initializeTimely = async (): Promise<void> => {
           <QueryClientProvider client={queryClient}>
             <App />
             {/* Show React Query devtools in development */}
-            {process.env.NODE_ENV === 'development' && (
+            {typeof process !== 'undefined' && process.env.NODE_ENV === 'development' && (
               <ReactQueryDevtools 
                 initialIsOpen={false} 
                 position="bottom-right"
@@ -295,7 +312,7 @@ const initializeTimely = async (): Promise<void> => {
           >
             Reload Application
           </button>
-          ${process.env.NODE_ENV === 'development' ? `
+          ${typeof process !== 'undefined' && process.env.NODE_ENV === 'development' ? `
             <details class="mt-4 text-left">
               <summary class="cursor-pointer text-sm text-gray-500">Development Error Details</summary>
               <pre class="mt-2 text-xs text-red-600 bg-red-100 p-2 rounded overflow-auto">${error}</pre>

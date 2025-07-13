@@ -145,8 +145,8 @@ CREATE INDEX IF NOT EXISTS idx_predicted_baskets_user ON predicted_baskets(user_
 -- Insert default users with negative IDs
 INSERT INTO users (instacart_user_id, email, password, first_name, last_name, role, is_active, email_verified)
 VALUES 
-    (-1, 'admin@timely.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewKyNiGH1CUhGJ.y', 'Admin', 'User', 'admin', true, true),
-    (-2, 'user@timely.com', '$2b$12$5KiR0C9XI73iKNowe7L.ZuBhfxMKw5fMfyiAJFZz1c/NetDm.gQfO', 'Regular', 'User', 'customer', true, true)
+    (-1, 'admin@timely.com', '$2b$12$8mj0dQXiynGsf2ym/ZK5Eea0Gs3euGhNMzz5bWiER0JFfBgXtZ0EW', 'Admin', 'User', 'admin', true, true),
+    (-2, 'user@timely.com', '$2b$12$.5eADgGg1kRkStG7DQL0SOskBMjWHzCDJwwaeidufTEblaNoFwBCu', 'Regular', 'User', 'customer', true, true)
 ON CONFLICT (instacart_user_id) DO NOTHING;
 
 -- Note: Passwords are hashed versions of 'admin_123' and 'user_123' respectively

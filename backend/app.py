@@ -78,7 +78,17 @@ def root():
     return jsonify({
         'name': 'Timely Backend API',
         'version': '1.0.0',
-        'endpoints': ['/api/health', '/api/auth', '/api/predictions', '/api/products', '/api/orders']
+        'endpoints': [
+            '/api/health',
+            '/api/auth',
+            '/api/predictions',
+            '/api/products', 
+            '/api/orders',
+            '/api/admin',
+            '/api/evaluations',
+            '/api/user',
+            '/api/favorites'
+        ]
     })
 
 # Error handlers

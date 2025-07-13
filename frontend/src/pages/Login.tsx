@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import toast from 'react-hot-toast';
 import { FormInput } from '@/components/forms/FormInput';
 import { Button } from '@/components/common/Button';
+import timelyLogo from '@/assets/timely-logo.png';
 
 interface LoginFormData {
   email: string;
@@ -61,7 +62,7 @@ const Login: React.FC = () => {
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center justify-center gap-2 mb-6">
-            <img src="/public/timely-logo.svg" alt="Timely Logo" className="h-10" />
+            <img src={timelyLogo} alt="Timely Logo" className="h-10" />
           </Link>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back
@@ -177,7 +178,7 @@ const Login: React.FC = () => {
                 </p>
                 <p className="text-blue-700">
                   Email: user@timely.com<br />
-                  Password: user123
+                  Password: user_123
                 </p>
               </div>
             </div>
