@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 // ✅ ADDED: Import the logo as a module
 import timelyLogo from '@/assets/timely-logo.png';
-import timelyIcon from '@/assets/timely-favicon.png';
+import timelyIcon from '@/assets/timely-favicon.svg';
 
 const Hero: React.FC = () => {
   return (
@@ -70,7 +70,7 @@ const Hero: React.FC = () => {
                   <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center">
                     <img src={timelyIcon} alt="Timely Icon" className="h-12 w-12" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Smart Predictions</h3>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">Smart Recommendations</h3>
                   <p className="text-gray-600">AI analyzes your shopping history to predict your next basket</p>
                 </div>
               </div>

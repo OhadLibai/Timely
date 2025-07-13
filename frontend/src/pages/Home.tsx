@@ -105,7 +105,7 @@ const Home: React.FC = () => {
               Why Choose Timely?
             </h2>
             <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-              Our machine learning algorithms analyze your shopping patterns to make personalized predictions
+              Groundbreaking AI Agent Designed to Facilitate your Grocery Shopping Tasks.
             </p>
 
             <ResponsiveGrid cols={{ sm: 1, md: 2, lg: 4 }} gap={8}>
