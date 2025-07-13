@@ -95,6 +95,8 @@ else
     echo "✅ Vectors already computed, skipping..."
 fi
 
+echo "⭐ ML Engine ready!"
+
 echo "=========================================="
 echo "🚀 Starting Flask backend server..."
 echo "=========================================="

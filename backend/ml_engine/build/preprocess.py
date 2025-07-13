@@ -12,7 +12,7 @@ import os
 DATA_DIR = "/app/data/dataset"  # Local copy in backend container
 OUTPUT_DIR = "/app/data/dataset"
 
-USER_FRACTION = 0.1
+USER_FRACTION = 0.1 # Determines how many users will be available from the dataset
 
 def preprocess_instacart():
     """

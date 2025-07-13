@@ -27,8 +27,8 @@ TOPK = 10
 
 # Production and Runtime Optimizations
 TOP_CANDIDATES = 100  # Top candidates (products) before final selection
-KNN_NEIGHBOR_LOADING_SAMPLE = 5000  # KNN search optimization, controls the real-time prediction speed
-MAX_VECTORS = 20000  # Limit to avoid memory issues, managed during the build process
+KNN_NEIGHBOR_LOADING_SAMPLE = 1000  # KNN search optimization, controls the real-time prediction speed
+MAX_VECTORS = 5000  # Limit to avoid memory issues, managed during the build process
 
 # Updated paths for new structure
 DATA_PATH = Path('/app/data')
@@ -84,13 +84,13 @@ class TifuKnnEngine:
                 self.training_vectors = pickle.load(f)
                 print(f"✅ Loaded {len(self.training_vectors)} pre-computed training vectors")
         else:
-            print(f"⚠️  No pre-computed training vectors found at {vectors_file}")
+            print(f"⚠️  No pre-computed training vectors found at {vectors_file}. Need to precompute vectors first")
         
     def precompute_training_vectors(self):
         """
         Pre-compute vectors for all training users
         This enables fast KNN search during predictions
-        OPTIMIZED: Only compute for a sample to avoid memory issues
+        OPTIMIZED: Process in batches to avoid memory overload
         """
         print("⚒️  Start precompute vectors")
 
@@ -98,9 +98,12 @@ class TifuKnnEngine:
         
         if len(training_users) > MAX_VECTORS:
             training_users = random.sample(training_users, MAX_VECTORS)
-            print(f"⚡ Limiting vector computation to {MAX_VECTORS} users for performance")
+            print(f"⚡ Limiting vector computation to {MAX_VECTORS} users for feasible memory load")
         
         print(f"🧮 Pre-computing vectors for {len(training_users)} training users...")
+
+        VECTORS_PATH.mkdir(parents=True, exist_ok=True)
+        vectors_file = VECTORS_PATH / 'training_vectors.pkl'
         
         computed_vectors = {}
         computed = 0
@@ -125,10 +128,7 @@ class TifuKnnEngine:
             if (computed + skipped) % 1000 == 0:
                 print(f"Progress: {computed + skipped}/{len(training_users)}")
         
-        # Save computed vectors
-        VECTORS_PATH.mkdir(parents=True, exist_ok=True)
-        vectors_file = VECTORS_PATH / 'training_vectors.pkl'
-        
+        # Save all computed vectors at the end
         try:
             with open(vectors_file, 'wb') as f:
                 pickle.dump(computed_vectors, f)    
@@ -137,8 +137,7 @@ class TifuKnnEngine:
             print(f"📁 Vectors saved to: {vectors_file}")
             
         except Exception as e:
-            print(f"❌ Error saving vectors: {e}")
-            raise RuntimeError(f"Failed to save pre-computed vectors: {e}")
+            raise RuntimeError(f"❌ Failed to save pre-computed vectors: {e}")
         
     def _compute_user_vector(self, user_history: List[List[int]]) -> Optional[np.ndarray]:
         """
@@ -407,10 +406,9 @@ def get_engine() -> TifuKnnEngine:
     """Get or create singleton engine instance"""
     global _engine_instance
     if _engine_instance is None:
-        print("🚀 Initializing ML Engine...")
+        print("✈️ Initializing ML Engine...")
         try:
             _engine_instance = TifuKnnEngine()
-            print("✅ ML Engine ready!")
         except Exception as e:
             print(f"❌ CRITICAL ERROR: ML Engine initialization failed: {e}")
             raise SystemExit(1)
