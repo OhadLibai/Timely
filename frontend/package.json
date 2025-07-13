@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "start": "parcel serve index.html --port 3000",
     "dev": "parcel serve index.html --port 3000",
     "build": "parcel build index.html",
     "preview": "parcel serve dist --port 4173",

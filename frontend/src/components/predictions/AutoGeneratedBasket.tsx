@@ -274,7 +274,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
           <div className="flex items-start gap-2 text-sm text-indigo-100">
             <Info size={16} className="mt-0.5 flex-shrink-0" />
             <p>
-              Powered by TIFU-KNN algorithm that learns from your shopping history to predict your next grocery needs
+              Powered by cutting edge algorithms that learns from your shopping history to satisfy your next grocery needs
             </p>
           </div>
         </div>

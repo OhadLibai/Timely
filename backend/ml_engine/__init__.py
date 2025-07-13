@@ -406,7 +406,7 @@ def get_engine() -> TifuKnnEngine:
     """Get or create singleton engine instance"""
     global _engine_instance
     if _engine_instance is None:
-        print("✈️ Initializing ML Engine...")
+        print("✈️  Initializing ML Engine...")
         try:
             _engine_instance = TifuKnnEngine()
         except Exception as e:

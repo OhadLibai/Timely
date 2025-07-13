@@ -22,7 +22,7 @@ const Home: React.FC = () => {
     {
       icon: Brain,
       title: 'AI-Powered Predictions',
-      description: 'TIFU-KNN algorithm predicts your next basket with 25% accuracy',
+      description: 'Top model accuracy',
       color: 'from-purple-500 to-indigo-600'
     },
     {
@@ -70,13 +70,13 @@ const Home: React.FC = () => {
             className="text-center"
           >
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-              Smart Grocery Shopping with{' '}
+              Smart Grocery Shopping powered by{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
                 AI Predictions
               </span>
             </h1>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-              Let our TIFU-KNN algorithm predict your next grocery basket based on your shopping patterns. 
+              Ground breakin machine learning engines to anticipate and assist with your next grocery basket
               Save time and never forget your essentials again.
             </p>
 

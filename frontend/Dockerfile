@@ -18,5 +18,9 @@ RUN npm run build
 # Expose port
 EXPOSE 3000
 
+RUN echo "=========================================="
+RUN echo "🚀 Starting React frontend app..."
+RUN echo "=========================================="
+
 # Start the application
 CMD ["npm", "start"]

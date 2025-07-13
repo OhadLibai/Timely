@@ -88,19 +88,19 @@ const protectedRoutes: RouteConfig[] = [
 // ============================================================================
 const adminRoutes: RouteConfig[] = [
   // Overview Hub Dashboard
-  { path: '/admin', element: AdminDashboard },
+  { path: '', element: AdminDashboard },
   
   // DEMAND 1: Demo User Creation
-  { path: '/admin/user-seeding', element: AdminUserSeeding },
+  { path: 'user-seeding', element: AdminUserSeeding },
   
   // DEMAND 2: Model Performance Evaluation
-  { path: '/admin/model-performance', element: AdminModelPerformance },
+  { path: 'model-performance', element: AdminModelPerformance },
   
   // DEMAND 3: Test Individual User Prediction
-  { path: '/admin/user-prediction', element: AdminUserPrediction },
+  { path: 'user-prediction', element: AdminUserPrediction },
   
   // DEMAND 4: Frontend Quality Overview
-  { path: '/admin/user-experience', element: AdminUserExperience },
+  { path: 'user-experience', element: AdminUserExperience },
 ];
 
 const App: React.FC = () => {
@@ -142,7 +142,7 @@ const App: React.FC = () => {
                   {adminRoutes.map(({ path, element: Component }) => (
                     <Route 
                       key={path} 
-                      path={path === '/admin' ? '' : path.replace('/admin', '')} 
+                      path={path} 
                       element={<Component />} 
                     />
                   ))}
