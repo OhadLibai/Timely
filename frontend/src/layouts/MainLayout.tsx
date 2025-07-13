@@ -259,7 +259,7 @@ const MainLayout: React.FC = () => {
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <img src="/timely-logo.png" alt="Timely Logo" className="h-8" />
+                <img src={timelyLogo} alt="Timely Logo" className="h-8" />
               </div>
               <p className="text-gray-600">
                 Your AI-powered grocery shopping assistant. Save time, shop smarter.

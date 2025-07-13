@@ -199,7 +199,7 @@ const ProductDetail: React.FC = () => {
           <div className="space-y-2">
             <div className="flex justify-between">
               <span className="text-gray-600">Category:</span>
-              <span className="text-gray-900">{product.category}</span>
+              <span className="text-gray-900">{typeof product.category === 'object' ? product.category.name : product.category}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-gray-600">Brand:</span>

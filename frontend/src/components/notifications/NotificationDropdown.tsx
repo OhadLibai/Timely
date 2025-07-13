@@ -23,7 +23,7 @@ const NotificationDropdown: React.FC = () => {
       message: 'Your order #12345 has been shipped and is on its way.',
       timestamp: '2 hours ago',
       read: false,
-      actionUrl: '/orders/12345'
+      actionUrl: '/orders'
     },
     {
       id: '2',

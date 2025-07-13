@@ -4,7 +4,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 // ✅ ADDED: Import the logo as a module
-import timelyLogo from '@/assets/timely-logo.png';
+import timelyLogo from '@/assets/timely-logo.svg';
 import timelyIcon from '@/assets/timely-favicon.svg';
 
 const Hero: React.FC = () => {
@@ -26,17 +26,17 @@ const Hero: React.FC = () => {
             </div>
             
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
-              Your Weekly
+              The Next Generation of Grocery Shopping<br />
+              In The Palm of Your Hand.<br />
+              It is You.<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
-                {" "}Grocery List
-              </span>
-              <br />
-              Predicted Smart
+              {" "}But Better.<br />
+              </span>              
             </h1>
             
             <p className="text-xl text-gray-600 mb-8 max-w-2xl">
-              Let AI learn your shopping patterns and automatically create your weekly grocery list. 
-              Save time, reduce waste, and never forget essentials again.
+              We define the new experience of buying goods, with groundbreaking AI agents designed to tackle
+              you grocery tasks with breeze.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -51,7 +51,7 @@ const Hero: React.FC = () => {
                 to="/predicted-basket"
                 className="inline-flex items-center px-8 py-4 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:border-gray-400 transition-colors"
               >
-                View Predictions
+                My Predicted Basket
               </Link>
             </div>
           </motion.div>
@@ -68,10 +68,10 @@ const Hero: React.FC = () => {
               <div className="relative bg-white rounded-3xl shadow-2xl p-8">
                 <div className="text-center">
                   <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mx-auto mb-6 flex items-center justify-center">
-                    <img src={timelyIcon} alt="Timely Icon" className="h-12 w-12" />
+                    <img src={timelyLogo} alt="Timely Icon" className="h-12 w-12" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">Smart Recommendations</h3>
-                  <p className="text-gray-600">AI analyzes your shopping history to predict your next basket</p>
+                  <p className="text-gray-600">Be Productive. Save Time. Delegate Timely. Embrace Timely.</p>
                 </div>
               </div>
             </div>

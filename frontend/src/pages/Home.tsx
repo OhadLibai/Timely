@@ -37,7 +37,7 @@ const Home: React.FC = () => {
     {
       icon: TrendingUp,
       title: 'Smart Recommendations',
-      description: 'Personalized suggestions based on your history',
+      description: 'Personalized suggestions based on your orders',
       color: 'from-green-500 to-emerald-600'
     },
     {
@@ -105,7 +105,7 @@ const Home: React.FC = () => {
               Why Choose Timely?
             </h2>
             <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto">
-              Groundbreaking AI Agent Designed to Facilitate your Grocery Shopping Tasks.
+              It is Easy. You Care About Your Time and So Do We! 
             </p>
 
             <ResponsiveGrid cols={{ sm: 1, md: 2, lg: 4 }} gap={8}>
