@@ -63,8 +63,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
           
           {/* Badges - Using utility function */}
           <div className="absolute top-3 left-3 flex flex-col gap-2">
-            {badges.map((badge) => (
-              <span key={badge.type} className={badge.className}>
+            {badges.map((badge, index) => (
+              <span key={`${badge.type}-${index}`} className={badge.className}>
                 {badge.text}
               </span>
             ))}

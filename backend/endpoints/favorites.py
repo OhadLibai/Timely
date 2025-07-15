@@ -4,7 +4,7 @@ Favorites management endpoints
 """
 
 from flask import Blueprint, request, jsonify
-from database import execute_query
+from database import execute_query, execute_delete
 import uuid
 
 favorites_bp = Blueprint('favorites', __name__)
@@ -19,18 +19,21 @@ def get_favorites(user_id):
             user_id_int = int(user_id)
         except ValueError:
             return jsonify({'error': 'Invalid user ID'}), 400
-            
+
         favorites = execute_query("""
-            SELECT f.*, p.*, c.name as category_name, c.image_url as category_image
+            SELECT f.id as favorite_id, f.user_id, f.product_id, 
+                   p.instacart_product_id, p.name, p.description, p.price, p.brand, p.image_url, p.is_active, p.department_id,
+                   c.name as category_name, c.image_url as category_image
             FROM favorites f
             JOIN products p ON f.product_id = p.instacart_product_id
             JOIN categories c ON p.department_id = c.department_id
             WHERE f.user_id = %s
         """, [user_id_int])
-        
+
         formatted_favorites = []
         for fav in favorites:
-            formatted_favorites.append({
+            favorite_item = {
+                'id': fav['favorite_id'],
                 'userId': str(user_id_int),
                 'product': {
                     'id': str(fav['product_id']),
@@ -48,10 +51,11 @@ def get_favorites(user_id):
                     'isActive': fav['is_active'],
                     'metadata': {}
                 }
-            })
-        
+            }
+            formatted_favorites.append(favorite_item)
+
         return jsonify(formatted_favorites)
-        
+
     except Exception as e:
         print(f"Get favorites error: {str(e)}")
         return jsonify({'error': 'Failed to fetch favorites'}), 500
@@ -69,44 +73,54 @@ def add_favorite(user_id):
         try:
             product_id = int(product_id_str)
         except (ValueError, TypeError):
-            return jsonify({'error': f'Invalid product ID: {product_id_str}'}), 400        
-        
+            return jsonify({'error': f'Invalid product ID: {product_id_str}'}), 400
+
         # Convert string ID to int for database query
         try:
-            user_id_int = int(user_id) 
+            user_id_int = int(user_id)
         except ValueError:
             return jsonify({'error': 'Invalid ID params'}), 400
-            
+
+        # Check if user exists
+        user_exists = execute_query(
+            "SELECT instacart_user_id FROM users WHERE instacart_user_id = %s",
+            [user_id_int],
+            fetch_one=True
+        )
+
+        if not user_exists:
+            return jsonify({'error': 'User not found'}), 404
+
         # Check if product exists
         product_exists = execute_query(
             "SELECT instacart_product_id FROM products WHERE instacart_product_id = %s",
             [product_id],
             fetch_one=True
         )
-        
+
         if not product_exists:
             return jsonify({'error': 'Product not found'}), 404
-        
+
         # Check if already favorited
         existing = execute_query(
             "SELECT id FROM favorites WHERE user_id = %s AND product_id = %s",
             [user_id_int, product_id],
             fetch_one=True
         )
-        
+
         if existing:
             return jsonify({'message': 'Already favorited'})
-        
+
         # Add favorite
         execute_query(
             "INSERT INTO favorites (id, user_id, product_id) VALUES (%s, %s, %s) RETURNING *",
             [str(uuid.uuid4()), user_id_int, product_id],
             fetch_one=True
         )
-        
+
         # Return success message instead of calling get_favorites
         return jsonify({'message': 'Added to favorites'})
-        
+
     except Exception as e:
         print(f"Add favorite error: {str(e)}")
         return jsonify({'error': 'Failed to add favorite'}), 500
@@ -122,16 +136,27 @@ def remove_favorite(user_id, product_id):
             product_id_int = int(product_id)
         except ValueError:
             return jsonify({'error': 'Invalid user ID or product ID'}), 400
-            
-        execute_query(
-            "DELETE FROM favorites WHERE user_id = %s AND product_id = %s",
-            [user_id_int, product_id_int]
-        )
-        
-        return jsonify({'message': 'Favorite removed'})
-        
+
+        # Simple direct query without execute_delete
+        import psycopg2.extras
+        from flask import current_app
+        conn = current_app.db_pool.getconn()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "DELETE FROM favorites WHERE user_id = %s AND product_id = %s",
+                [user_id_int, product_id_int]
+            )
+            conn.commit()
+            return jsonify({'message': 'Favorite removed'})
+        finally:
+            cur.close()
+            current_app.db_pool.putconn(conn)
+
     except Exception as e:
         print(f"Remove favorite error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': 'Failed to remove favorite'}), 500
 
 
@@ -145,15 +170,15 @@ def check_favorite(user_id, product_id):
             product_id_int = int(product_id)
         except ValueError:
             return jsonify({'isFavorited': False})
-            
+
         favorite = execute_query(
             "SELECT id FROM favorites WHERE user_id = %s AND product_id = %s",
             [user_id_int, product_id_int],
             fetch_one=True
         )
-        
+
         return jsonify({'isFavorited': favorite is not None})
-        
+
     except Exception as e:
         print(f"Check favorite error: {str(e)}")
         return jsonify({'isFavorited': False})

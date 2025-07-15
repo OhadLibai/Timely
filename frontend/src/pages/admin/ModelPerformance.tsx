@@ -396,38 +396,38 @@ const ModelPerformance: React.FC = () => {
               <div className="space-y-4">
                 <h4 className="font-medium text-gray-900">Performance Analysis</h4>
                 <div className="space-y-3">
-                  <div className={`p-3 rounded-lg ${metricsData.PrecisionAt > 0.8 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                  <div className={`p-3 rounded-lg ${metricsData.PrecisionAt > 0.35 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
                     <div className="flex items-center gap-2">
-                      {metricsData.PrecisionAt > 0.8 ? (
+                      {metricsData.PrecisionAt > 0.35 ? (
                         <CheckCircle className="w-4 h-4 text-green-600" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-yellow-600" />
                       )}
                       <span className="text-sm font-medium">
-                        Precision@20: {metricsData.PrecisionAt > 0.8 ? 'Excellent' : 'Good'}
+                        Precision@K: {metricsData.PrecisionAt > 0.35 ? 'Excellent' : 'Good'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">
-                      {metricsData.PrecisionAt > 0.8 
+                      {metricsData.PrecisionAt > 0.35 
                         ? 'Model shows high accuracy in top recommendations'
                         : 'Model accuracy is acceptable but could be improved'
                       }
                     </p>
                   </div>
                   
-                  <div className={`p-3 rounded-lg ${metricsData.RecallAt > 0.75 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                  <div className={`p-3 rounded-lg ${metricsData.RecallAt > 0.35 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
                     <div className="flex items-center gap-2">
-                      {metricsData.RecallAt > 0.75 ? (
+                      {metricsData.RecallAt > 0.35 ? (
                         <CheckCircle className="w-4 h-4 text-green-600" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-yellow-600" />
                       )}
                       <span className="text-sm font-medium">
-                        Recall@20: {metricsData.RecallAt > 0.75 ? 'Excellent' : 'Good'}
+                        Recall@K: {metricsData.RecallAt > 0.35 ? 'Excellent' : 'Good'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">
-                      {metricsData.RecallAt > 0.75 
+                      {metricsData.RecallAt > 0.35 
                         ? 'Model captures most relevant items effectively'
                         : 'Model captures relevant items but could improve coverage'
                       }

@@ -43,7 +43,9 @@ export const useDemoUserSeeding = () => {
 
   const seedUser = useMutationWithToast({
     mutationFn: (instacartUserId: string) => adminService.seedDemoUser(instacartUserId),
-    successMessage: 'Demo user seeded successfully',
+    successMessage: (data: any) => {
+      return data.success === false ? 'User already exists' : 'Demo user seeded successfully';
+    },
     errorMessage: 'Failed to seed demo user',
     onSuccess: () => {
       // Invalidate related queries

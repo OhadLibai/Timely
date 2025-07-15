@@ -13,6 +13,10 @@ import os
 # Updated data paths for new structure
 DATA_DIR = "/app/data/dataset"
 
+# Splitting the user for trainining, validating and testing
+TRAIN_SPLIT = float(os.getenv("TRAIN_SPLIT"))
+VALIDATION_SPLIT = float(os.getenv("VALIDATION_SPLIT"))
+
 def create_keyset_fold(dataset='instacart', fold_id=0):
     try:
         """
@@ -47,13 +51,13 @@ def create_keyset_fold(dataset='instacart', fold_id=0):
         random.shuffle(user)
         user = [str(user_id) for user_id in user]
         
-        # Create splits: 72% train, 8% validation, 20% test
-        train_end = int(user_num * 4/5 * 0.9)  # 72%
-        val_end = int(user_num * 4/5)          # 80%
+        # Create splits: 80% train, 10% validation, 10% test (or by the paramaters in docker-compose)
+        train_end = int(user_num * TRAIN_SPLIT) # 80%
+        val_end = int(user_num * (TRAIN_SPLIT+VALIDATION_SPLIT)) # 90%
         
         train_user = user[:train_end]
         val_user = user[train_end:val_end]
-        test_user = user[val_end:]
+        test_user = user[val_end:] # 100%
         
         print(f"📊 Train users: {len(train_user)} ({len(train_user)/user_num*100:.1f}%)")
         print(f"📊 Validation users: {len(val_user)} ({len(val_user)/user_num*100:.1f}%)")

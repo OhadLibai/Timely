@@ -136,7 +136,7 @@ const Favorites: React.FC = () => {
           <AnimatePresence>
             {favorites.map((favorite) => (
               <motion.div
-                key={favorite.id}
+                key={favorite.product.id}
                 layout
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}

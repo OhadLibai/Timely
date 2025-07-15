@@ -124,21 +124,24 @@ const AdminDashboard: React.FC = () => {
   );
 
   const DemoManagementSection = () => (
-    <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 rounded-xl shadow-xl border border-slate-200/80 p-12 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-600/3 via-gray-600/3 to-zinc-600/3"></div>
+    <div className="bg-gradient-to-br from-cyan-50 via-sky-50 to-blue-50 rounded-xl shadow-xl border border-cyan-200/60 p-12 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/8 via-sky-600/8 to-blue-600/8"></div>
+      <div className="absolute top-4 right-4 w-20 h-20 bg-gradient-to-br from-cyan-400/20 to-blue-400/20 rounded-full blur-xl"></div>
+      <div className="absolute bottom-6 left-6 w-16 h-16 bg-gradient-to-br from-sky-400/20 to-cyan-400/20 rounded-full blur-lg"></div>
       <div className="relative">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <div className="p-4 bg-gradient-to-br from-slate-600 to-gray-700 rounded-xl shadow-lg">
+            <div className="p-4 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl shadow-lg ring-2 ring-cyan-400/30">
               <Users className="w-7 h-7 text-white" />
             </div>
             <div>
               <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                System Management
-                <Settings className="w-6 h-6 text-slate-600" />
+                ⚡ System Management
+                <Settings className="w-6 h-6 text-cyan-600" />
+                <Crown className="w-5 h-5 text-blue-500" />
               </h2>
-              <p className="text-base text-slate-700 font-medium mt-1">
-                User provisioning and system administration
+              <p className="text-base text-cyan-700 font-medium mt-1">
+                🔧 User provisioning and system administration
               </p>
             </div>
           </div>
@@ -149,7 +152,7 @@ const AdminDashboard: React.FC = () => {
               onClick={() => navigate('/admin/user-seeding')}
               icon={UserPlus}
             >
-              Create User
+              👤 Create User
             </Button>
             <Button
               variant="primary"
@@ -158,7 +161,7 @@ const AdminDashboard: React.FC = () => {
               icon={ArrowRight}
               iconPosition="right"
             >
-              Manage Users
+              🎛️ Manage Users
             </Button>
           </div>
         </div>
@@ -170,7 +173,7 @@ const AdminDashboard: React.FC = () => {
           value={2}
           subtitle="Demo accounts provisioned"
           icon={Users}
-          color="slate"
+          color="cyan"
           size="md"
         />
         <MetricCard
@@ -178,7 +181,7 @@ const AdminDashboard: React.FC = () => {
           value={10}
           subtitle="Total transactions processed"
           icon={Package}
-          color="slate"
+          color="blue"
           size="md"
         />
         <MetricCard
@@ -186,7 +189,7 @@ const AdminDashboard: React.FC = () => {
           value={'User 42'}
           subtitle="Last provisioned account"
           icon={Clock}
-          color="slate"
+          color="sky"
           size="md"
         />
         </div>
@@ -197,26 +200,29 @@ const AdminDashboard: React.FC = () => {
   const PredictionTestingSection = () => (
     <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50 rounded-xl shadow-lg border border-green-200/50 p-12 relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-green-600/5 via-emerald-600/5 to-lime-600/5"></div>
+      <div className="absolute top-4 right-4 w-24 h-24 bg-gradient-to-br from-green-400/20 to-emerald-400/20 rounded-full blur-xl"></div>
+      <div className="absolute bottom-6 left-6 w-18 h-18 bg-gradient-to-br from-lime-400/20 to-green-400/20 rounded-full blur-lg"></div>
       <div className="relative">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-lg">
-              <Target className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-lg ring-2 ring-green-400/30">
+              <Target className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
                 🎯 Prediction Testing
-                <Trophy className="w-5 h-5 text-green-500" />
+                <Trophy className="w-6 h-6 text-green-500" />
+                <Sparkles className="w-5 h-5 text-emerald-500" />
               </h2>
-              <p className="text-sm text-green-700 font-medium">
-                🔍 Individual user prediction analysis
+              <p className="text-base text-green-700 font-medium mt-1">
+                🔍 Individual user prediction analysis and validation
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <Button
               variant="outline"
-              size="sm"
+              size="md"
               onClick={() => navigate('/admin/user-prediction')}
               icon={PlayCircle}
             >
@@ -224,7 +230,7 @@ const AdminDashboard: React.FC = () => {
             </Button>
             <Button
               variant="primary"
-              size="sm"
+              size="md"
               onClick={() => navigate('/admin/user-prediction')}
               icon={ArrowRight}
               iconPosition="right"
@@ -234,14 +240,14 @@ const AdminDashboard: React.FC = () => {
           </div>
         </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
           title="Last Test"
           value="User 42"
           subtitle="Most recent analysis"
           icon={Target}
           color="blue"
-          size="sm"
+          size="md"
         />
         <MetricCard
           title="Test Accuracy"
@@ -249,7 +255,7 @@ const AdminDashboard: React.FC = () => {
           subtitle="Average precision"
           icon={CheckCircle}
           color="green"
-          size="sm"
+          size="md"
         />
         <MetricCard
           title="Tests Run"
@@ -257,7 +263,7 @@ const AdminDashboard: React.FC = () => {
           subtitle="Total predictions"
           icon={BarChart3}
           color="purple"
-          size="sm"
+          size="md"
         />
         </div>
       </div>
@@ -427,23 +433,23 @@ const AdminDashboard: React.FC = () => {
             <MLAnalyticsSection />
           </motion.div>
 
-          {/* Demo Management & Prediction Testing */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.1 }}
-            >
-              <DemoManagementSection />
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.2 }}
-            >
-              <PredictionTestingSection />
-            </motion.div>
-          </div>
+          {/* System Management Section (Full Width) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+          >
+            <DemoManagementSection />
+          </motion.div>
+
+          {/* Prediction Testing Section (Full Width) */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.2 }}
+          >
+            <PredictionTestingSection />
+          </motion.div>
 
           {/* User Experience Section */}
           <motion.div

@@ -63,7 +63,7 @@ export interface OrdersResponse {
 // ORDER SERVICE CLASS - MINIMAL IMPLEMENTATION
 // ============================================================================
 class OrderService {
-  
+
   /**
    * Create order - Backend needs userId to know which user is creating the order
    * Uses Option B pattern: userId in URL path
@@ -79,7 +79,17 @@ class OrderService {
    */
   async getOrders(filters: OrderFilters = {}): Promise<OrdersResponse> {
     const userId = useAuthStore.getState().getCurrentUserId();
-    return api.get<OrdersResponse>(`/orders/user/${userId}`);
+    const params = new URLSearchParams();
+    if (filters.page) {
+      params.append('page', filters.page.toString());
+    }
+    if (filters.limit) {
+      params.append('limit', filters.limit.toString());
+    }
+    if (filters.status) {
+      params.append('status', filters.status);
+    }
+    return api.get<OrdersResponse>(`/orders/user/${userId}?${params.toString()}`);
   }
 
   /**

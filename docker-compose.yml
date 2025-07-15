@@ -40,6 +40,8 @@ services:
       - MAX_VECTORS=500  # Limit to avoid memory issues, managed during the build process
       - EVALUATE_AT=10  
       - PREDICTED_BASKET_SIZE=10 # TOP_K parameter
+      - TRAIN_SPLIT=0.8
+      - VALIDATION_SPLIT=0.1
     mem_limit: 8g
 
   frontend:

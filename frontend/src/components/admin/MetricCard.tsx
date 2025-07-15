@@ -10,7 +10,7 @@ interface MetricCardProps {
   subtitle?: string;
   change?: number;
   icon: LucideIcon;
-  color?: 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'indigo' | 'pink' | 'orange' | 'gray';
+  color?: 'blue' | 'green' | 'purple' | 'red' | 'yellow' | 'indigo' | 'pink' | 'orange' | 'gray' | 'cyan' | 'sky' | 'slate';
   size?: 'sm' | 'md' | 'lg';
   loading?: boolean;
   onClick?: () => void;
@@ -40,7 +40,10 @@ const MetricCard: React.FC<MetricCardProps> = ({
     indigo: 'bg-indigo-500',
     pink: 'bg-pink-500',
     orange: 'bg-orange-500',
-    gray: 'bg-gray-500'
+    gray: 'bg-gray-500',
+    cyan: 'bg-cyan-500',
+    sky: 'bg-sky-500',
+    slate: 'bg-slate-500'
   };
 
   const sizeClasses = {

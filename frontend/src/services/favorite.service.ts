@@ -6,6 +6,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { Product } from '@/services/product.service';
 
 export interface Favorite {
+  id: string;
   userId: string;
   product: Product;
 }

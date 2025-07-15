@@ -19,17 +19,21 @@ import { formatOrderNumber, formatPrice } from '@/utils/formatters';
 
 const Orders: React.FC = () => {
   const navigate = useNavigate();
-  const [filter, setFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled'>('all');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'confirmed' | 'completed' | 'cancelled'>('all');
 
-  const { data: ordersResponse, isLoading, error, refetch } = useOrders();
+  const { data: ordersResponse, isLoading, error, refetch } = useOrders({
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    limit: 50 // Get more orders like Products does
+  });
 
   const orders = ordersResponse?.orders || [];
 
-  const filteredOrders = orders.filter(order => 
-    filter === 'all' || order.status === filter
-  );
+  // No client-side filtering needed - backend handles it
+  const filteredOrders = orders;
 
-  const statusCounts = orders.reduce((acc, order) => {
+  // Status counts would ideally come from backend, but for now calculate from all orders
+  const { data: allOrdersResponse } = useOrders({ limit: 100 }); // Separate query for counts
+  const statusCounts = (allOrdersResponse?.orders || []).reduce((acc, order) => {
     acc[order.status] = (acc[order.status] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
@@ -43,8 +47,9 @@ const Orders: React.FC = () => {
     <AsyncStateWrapper
       loading={isLoading}
       error={error}
+      data={orders}
       onRetry={refetch}
-      isEmpty={!isLoading && (!ordersResponse || !ordersResponse.orders || ordersResponse.orders.length === 0)}
+      isEmpty={!isLoading && (!orders || orders.length === 0)}
       emptyState={
         <EmptyState
           icon={Package}
@@ -94,8 +99,8 @@ const Orders: React.FC = () => {
           ].map(({ key, label, count }) => (
             <Button
               key={key}
-              onClick={() => setFilter(key as any)}
-              variant={filter === key ? 'primary' : 'outline'}
+              onClick={() => setStatusFilter(key as any)}
+              variant={statusFilter === key ? 'primary' : 'outline'}
               size="sm"
             >
               {label} ({count})
@@ -217,11 +222,11 @@ const Orders: React.FC = () => {
       </div>
 
       {/* Show message if no orders match filter */}
-      {filteredOrders.length === 0 && orders.length > 0 && (
+      {filteredOrders.length === 0 && (allOrdersResponse?.orders?.length || 0) > 0 && (
         <div className="text-center py-12">
           <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No {filter} orders found
+            No {statusFilter} orders found
           </h3>
           <p className="text-gray-600">
             Try changing the filter to see more orders.

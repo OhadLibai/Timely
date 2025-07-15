@@ -60,6 +60,11 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
           toast.success(`🎉 Generated ${response.basket.items.length} items for your basket!`, {
             duration: 5000
           });
+
+          // Navigate to predicted basket page for banner and button variants
+          if ((variant === 'banner' || variant === 'button') && onNavigate) {
+            onNavigate('/predicted-basket');
+          }
         } else if (response.error) {
           // FIXED: Display specific backend error (e.g., "User needs at least 3 orders for predictions")
           toast.error(response.error, {
