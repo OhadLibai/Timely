@@ -8,7 +8,11 @@ import { useMutation } from 'react-query';
 import { 
   Brain, Sparkles, ShoppingCart, ArrowRight, 
   Loader2, CheckCircle, Info,
-  Target, Zap, Star, Timer
+  Target, Zap, Star, Timer,
+  Rocket,
+  Atom,
+  LucideWand,
+  LucideWand2
 } from 'lucide-react';
 import { predictionService, PredictionResponse } from '@/services/prediction.service';
 import { usePredictedBasketStore } from '@/stores/predictedBasket.store';
@@ -217,7 +221,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
                   <div className="relative">
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full blur-md opacity-50 animate-pulse"></div>
                     <div className="relative bg-gradient-to-r from-purple-600 to-indigo-700 rounded-full p-4 shadow-xl">
-                      <Brain size={32} className="text-white" />
+                      <Rocket size={32} className="text-white" />
                     </div>
                   </div>
                   <div className="text-left">
@@ -231,36 +235,20 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
                 </p>
               </div>
 
-              {/* Features Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
+              {/* Features Grid - Clean 2 Main Features */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 {[
                   {
-                    icon: Brain,
-                    title: 'Deep Learning AI',
-                    description: 'Advanced neural networks analyze your patterns',
-                    color: 'from-purple-500 to-indigo-600',
-                    accent: 'bg-purple-500'
-                  },
-                  {
-                    icon: Target,
-                    title: 'Precision Targeting',
-                    description: 'Pinpoint accuracy for your preferences',
-                    color: 'from-indigo-500 to-blue-600',
-                    accent: 'bg-indigo-500'
-                  },
-                  {
-                    icon: Timer,
-                    title: 'Lightning Fast',
-                    description: 'Generate your basket in seconds',
-                    color: 'from-blue-500 to-cyan-600',
-                    accent: 'bg-blue-500'
-                  },
-                  {
-                    icon: Sparkles,
+                    icon: LucideWand2,
                     title: 'Personalized Magic',
                     description: 'Tailored specifically for your lifestyle',
-                    color: 'from-cyan-500 to-green-600',
-                    accent: 'bg-cyan-500'
+                    color: 'from-blue-500 to-cyan-600'
+                  },
+                  {
+                    icon: Atom,
+                    title: 'Precision Targeting',
+                    description: 'Pinpoint accuracy for your preferences',
+                    color: 'from-blue-500 to-cyan-600'
                   }
                 ].map((feature, index) => (
                   <motion.div
@@ -268,19 +256,15 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 * index }}
-                    className="relative group/feature"
+                    className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow duration-300"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/50 to-gray-50/50 rounded-xl blur-sm opacity-0 group-hover/feature:opacity-100 transition-opacity duration-300"></div>
-                    <div className="relative bg-white/80 rounded-xl p-6 shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 hover:scale-105">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className={`p-2 rounded-lg bg-gradient-to-r ${feature.color}`}>
-                          <feature.icon size={20} className="text-white" />
-                        </div>
-                        <div className={`w-2 h-2 ${feature.accent} rounded-full animate-pulse`}></div>
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className={`p-3 rounded-lg bg-gradient-to-r ${feature.color}`}>
+                        <feature.icon size={24} className="text-white" />
                       </div>
-                      <h4 className="font-bold text-gray-900 mb-2">{feature.title}</h4>
-                      <p className="text-sm text-gray-600">{feature.description}</p>
+                      <h4 className="text-xl font-bold text-gray-900">{feature.title}</h4>
                     </div>
+                    <p className="text-gray-600">{feature.description}</p>
                   </motion.div>
                 ))}
               </div>
@@ -398,12 +382,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
                     </span>
                   </div>
                 </div>
-                
                 <div className="mt-6 flex items-center justify-center gap-2 text-sm text-gray-500">
-                  <Info size={16} />
-                  <span>
-                    Powered by cutting-edge machine learning algorithms trained on millions of shopping patterns
-                  </span>
                 </div>
               </div>
             </div>

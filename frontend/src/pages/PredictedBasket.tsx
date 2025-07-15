@@ -7,7 +7,8 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Brain, ShoppingCart, TrendingUp, Info, Check, X, 
   RefreshCw, Calendar, Clock, Sparkles, AlertCircle,
-  ChevronRight, Plus, Minus, Trash2, Star, Award
+  ChevronRight, Plus, Minus, Trash2, Star, Award,
+  Plane
 } from 'lucide-react';
 import { predictionService } from '@/services/prediction.service';
 import { usePredictedBasketStore, usePredictedBasketActions } from '@/stores/predictedBasket.store';
@@ -239,8 +240,8 @@ const PredictedBasket: React.FC = () => {
                 disabled={generateMutation.isLoading}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                <RefreshCw size={18} className={generateMutation.isLoading ? 'animate-spin' : ''} />
-                Generate New
+                <Plane size={18} className={generateMutation.isLoading ? 'animate-spin' : ''} />
+                Generate Again!  
               </button>
               
               <button

@@ -66,7 +66,7 @@ const AdminDashboard: React.FC = () => {
           <div className="flex items-center gap-2">
             <Button
               variant="primary"
-              size="sm"
+              size="md"
               onClick={() => navigate('/admin/model-performance')}
               icon={ArrowRight}
               iconPosition="right"
@@ -80,7 +80,7 @@ const AdminDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <MetricCard
           title="Precision@K"
-          value={mlMetrics.data ? `${(mlMetrics.data.PrecisionAt * 100).toFixed(1)}%` : 'N/A'}
+          value={mlMetrics.data ? mlMetrics.data.PrecisionAt?.toFixed(3) : 'N/A'}
           subtitle="Accuracy at top K"
           icon={Target}
           color="blue"
@@ -88,7 +88,7 @@ const AdminDashboard: React.FC = () => {
         />
         <MetricCard
           title="Recall@K"
-          value={mlMetrics.data ? `${(mlMetrics.data.RecallAt * 100).toFixed(1)}%` : 'N/A'}
+          value={mlMetrics.data ? mlMetrics.data.RecallAt?.toFixed(3) : 'N/A'}
           subtitle="Coverage accuracy"
           icon={Activity}
           color="green"
@@ -112,7 +112,7 @@ const AdminDashboard: React.FC = () => {
         />
         <MetricCard
           title="Jaccard Similarity"
-          value={mlMetrics.data ? `${(mlMetrics.data.JaccardSimilarity * 100).toFixed(1)}%` : 'N/A'}
+          value={mlMetrics.data ? mlMetrics.data.JaccardSimilarity.toFixed(3) : 'N/A'}
           subtitle="Set similarity"
           icon={Zap}
           color="orange"

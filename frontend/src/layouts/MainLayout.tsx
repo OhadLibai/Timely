@@ -66,7 +66,7 @@ const MainLayout: React.FC = () => {
               to="/"
               className="flex items-center gap-2 text-xl font-bold text-gray-900"
             >
-              <TimelyBrandLogo size="lg" variant="full" animated={false} glowing={true} />
+              <TimelyBrandLogo size="xl" variant="full" animated={false} glowing={true} />
             </Link>
 
             {/* Desktop Navigation */}
@@ -84,7 +84,7 @@ const MainLayout: React.FC = () => {
                         : 'text-gray-700 hover:text-indigo-600'
                     }`}
                   >
-                    <link.icon size={22} />
+                    <link.icon size={36} />
                     {link.label}
                   </Link>
                 );
@@ -98,7 +98,7 @@ const MainLayout: React.FC = () => {
                 onClick={() => setIsSearchOpen(true)}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <Search size={25} />
+                <Search size={28} />
               </button>
 
 
@@ -113,7 +113,7 @@ const MainLayout: React.FC = () => {
                   onClick={() => setIsCartOpen(!isCartOpen)}
                   className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <ShoppingCart size={25} />
+                  <ShoppingCart size={29} />
                   {cartItemCount > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
@@ -144,7 +144,7 @@ const MainLayout: React.FC = () => {
                         {user?.firstName?.[0]?.toUpperCase() || 'U'}
                       </span>
                     </div>
-                    <ChevronDown size={20} />
+                    <ChevronDown size={23} />
                   </button>
 
                   <AnimatePresence>
@@ -168,7 +168,7 @@ const MainLayout: React.FC = () => {
                           <Link
                             to="/profile"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="flex items-center gap-3 px-4 py-2 text-md text-gray-700 hover:bg-gray-100"
                           >
                             <User size={16} />
                             My Profile
@@ -176,7 +176,7 @@ const MainLayout: React.FC = () => {
                           <Link
                             to="/orders"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="flex items-center gap-3 px-4 py-2 text-md text-gray-700 hover:bg-gray-100"
                           >
                             <Package size={16} />
                             My Orders
@@ -184,7 +184,7 @@ const MainLayout: React.FC = () => {
                           <Link
                             to="/favorites"
                             onClick={() => setIsUserMenuOpen(false)}
-                            className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            className="flex items-center gap-3 px-4 py-2 text-md text-gray-700 hover:bg-gray-100"
                           >
                             <Heart size={16} />
                             Favorites
@@ -193,7 +193,7 @@ const MainLayout: React.FC = () => {
                             <Link
                               to="/admin"
                               onClick={() => setIsUserMenuOpen(false)}
-                              className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              className="flex items-center gap-3 px-4 py-2 text-md text-gray-700 hover:bg-gray-100"
                             >
                               <Settings size={16} />
                               Admin Dashboard
@@ -207,7 +207,7 @@ const MainLayout: React.FC = () => {
                               setIsUserMenuOpen(false);
                               handleLogout();
                             }}
-                            className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50/20"
+                            className="flex items-center gap-3 w-full px-4 py-2 text-md text-red-600 hover:bg-red-50/20"
                           >
                             <LogOut size={16} />
                             Sign Out

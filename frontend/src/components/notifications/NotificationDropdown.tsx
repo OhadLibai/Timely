@@ -97,7 +97,7 @@ const NotificationDropdown: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
       >
-        <Bell size={20} />
+        <Bell size={26} />
         {unreadCount > 0 && (
           <motion.span
             initial={{ scale: 0 }}

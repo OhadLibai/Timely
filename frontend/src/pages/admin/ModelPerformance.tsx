@@ -209,7 +209,7 @@ const ModelPerformance: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <MetricCard
                 title="Precision@K"
-                value={`${(metricsData.PrecisionAt * 100).toFixed(1)}%`}
+                value={metricsData.PrecisionAt.toFixed(3)}
                 subtitle="Accuracy of top K predictions"
                 icon={Target}
                 color="blue"
@@ -217,7 +217,7 @@ const ModelPerformance: React.FC = () => {
               />
               <MetricCard
                 title="Recall@K"
-                value={`${(metricsData.RecallAt * 100).toFixed(1)}%`}
+                value={metricsData.RecallAt.toFixed(3)}
                 subtitle="Coverage of relevant items"
                 icon={Activity}
                 color="green"
@@ -241,7 +241,7 @@ const ModelPerformance: React.FC = () => {
               />
               <MetricCard
                 title="Jaccard Similarity"
-                value={`${(metricsData.JaccardSimilarity * 100).toFixed(1)}%`}
+                value={metricsData.JaccardSimilarity.toFixed(3)}
                 subtitle="Set intersection similarity"
                 icon={Zap}
                 color="orange"
@@ -345,28 +345,28 @@ const ModelPerformance: React.FC = () => {
                   dataKey="precision" 
                   stroke="#6366F1" 
                   strokeWidth={2}
-                  name="Precision@20"
+                  name="Precision@K"
                 />
                 <Line 
                   type="monotone" 
                   dataKey="recall" 
                   stroke="#10B981" 
                   strokeWidth={2}
-                  name="Recall@20"
+                  name="Recall@K"
                 />
                 <Line 
                   type="monotone" 
                   dataKey="f1" 
                   stroke="#EC4899" 
                   strokeWidth={2}
-                  name="F1 Score@20"
+                  name="F1 Score@K"
                 />
                 <Line 
                   type="monotone" 
                   dataKey="ndcg" 
                   stroke="#F59E0B" 
                   strokeWidth={2}
-                  name="NDCG@20"
+                  name="NDCG@K"
                 />
                 <Line 
                   type="monotone" 
