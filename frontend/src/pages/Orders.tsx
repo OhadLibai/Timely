@@ -44,7 +44,7 @@ const Orders: React.FC = () => {
       loading={isLoading}
       error={error}
       onRetry={refetch}
-      isEmpty={!orders || orders.length === 0}
+      isEmpty={!isLoading && (!ordersResponse || !ordersResponse.orders || ordersResponse.orders.length === 0)}
       emptyState={
         <EmptyState
           icon={Package}
@@ -52,7 +52,7 @@ const Orders: React.FC = () => {
           description="Start shopping to see your order history here."
           action={{
             label: "Browse Products",
-            href: "/products"
+            onClick: () => navigate('/products')
           }}
         />
       }
@@ -121,7 +121,7 @@ const Orders: React.FC = () => {
                   </h3>
                   <div className="flex items-center gap-2 text-sm text-gray-600">
                     <Calendar size={14} />
-                    <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                    <span>{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</span>
                     <span>•</span>
                     <span>{order.items.length} items</span>
                   </div>
@@ -186,7 +186,7 @@ const Orders: React.FC = () => {
             <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-200">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <ShoppingCart size={14} />
-                <span>Order placed on {new Date(order.createdAt).toLocaleDateString()}</span>
+                <span>Order placed on {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}</span>
               </div>
               
               <div className="flex items-center gap-2">

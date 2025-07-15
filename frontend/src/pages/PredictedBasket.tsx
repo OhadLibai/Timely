@@ -110,14 +110,12 @@ const PredictedBasket: React.FC = () => {
   const { addAcceptedToCart, hasAcceptedItems } = usePredictedBasketActions();
   const { getItemCount } = useCartStore();
 
-  // Check if we should auto-load on first visit
+  // No auto-load - only generate when user explicitly requests it
   useEffect(() => {
-    if (isFirstLoad && !basket) {
+    if (isFirstLoad) {
       setIsFirstLoad(false);
-      // Auto-load prediction on first visit
-      generateMutation.mutate(false);
     }
-  }, [isFirstLoad, basket]);
+  }, [isFirstLoad]);
 
   // Generate prediction mutation
   const generateMutation = useMutation(
@@ -131,20 +129,21 @@ const PredictedBasket: React.FC = () => {
       onSuccess: (data) => {
         toast.dismiss('generate-basket');
         
-        if (data && data.items.length > 0) {
+        if (data && data.basket && 'items' in data.basket && data.basket.items && data.basket.items.length > 0) {
           // Convert API response to local store format
-          const items = data.items.map(item => ({
+          const items = data.basket.items.map(item => ({
             product: item.product,
             quantity: item.quantity
           }));
           
           setBasket(items);
-          toast.success(`🎉 Generated ${data.items.length} items for your basket!`, {
+          toast.success(`🎉 Generated ${items.length} items for your basket!`, {
             duration: 5000
           });
         } else {
           toast.error('No predictions available yet. Complete a few orders to get personalized recommendations!', {
-            duration: 6000
+            duration: 6000,
+            icon: '⚠️'
           });
         }
       },
@@ -208,7 +207,7 @@ const PredictedBasket: React.FC = () => {
             description="Let our AI analyze your shopping patterns to predict and create your next grocery list in seconds."
             action={{
               label: generateMutation.isLoading ? "Generating..." : "Generate My Basket",
-              onClick: () => generateMutation.mutate(false),
+              onClick: () => generateMutation.mutate(),
               variant: 'primary'
             }}
             className="min-h-[400px]"
@@ -236,7 +235,7 @@ const PredictedBasket: React.FC = () => {
             
             <div className="flex items-center gap-3">
               <button
-                onClick={() => generateMutation.mutate(true)}
+                onClick={() => generateMutation.mutate()}
                 disabled={generateMutation.isLoading}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >

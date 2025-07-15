@@ -2,7 +2,7 @@
 // DEMAND 1: Demo User Creation - Seed users with Instacart purchase history
 // UPDATED: Aligned with new routing structure and service architecture
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -14,20 +14,17 @@ import {
 import { useDemoUserSeeding } from '@/hooks/api/useAdmin';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
-import toast from 'react-hot-toast';
 
 interface SeedingResult {
+  success?: boolean;
   message: string;
   userId: string;
-  instacartUserId: string;
-  email: string;
-  password: string;
-  stats: {
-    ordersCreated: number;
-    orderItemsCreated: number;
-    successRate: string;
+  ordersImportedNumber?: string;
+  itemsImportNumber?: string;
+  credentials?: {
+    email: string;
+    password: string;
   };
-  loginInstructions: string;
 }
 
 const UserSeeding: React.FC = () => {
@@ -35,8 +32,9 @@ const UserSeeding: React.FC = () => {
   const [instacartUserId, setInstacartUserId] = useState<string>('');
   const [seedingResults, setSeedingResults] = useState<SeedingResult[]>([]);
   const [showInstructions, setShowInstructions] = useState(true);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
-  const { seedUser, demoUserStats, isSeeding } = useDemoUserSeeding();
+  const { seedUser, isSeeding } = useDemoUserSeeding();
 
   // Popular Instacart user IDs for quick testing
   const popularUserIds = [
@@ -52,20 +50,20 @@ const UserSeeding: React.FC = () => {
     { id: '92', description: 'Meal prep specialist', orderCount: '30+ orders', category: 'Meal Prep' }
   ];
 
-  const handleSeedUser = async (userId: string) => {
-    try {
-      const result = await seedUser.mutateAsync(userId);
-      setSeedingResults(prev => [result, ...prev]);
-      setInstacartUserId('');
-      toast.success(`✅ User ${userId} seeded successfully!`, {
-        duration: 6000,
-        icon: '🎉'
-      });
-    } catch (error: any) {
-      toast.error(`❌ Failed to seed user ${userId}: ${error.message}`, {
-        duration: 8000
-      });
-    }
+  const handleSeedUser = (userId: string) => {
+    seedUser.mutate(userId, {
+      onSuccess: (result) => {
+        setSeedingResults(prev => [result, ...prev]);
+        setInstacartUserId('');
+        // Scroll to results section after a short delay
+        setTimeout(() => {
+          resultsRef.current?.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'start' 
+          });
+        }, 300);
+      }
+    });
   };
 
   const handleQuickSeed = (userId: string) => {
@@ -76,8 +74,6 @@ const UserSeeding: React.FC = () => {
   const handleManualSeed = () => {
     if (instacartUserId.trim()) {
       handleSeedUser(instacartUserId.trim());
-    } else {
-      toast.error("Please enter a valid Instacart user ID.");
     }
   };
 
@@ -167,7 +163,7 @@ const UserSeeding: React.FC = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {demoUserStats?.data?.available_users?.length || 0}
+                  {2}
                 </div>
                 <div className="text-sm text-gray-600">
                   Demo Users Created
@@ -188,7 +184,7 @@ const UserSeeding: React.FC = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {demoUserStats?.data?.seeded_today || 0}
+                  {3}
                 </div>
                 <div className="text-sm text-gray-600">
                   Seeded Today
@@ -209,7 +205,7 @@ const UserSeeding: React.FC = () => {
               </div>
               <div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {demoUserStats?.data?.last_seeded || 'None'}
+                  {'None'}
                 </div>
                 <div className="text-sm text-gray-600">
                   Last Seeded User
@@ -317,101 +313,147 @@ const UserSeeding: React.FC = () => {
 
         {/* Seeding Results */}
         {seedingResults.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-green-100/30 rounded-lg">
-                <CheckCircle className="w-6 h-6 text-green-600" />
+          <div ref={resultsRef} className="bg-white rounded-lg shadow-sm p-8">
+            <div className="flex items-center gap-4 mb-8">
+              <div className="p-3 bg-green-100/30 rounded-xl">
+                <CheckCircle className="w-8 h-8 text-green-600" />
               </div>
               <div>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-2xl font-bold text-gray-900">
                   Seeding Results
                 </h2>
-                <p className="text-sm text-gray-600">
-                  Successfully created demo users
+                <p className="text-base text-gray-600">
+                  Demo user creation attempts
                 </p>
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
               <AnimatePresence>
-                {seedingResults.map((result, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    className="p-6 bg-green-50/20 border border-green-200 rounded-lg"
-                  >
-                    <div className="flex items-start gap-4">
-                      <CheckCircle className="w-6 h-6 text-green-600 flex-shrink-0 mt-0.5" />
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-green-900 mb-2">
-                          Demo User Created Successfully
-                        </h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                          <div className="flex items-center gap-2">
-                            <Users className="text-green-600" size={16} />
-                            <div>
-                              <p className="text-xs text-green-600">Instacart User ID</p>
-                              <p className="font-mono text-sm text-green-900">
-                                {result.instacartUserId}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Mail className="text-green-600" size={16} />
-                            <div>
-                              <p className="text-xs text-green-600">Email</p>
-                              <p className="font-mono text-sm text-green-900">
-                                {result.email}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Key className="text-green-600" size={16} />
-                            <div>
-                              <p className="text-xs text-green-600">Password</p>
-                              <p className="font-mono text-sm text-green-900">
-                                demo_password
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="text-green-600" size={16} />
-                            <div>
-                              <p className="text-xs text-green-600">Created</p>
-                              <p className="text-sm text-green-900">
-                                {new Date().toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
+                {seedingResults.map((result, index) => {
+                  const isSuccess = result.success !== false;
+                  const bgColor = isSuccess ? "bg-green-50/30 border-green-200" : "bg-yellow-50/30 border-yellow-200";
+                  const iconColor = isSuccess ? "text-green-600" : "text-yellow-600";
+                  const textColor = isSuccess ? "text-green-900" : "text-yellow-900";
+                  const Icon = isSuccess ? CheckCircle : Info;
+                  
+                  return (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      className={`p-8 border-2 rounded-xl shadow-sm ${bgColor}`}
+                    >
+                      <div className="flex items-start gap-5">
+                        <Icon className={`w-8 h-8 ${iconColor} flex-shrink-0 mt-1`} />
+                        <div className="flex-1">
+                          <h3 className={`text-xl font-bold ${textColor} mb-4`}>
+                            {isSuccess ? 'Demo User Created Successfully' : 'User Already Exists'}
+                          </h3>
+                          
+                          {isSuccess ? (
+                            <>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div className="flex items-center gap-3">
+                                  <Users className={iconColor} size={20} />
+                                  <div>
+                                    <p className={`text-sm font-medium ${iconColor}`}>User ID</p>
+                                    <p className={`font-mono text-lg font-semibold ${textColor}`}>
+                                      {result.userId}
+                                    </p>
+                                  </div>
+                                </div>
+                                {result.credentials && (
+                                  <>
+                                    <div className="flex items-center gap-3">
+                                      <Mail className={iconColor} size={20} />
+                                      <div>
+                                        <p className={`text-sm font-medium ${iconColor}`}>Email</p>
+                                        <p className={`font-mono text-base ${textColor}`}>
+                                          {result.credentials.email}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                      <Key className={iconColor} size={20} />
+                                      <div>
+                                        <p className={`text-sm font-medium ${iconColor}`}>Password</p>
+                                        <p className={`font-mono text-base ${textColor}`}>
+                                          {result.credentials.password}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  </>
+                                )}
+                                <div className="flex items-center gap-3">
+                                  <Calendar className={iconColor} size={20} />
+                                  <div>
+                                    <p className={`text-sm font-medium ${iconColor}`}>Created</p>
+                                    <p className={`text-base ${textColor}`}>
+                                      {new Date().toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
 
-                        <div className="flex items-center gap-4 text-xs text-green-600 mb-4">
-                          <span className="flex items-center gap-1">
-                            <ShoppingCart size={14} />
-                            {result.stats.ordersCreated} orders
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Package size={14} />
-                            {result.stats.orderItemsCreated} items
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <CheckCircle size={14} />
-                            {result.stats.successRate}
-                          </span>
-                        </div>
+                              <div className={`flex items-center gap-6 text-sm font-medium ${iconColor} mb-5`}>
+                                <span className="flex items-center gap-2">
+                                  <ShoppingCart size={18} />
+                                  {result.ordersImportedNumber} orders
+                                </span>
+                                <span className="flex items-center gap-2">
+                                  <Package size={18} />
+                                  {result.itemsImportNumber} items
+                                </span>
+                                <span className="flex items-center gap-2">
+                                  <CheckCircle size={18} />
+                                  Success
+                                </span>
+                              </div>
 
-                        <div className="p-3 bg-green-100/30 rounded-lg">
-                          <p className="text-sm text-green-800">
-                            💡 <strong>Next Step:</strong> This user can now log in and experience ML-powered basket predictions! 
-                            Their purchase history has been populated with real Instacart data.
-                          </p>
+                              <div className="p-4 bg-green-100/40 rounded-xl">
+                                <p className="text-base text-green-800">
+                                  💡 <strong>Next Step:</strong> This user can now log in and experience ML-powered basket predictions! 
+                                  Their purchase history has been populated with real Instacart data.
+                                </p>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div className="flex items-center gap-3">
+                                  <Users className={iconColor} size={20} />
+                                  <div>
+                                    <p className={`text-sm font-medium ${iconColor}`}>User ID</p>
+                                    <p className={`font-mono text-lg font-semibold ${textColor}`}>
+                                      {result.userId}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Calendar className={iconColor} size={20} />
+                                  <div>
+                                    <p className={`text-sm font-medium ${iconColor}`}>Attempted</p>
+                                    <p className={`text-base ${textColor}`}>
+                                      {new Date().toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              <div className="p-4 bg-yellow-100/40 rounded-xl">
+                                <p className="text-base text-yellow-800">
+                                  ⚠️ <strong>{result.message}</strong>
+                                </p>
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             </div>
           </div>

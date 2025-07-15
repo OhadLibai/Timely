@@ -15,7 +15,7 @@ import { formatPrice } from '@/utils/formatters';
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { addItem } = useCartStore();
+  const { addToCart } = useCartStore();
   const [quantity, setQuantity] = useState(1);
 
   const { data: product, isLoading, error } = useProduct(id!);
@@ -23,11 +23,11 @@ const ProductDetail: React.FC = () => {
   const handleAddToCart = () => {
     if (!product) return;
     
-    addItem({
+    addToCart({
       id: product.id,
       name: product.name,
       price: product.price,
-      image: product.image,
+      imageUrl: product.imageUrl,
       quantity: quantity
     });
     
@@ -47,7 +47,7 @@ const ProductDetail: React.FC = () => {
       className="aspect-square rounded-xl overflow-hidden bg-gray-100"
     >
       <ProductImage
-        src={product.image}
+        src={product.imageUrl}
         alt={product.name}
         className="w-full h-full object-cover"
       />

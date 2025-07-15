@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 
 predictions_bp = Blueprint('predictions', __name__)
 
-def format_prediction_response(ml_result, user_id):
+def format_prediction_response(ml_result):
     """
     Format ML engine result into API response
     """
@@ -65,16 +65,22 @@ def format_prediction_response(ml_result, user_id):
     }
 
 
-@predictions_bp.route('/predicted-basket/<int:user_id>', methods=['POST'])
+@predictions_bp.route('/predicted-basket/<string:user_id>', methods=['POST'])
 def get_predicted_basket(user_id):
     """
     Get prediction for a database user (Demand #1)
     """
     try:
+        # Convert string ID to int for database query
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            return jsonify({'error': 'Invalid user ID'}), 400
+        
         # Check if user exists and has sufficient orders
         order_count = execute_query(
             "SELECT COUNT(*) as count FROM orders WHERE user_id = %s",
-            [user_id],
+            [user_id_int],
             fetch_one=True
         )
         
@@ -87,10 +93,10 @@ def get_predicted_basket(user_id):
         
         # Generate prediction using ML engine
         ml_engine = current_app.ml_engine
-        prediction = ml_engine.predict_basket(str(user_id), use_csv_data=False)
+        prediction = ml_engine.predict_basket(user_id, use_csv_data=False)
         
         # Format and return response
-        response = format_prediction_response(prediction, user_id)
+        response = format_prediction_response(prediction)
         return jsonify(response)
         
     except Exception as e:

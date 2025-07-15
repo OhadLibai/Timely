@@ -172,16 +172,16 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
-          className="text-center mb-11"
+          className="text-center mb-16"
         >
-          <div className="flex items-center justify-center gap-5 mb-7">
-            <TimelyBrandLogo size="md" variant="signature" animated={true} />
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <TimelyBrandLogo size="xl" variant="signature" animated={true} />
             <div className="w-2 h-2 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full animate-pulse"></div>
-            <h2 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700 leading-tight">
-            Hello World!<br /> Meet Timely
+            <h2 className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-700">
+            Introducing Timely
             </h2>
           </div>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             Experience the future of grocery shopping with our revolutionary AI that learns your patterns and creates perfect baskets instantly.
           </p>
         </motion.div>
@@ -319,7 +319,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
                           ) : (
                             <>
                               <Sparkles size={28} />
-                              <span>Generate My Basket</span>
+                              <span>Generate My AI Basket</span>
                               <Zap size={28} />
                             </>
                           )}

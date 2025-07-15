@@ -9,13 +9,18 @@ from database import execute_query
 user_bp = Blueprint('user', __name__)
 
 
-@user_bp.route('/<int:user_id>/profile', methods=['GET'])
+@user_bp.route('/<string:user_id>/profile', methods=['GET'])
 def get_profile(user_id):
     """Get user profile"""
     try:
+        # Convert string ID to int for database query
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            return jsonify({'error': 'Invalid user ID'}), 400
         user = execute_query(
             "SELECT * FROM users WHERE instacart_user_id = %s",
-            [user_id],
+            [user_id_int],
             fetch_one=True
         )
         
@@ -36,17 +41,23 @@ def get_profile(user_id):
         return jsonify({'error': 'Failed to fetch profile'}), 500
 
 
-@user_bp.route('/<int:user_id>/profile', methods=['PUT'])
+@user_bp.route('/<string:user_id>/profile', methods=['PUT'])
 def update_profile(user_id):
     """Update user profile"""
     try:
+        # Convert string ID to int for database query
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            return jsonify({'error': 'Invalid user ID'}), 400
+        
         data = request.json
         
         execute_query("""
             UPDATE users 
             SET first_name = %s, last_name = %s, updated_at = CURRENT_TIMESTAMP
             WHERE instacart_user_id = %s
-        """, [data.get('firstName'), data.get('lastName'), user_id])
+        """, [data.get('firstName'), data.get('lastName'), user_id_int])
         
         return get_profile(user_id)
         
@@ -55,14 +66,20 @@ def update_profile(user_id):
         return jsonify({'error': 'Failed to update profile'}), 500
 
 
-@user_bp.route('/<int:user_id>/account', methods=['DELETE'])
+@user_bp.route('/<string:user_id>/account', methods=['DELETE'])
 def delete_account(user_id):
     """Delete user account"""
     try:
+        # Convert string ID to int for database query
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            return jsonify({'error': 'Invalid user ID'}), 400
+        
         # For safety, just deactivate instead of delete
         execute_query(
             "UPDATE users SET is_active = false WHERE instacart_user_id = %s",
-            [user_id]
+            [user_id_int]
         )
         
         return jsonify({'message': 'Account deleted successfully'})

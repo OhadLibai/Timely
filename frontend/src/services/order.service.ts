@@ -29,6 +29,7 @@ export interface Order {
   paymentMethod: string;
   paymentStatus: string;
   metadata: Record<string, any>;
+  createdAt?: string;
 
   // ML fields for Instacart compatibility
   orderSequence?: number;
@@ -42,6 +43,12 @@ export interface Order {
 export interface CreateOrderData {
   cartId: string;
   paymentMethod: string;
+}
+
+export interface OrderFilters {
+  status?: string;
+  limit?: number;
+  page?: number;
 }
 
 export interface OrdersResponse {
@@ -70,7 +77,7 @@ class OrderService {
    * Get user's orders - Backend needs userId to return correct user's orders
    * MINIMAL: No complex filtering logic, components handle filtering
    */
-  async getOrders(): Promise<OrdersResponse> {
+  async getOrders(filters: OrderFilters = {}): Promise<OrdersResponse> {
     const userId = useAuthStore.getState().getCurrentUserId();
     return api.get<OrdersResponse>(`/orders/user/${userId}`);
   }

@@ -76,12 +76,15 @@ class AuthService {
 
     this.setTokens(response.accessToken, response.refreshToken);
   }
-
-  // Get current user
-  async getCurrentUser(): Promise<User> {
-    const response = await api.get<{ user: User }>('/auth/me');
-    this.setUser(response.user);
-    return response.user;
+  
+  // User management
+  getUser(): User | null {
+    const userStr = localStorage.getItem(this.USER_KEY);
+    return userStr ? JSON.parse(userStr) : null;
+  }
+  
+  setUser(user: User): void {
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
 
   // Token management
@@ -96,16 +99,6 @@ class AuthService {
   private setTokens(accessToken: string, refreshToken: string): void {
     localStorage.setItem(this.ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
-  }
-
-  // User management
-  getUser(): User | null {
-    const userStr = localStorage.getItem(this.USER_KEY);
-    return userStr ? JSON.parse(userStr) : null;
-  }
-
-  private setUser(user: User): void {
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
 
   // Check if user is authenticated

@@ -15,30 +15,37 @@ from datetime import datetime, timedelta
 admin_bp = Blueprint('admin', __name__)
 
 
-@admin_bp.route('/demo/seed-user/<int:instacart_user_id>', methods=['POST'])
+@admin_bp.route('/demo/seed-user/<string:instacart_user_id>', methods=['POST'])
 def seed_demo_user(instacart_user_id):
     """
     Create demo user with historical data from Instacart (Demand #1)
+    Credentials form:
+        - email : demo<id>@timely.com
+        - password : demo_<id>
     """
     try:
         # Check if user exists in Instacart data
         ml_engine = current_app.ml_engine
-        if str(instacart_user_id) not in ml_engine.data_history:
+        if instacart_user_id not in ml_engine.csv_data_history:
             return jsonify({
                 'error': f'Instacart user {instacart_user_id} not found in dataset'
             }), 404
         
+        instacart_user_id_int = int(instacart_user_id)
+        
         # Check if user already exists
         existing = execute_query(
             "SELECT instacart_user_id FROM users WHERE instacart_user_id = %s",
-            [instacart_user_id],
+            [instacart_user_id_int],
             fetch_one=True
         )
         
         if existing:
             return jsonify({
-                'error': f'User {instacart_user_id} already exists'
-            }), 400
+                'success': False,
+                'message': f'This user is already created, try another one',
+                'userId': str(instacart_user_id)
+            }), 200
         
         # Generate credentials
         email = f'demo{instacart_user_id}@timely.com'
@@ -53,12 +60,12 @@ def seed_demo_user(instacart_user_id):
                     role, is_active, email_verified, is_demo_user
                 ) VALUES (%s, %s, %s, %s, %s, 'customer', true, true, true)
             """, [
-                instacart_user_id, email, hashed_password,
-                'Demo', f'User {instacart_user_id}'
+                instacart_user_id_int, email, hashed_password,
+                'Demo', f'User {instacart_user_id_int}'
             ])
         
         # Import order history
-        orders_imported = import_order_history(instacart_user_id)
+        orders_imported_num, items_imported_num = import_order_history(instacart_user_id_int) 
         
         return jsonify({
             'success': True,
@@ -67,8 +74,9 @@ def seed_demo_user(instacart_user_id):
                 'password': password
             },
             'userId': str(instacart_user_id),
-            'ordersImported': orders_imported,
-            'message': f'Demo user created with {orders_imported} historical orders'
+            'ordersImportedNumber': str(orders_imported_num), # number of orders found for this user
+            'itemsImportNumber': str(items_imported_num),  
+            'message': f'User {instacart_user_id_int} had {orders_imported_num} historical orders and {items_imported_num} items'
         })
         
     except Exception as e:
@@ -76,26 +84,31 @@ def seed_demo_user(instacart_user_id):
         return jsonify({'error': 'Failed to create demo user'}), 500
 
 
-@admin_bp.route('/demo/user-prediction/<int:user_id>', methods=['GET'])
+@admin_bp.route('/demo/user-prediction/<string:user_id>', methods=['GET'])
 def get_user_prediction_comparison(user_id):
     """
     Get prediction comparison for demo (Demand #3)
     """
     try:
+        # Convert string ID to int for database query
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            return jsonify({'error': 'Invalid user ID'}), 400
+        
         # Generate prediction
         ml_engine = current_app.ml_engine
-        prediction = ml_engine.predict_basket(str(user_id), use_csv_data=True)
+        prediction = ml_engine.predict_basket(user_id, use_csv_data=True)
         
         if not prediction['success']:
             return jsonify({
                 'error': prediction.get('error', 'Prediction failed')
             }), 400
-        
-        # Get predicted products
-        predicted_basket = []
-        ground_truth_basket = []
-        
+
         with get_db_cursor() as cur:
+            # Predicted products
+            predicted_basket = []
+
             # Format predicted items
             for product_id in prediction['items']:
                 cur.execute("""
@@ -110,11 +123,12 @@ def get_user_prediction_comparison(user_id):
                     predicted_basket.append(format_product(product))
             
             # Get ground truth
+            ground_truth_basket = []
             future_df = pd.read_csv('/app/data/dataset/instacart_future.csv')
-            user_future = future_df[future_df['user_id'] == user_id]
+            user_future = future_df[future_df['user_id'] == user_id_int]
             
             if not user_future.empty:
-                for product_id in user_future['product_id'].unique()[:20]:
+                for product_id in user_future['product_id'].unique()[:10]:
                     cur.execute("""
                         SELECT p.*, c.name as category_name
                         FROM products p
@@ -137,19 +151,20 @@ def get_user_prediction_comparison(user_id):
         return jsonify({'error': 'Failed to generate comparison'}), 500
         
 
-def import_order_history(user_id):
+def import_order_history(user_id:int):
     """
     Import user's order history from Instacart CSV
     """
     try:
         # Load history data
         history_df = pd.read_csv('/app/data/dataset/instacart_history.csv')
-        user_history = history_df[history_df['user_id'] == user_id]
+        user_history = history_df[history_df['user_id'] == user_id] # string comparison or ints?
         
         if user_history.empty:
-            return 0
+            return 0, 0
         
         orders_created = 0
+        num_of_items = 0
         current_date = datetime.now()
         
         with get_db_cursor() as cur:
@@ -203,6 +218,7 @@ def import_order_history(user_id):
                             item.get('add_to_cart_order', 1),
                             bool(item.get('reordered', 0))
                         ])
+                        num_of_items += 1
                 
                 # Update order total
                 cur.execute(
@@ -212,11 +228,11 @@ def import_order_history(user_id):
                 
                 orders_created += 1
         
-        return orders_created
+        return orders_created, num_of_items
         
     except Exception as e:
         print(f"Import history error: {str(e)}")
-        return 0
+        return 0, 0
 
 
 def format_product(product):

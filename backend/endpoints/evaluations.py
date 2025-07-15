@@ -7,6 +7,7 @@ All calculations are self-contained for simplicity
 
 from flask import Blueprint, jsonify, current_app
 import pandas as pd
+import os
 import numpy as np
 import math
 import random
@@ -14,26 +15,24 @@ from typing import List, Set
 
 evaluations_bp = Blueprint('evaluations', __name__)
 
+EVALUATE_AT = int(os.getenv("EVALUATE_AT")) # Fixed `K` value
 
 @evaluations_bp.route('/metrics/<int:sample_size>', methods=['POST'])
 def evaluate_metrics(sample_size):
     """
-    Evaluate model performance with 5 key metrics at K=20
+    Evaluate model performance with 5 key metrics at K=EVALUATE_AT
     
     Returns:
-    - PrecisionAt20: What % of recommended items were actually purchased
-    - RecallAt20: What % of purchased items were recommended  
-    - F1ScoreAt20: Harmonic mean of precision and recall
-    - NDCGAt20: Ranking quality (higher ranked hits are better)
+    - PrecisionAt: What % of recommended items were actually purchased
+    - RecallAt: What % of purchased items were recommended  
+    - F1ScoreAt: Harmonic mean of precision and recall
+    - NDCGAt: Ranking quality (higher ranked hits are better)
     - JaccardSimilarity: Set overlap between predicted and actual
     """
     try:
         # Validate sample size
         if sample_size < 1:
             return jsonify({'error': 'Sample size must be at least 1'}), 400
-        
-        # Fixed K value
-        K = 20
         
         # Get ML engine and data
         ml_engine = current_app.ml_engine
@@ -69,7 +68,7 @@ def evaluate_metrics(sample_size):
                 continue
             
             # Get top K predictions
-            predicted_items = result['items'][:K]
+            predicted_items = result['items'][:EVALUATE_AT]
             predicted_set = set(predicted_items)
             
             # Get ground truth
@@ -84,7 +83,7 @@ def evaluate_metrics(sample_size):
             
             valid_users += 1
             
-            # Calculate Precision@20
+            # Calculate Precision@
             # Precision = |predicted ∩ actual| / |predicted|
             if predicted_set:
                 precision = len(predicted_set & true_items) / len(predicted_set)
@@ -92,12 +91,12 @@ def evaluate_metrics(sample_size):
             else:
                 precisions.append(0.0)
             
-            # Calculate Recall@20
+            # Calculate Recall@
             # Recall = |predicted ∩ actual| / |actual|
             recall = len(predicted_set & true_items) / len(true_items)
             recalls.append(recall)
             
-            # Calculate F1-Score@20
+            # Calculate F1-Score
             # F1 = 2 * (precision * recall) / (precision + recall)
             if precisions[-1] + recalls[-1] > 0:
                 f1 = 2 * (precisions[-1] * recalls[-1]) / (precisions[-1] + recalls[-1])
@@ -105,7 +104,7 @@ def evaluate_metrics(sample_size):
                 f1 = 0.0
             f1_scores.append(f1)
             
-            # Calculate NDCG@20
+            # Calculate NDCG
             # NDCG = DCG / IDCG
             dcg = 0.0
             for i, item in enumerate(predicted_items):
@@ -114,7 +113,7 @@ def evaluate_metrics(sample_size):
                     dcg += 1.0 / math.log2(i + 2)  # i+2 because position starts at 0
             
             # Ideal DCG: all relevant items at top positions
-            idcg = sum(1.0 / math.log2(i + 2) for i in range(min(len(true_items), K)))
+            idcg = sum(1.0 / math.log2(i + 2) for i in range(min(len(true_items), EVALUATE_AT)))
             
             ndcg = dcg / idcg if idcg > 0 else 0.0
             ndcg_scores.append(ndcg)
@@ -138,10 +137,10 @@ def evaluate_metrics(sample_size):
         
         # Calculate final averaged metrics
         metrics = {
-            'PrecisionAt20': round(np.mean(precisions), 4),
-            'RecallAt20': round(np.mean(recalls), 4),
-            'F1ScoreAt20': round(np.mean(f1_scores), 4),
-            'NDCGAt20': round(np.mean(ndcg_scores), 4),
+            'PrecisionAt': round(np.mean(precisions), 4),
+            'RecallAt': round(np.mean(recalls), 4),
+            'F1ScoreAt': round(np.mean(f1_scores), 4),
+            'NDCGAt': round(np.mean(ndcg_scores), 4),
             'JaccardSimilarity': round(np.mean(jaccard_scores), 4),
             'sampleSize': valid_users
         }
@@ -155,10 +154,10 @@ def evaluate_metrics(sample_size):
         
         # Return error with sample metrics for debugging
         return jsonify({
-            'PrecisionAt20': 0.42,
-            'RecallAt20': 0.38,
-            'F1ScoreAt20': 0.40,
-            'NDCGAt20': 0.45,
+            'PrecisionAt': 0.42,
+            'RecallAt': 0.38,
+            'F1ScoreAt': 0.40,
+            'NDCGAt': 0.45,
             'JaccardSimilarity': 0.35,
             'sampleSize': sample_size,
             'error': f'Evaluation failed: {str(e)}'

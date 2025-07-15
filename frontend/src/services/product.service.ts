@@ -24,6 +24,16 @@ export interface Category {
   imageUrl?: string;
 }
 
+export interface ProductFilters {
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: string;
+  search?: string;
+  categories?: string[];
+  inStock?: boolean;
+}
+
 class ProductService {
   
   // ============================================================================

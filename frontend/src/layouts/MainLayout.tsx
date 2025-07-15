@@ -12,7 +12,7 @@ import { useCartStore } from '@/stores/cart.store';
 import CartDropdown from '@/components/cart/CartDropdown';
 import NotificationDropdown from '@/components/notifications/NotificationDropdown';
 import SearchModal from '@/components/search/SearchModal';
-import timelyLogo from '@/assets/timely-logo.png';
+import TimelyBrandLogo from '@/components/common/TimelyBrandLogo';
 
 const MainLayout: React.FC = () => {
   const location = useLocation();
@@ -66,7 +66,7 @@ const MainLayout: React.FC = () => {
               to="/"
               className="flex items-center gap-2 text-xl font-bold text-gray-900"
             >
-              <img src={timelyLogo} alt="Timely Logo" className="h-8" />
+              <TimelyBrandLogo size="lg" variant="full" animated={false} glowing={true} />
             </Link>
 
             {/* Desktop Navigation */}
@@ -84,7 +84,7 @@ const MainLayout: React.FC = () => {
                         : 'text-gray-700 hover:text-indigo-600'
                     }`}
                   >
-                    <link.icon size={18} />
+                    <link.icon size={22} />
                     {link.label}
                   </Link>
                 );
@@ -98,7 +98,7 @@ const MainLayout: React.FC = () => {
                 onClick={() => setIsSearchOpen(true)}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <Search size={20} />
+                <Search size={25} />
               </button>
 
 
@@ -113,7 +113,7 @@ const MainLayout: React.FC = () => {
                   onClick={() => setIsCartOpen(!isCartOpen)}
                   className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  <ShoppingCart size={20} />
+                  <ShoppingCart size={25} />
                   {cartItemCount > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
@@ -144,7 +144,7 @@ const MainLayout: React.FC = () => {
                         {user?.firstName?.[0]?.toUpperCase() || 'U'}
                       </span>
                     </div>
-                    <ChevronDown size={16} />
+                    <ChevronDown size={20} />
                   </button>
 
                   <AnimatePresence>
@@ -259,7 +259,7 @@ const MainLayout: React.FC = () => {
             {/* Company Info */}
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <img src={timelyLogo} alt="Timely Logo" className="h-8" />
+                <TimelyBrandLogo size="lg" variant="full" animated={false} glowing={true} />
               </div>
               <p className="text-gray-600">
                 Your AI-powered grocery shopping assistant. Save time, shop smarter.

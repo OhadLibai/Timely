@@ -11,10 +11,10 @@ import math
 orders_bp = Blueprint('orders', __name__)
 
 
-@orders_bp.route('/create/<int:user_id>', methods=['POST'])
+@orders_bp.route('/create/<string:user_id>', methods=['POST'])
 def create_order(user_id):
     """Create order from cart"""
-    try:
+    try:        
         data = request.json
         cart_id = data.get('cartId')
         payment_method = data.get('paymentMethod', 'card')
@@ -40,16 +40,22 @@ def create_order(user_id):
         return jsonify({'error': 'Failed to create order'}), 500
 
 
-@orders_bp.route('/user/<int:user_id>', methods=['GET'])
+@orders_bp.route('/user/<string:user_id>', methods=['GET'])
 def get_user_orders(user_id):
     """Get user's orders"""
     try:
+        # Convert string ID to int for database query
+        try:
+            user_id_int = int(user_id)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Invalid user ID'}), 400
+        
         orders = execute_query("""
             SELECT * FROM orders 
             WHERE user_id = %s 
             ORDER BY created_at DESC
             LIMIT 20
-        """, [user_id])
+        """, [user_id_int])
         
         formatted_orders = []
         for order in orders:
@@ -104,7 +110,9 @@ def get_user_orders(user_id):
                 'orderSequence': order['order_sequence'],
                 'daysSincePriorOrder': float(order['days_since_prior_order']) if order['days_since_prior_order'] else None,
                 'orderDow': order['order_dow'],
-                'orderHourOfDay': order['order_hour_of_day']
+                'orderHourOfDay': order['order_hour_of_day'],
+                'createdAt': order['created_at'].isoformat() if order['created_at'] else None,
+                'updatedAt': order['updated_at'].isoformat() if order['updated_at'] else None
             })
         
         return jsonify({
@@ -120,7 +128,7 @@ def get_user_orders(user_id):
         return jsonify({'error': 'Failed to fetch orders'}), 500
 
 
-@orders_bp.route('/<order_id>', methods=['GET'])
+@orders_bp.route('/<string:order_id>', methods=['GET'])
 def get_order(order_id):
     """Get single order"""
     try:
@@ -133,19 +141,55 @@ def get_order(order_id):
         if not order:
             return jsonify({'error': 'Order not found'}), 404
         
-        # Format similar to get_user_orders
-        # (Implementation abbreviated for brevity)
-        
+        # Get order items
+        items = execute_query("""
+            SELECT oi.*, p.name, p.description, p.brand, p.image_url,
+                    c.department_id, c.name as category_name
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.instacart_product_id
+            JOIN categories c ON p.department_id = c.department_id
+            WHERE oi.order_id = %s
+        """, [order['id']])
+
+        formatted_items = []
+        for item in items:
+            formatted_items.append({
+                'id': item['id'],
+                'orderId': item['order_id'],
+                'product': {
+                    'id': str(item['product_id']),
+                    'sku': f"SKU-{item['product_id']}",
+                    'name': item['name'],
+                    'description': item['description'],
+                    'price': float(item['price']),
+                    'brand': item['brand'],
+                    'imageUrl': item['image_url'],
+                    'category': {
+                        'id': str(item['department_id']),
+                        'name': item['category_name']
+                    },
+                    'stock': 100,
+                    'isActive': True,
+                    'metadata': {}
+                },
+                'quantity': item['quantity'],
+                'price': float(item['price']),
+                'total': float(item['total']),
+                'addToCartOrder': item['add_to_cart_order'],
+                'reordered': item['reordered']
+            })
+    
         return jsonify({
             'id': order['id'],
             'orderNumber': order['order_number'],
             'userId': str(order['user_id']),
             'status': order['status'],
-            'items': [],
+            'items': formatted_items,
             'total': float(order['total']),
             'paymentMethod': order['payment_method'] or 'card',
             'paymentStatus': order['payment_status'] or 'paid',
-            'metadata': {}
+            'metadata': {},
+            'createdAt': order['created_at'].isoformat() if order['created_at'] else None
         })
         
     except Exception as e:

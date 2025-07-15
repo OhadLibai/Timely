@@ -3,7 +3,7 @@
 // ORGANIZED: Navigation grouped by category with proper routing
 
 import React, { useState, useEffect } from 'react';
-import { Outlet, Link, useLocation } from 'react-router-dom';
+import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Menu, X, Brain, Target, UserPlus,
@@ -11,11 +11,12 @@ import {
   Palette
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
-import timelyLogo from '@/assets/timely-logo.png';
+import TimelyLogo from '@/components/common/TimelyLogo';
 
 const AdminLayout: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, logout } = useAuthStore();
 
   // Close sidebar on route change (mobile)
@@ -25,6 +26,7 @@ const AdminLayout: React.FC = () => {
 
   const handleLogout = () => {
     logout();
+    navigate('/');
   };
 
   // ============================================================================
@@ -146,8 +148,8 @@ const AdminLayout: React.FC = () => {
     <>
       {/* Header */}
       <div className="flex items-center justify-between h-16 px-6 border-b border-gray-200">
-        <Link to="/admin" className="flex items-center gap-3">
-          <img src={timelyLogo} alt="Timely Admin Logo" className="h-8" />
+        <Link to="/" className="flex items-center gap-3">
+          <TimelyLogo size="md" animated={false} /> 
         </Link>
         <button
           onClick={() => setIsSidebarOpen(false)}

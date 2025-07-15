@@ -184,6 +184,7 @@ function ListPage<T>({
             <AsyncStateWrapper
               loading={isLoading}
               error={error}
+              data={data}
               onRetry={onRetry}
               isEmpty={!data || data.length === 0}
               emptyState={emptyState}

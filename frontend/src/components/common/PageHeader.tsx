@@ -25,14 +25,14 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
 }) => {
   const content = (
     <div className={`flex items-center justify-between gap-6 ${className}`}>
-      <div className="flex-1">
+      <div className="flex-1 text-center">
         {breadcrumb && (
           <div className="mb-2">
             {breadcrumb}
           </div>
         )}
         
-        <div className="flex items-center gap-3 mb-2">
+        <div className="flex items-center justify-center gap-3 mb-2">
           {Icon && (
             <div className="p-2 bg-primary-100/30 rounded-lg">
               <Icon className="w-6 h-6 text-primary-600" />
@@ -44,7 +44,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         </div>
         
         {description && (
-          <p className="text-lg text-gray-600 max-w-2xl">
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             {description}
           </p>
         )}

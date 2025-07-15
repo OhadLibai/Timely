@@ -92,7 +92,96 @@ const UserPrediction: React.FC = () => {
   const renderProductComparison = () => {
     if (!predictionData) return null;
 
-    const { predictedBasket, groundTruthBasket, matchingProducts } = predictionData;
+    const { predictedBasket, groundTruthBasket } = predictionData;
+    
+    // Safety check for undefined arrays
+    if (!predictedBasket || !groundTruthBasket) {
+      return <div className="text-red-500">Error: Missing prediction data</div>;
+    }
+
+    // Create aligned product lists
+    const createAlignedLists = () => {
+      // Find matching products
+      const matchingProducts = predictedBasket.filter(predicted => 
+        groundTruthBasket.some(actual => actual.id === predicted.id)
+      );
+
+      // Get non-matching products from each list
+      const predictedOnly = predictedBasket.filter(predicted => 
+        !groundTruthBasket.some(actual => actual.id === predicted.id)
+      );
+      const groundTruthOnly = groundTruthBasket.filter(actual => 
+        !predictedBasket.some(predicted => predicted.id === actual.id)
+      );
+
+      // Create aligned rows
+      const alignedRows = [];
+      
+      // First, add all matching products (aligned on same rows)
+      matchingProducts.forEach(matchedProduct => {
+        const predictedItem = predictedBasket.find(p => p.id === matchedProduct.id);
+        const groundTruthItem = groundTruthBasket.find(g => g.id === matchedProduct.id);
+        
+        alignedRows.push({
+          predicted: predictedItem,
+          groundTruth: groundTruthItem,
+          isMatched: true
+        });
+      });
+
+      // Then add non-matching products at the bottom
+      const maxNonMatching = Math.max(predictedOnly.length, groundTruthOnly.length);
+      for (let i = 0; i < maxNonMatching; i++) {
+        alignedRows.push({
+          predicted: predictedOnly[i] || null,
+          groundTruth: groundTruthOnly[i] || null,
+          isMatched: false
+        });
+      }
+
+      return alignedRows;
+    };
+
+    const alignedRows = createAlignedLists();
+
+    const renderProductCard = (product: any, isMatched: boolean, side: 'predicted' | 'groundTruth') => {
+      if (!product) {
+        return (
+          <div className="flex items-center gap-4 p-4 bg-transparent rounded-lg min-h-[80px]">
+            {/* Empty placeholder to maintain alignment */}
+          </div>
+        );
+      }
+
+      return (
+        <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+          <ProductImage
+            src={product.imageUrl}
+            alt={product.name}
+            className="w-12 h-12 rounded-lg"
+          />
+          <div className="flex-1">
+            <h4 className="font-medium text-gray-900">
+              {product.name}
+            </h4>
+            <p className="text-sm text-gray-600">
+              Product ID: {product.id}
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            {isMatched ? (
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                <Check className="w-4 h-4 text-white" />
+              </div>
+            ) : (
+              <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
+                <X className="w-4 h-4 text-gray-500" />
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    };
 
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -117,35 +206,9 @@ const UserPrediction: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {predictedBasket.map((product: any, index: number) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
-              >
-                <ProductImage
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-12 h-12 rounded-lg"
-                />
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">
-                    {product.name}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Product ID: {product.id}
-                  </p>
-                </div>
-                <div className="flex-shrink-0">
-                  {matchingProducts.some((m: any) => m.id === product.id) ? (
-                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                  ) : (
-                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                      <X className="w-4 h-4 text-gray-500" />
-                    </div>
-                  )}
-                </div>
+            {alignedRows.map((row, index) => (
+              <div key={`predicted-${index}`}>
+                {renderProductCard(row.predicted, row.isMatched, 'predicted')}
               </div>
             ))}
           </div>
@@ -172,35 +235,9 @@ const UserPrediction: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 gap-4">
-            {groundTruthBasket.map((product: any, index: number) => (
-              <div
-                key={index}
-                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
-              >
-                <ProductImage
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-12 h-12 rounded-lg"
-                />
-                <div className="flex-1">
-                  <h4 className="font-medium text-gray-900">
-                    {product.name}
-                  </h4>
-                  <p className="text-sm text-gray-600">
-                    Product ID: {product.id}
-                  </p>
-                </div>
-                <div className="flex-shrink-0">
-                  {matchingProducts.some((m: any) => m.id === product.id) ? (
-                    <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                      <Check className="w-4 h-4 text-white" />
-                    </div>
-                  ) : (
-                    <div className="w-6 h-6 bg-gray-300 rounded-full flex items-center justify-center">
-                      <X className="w-4 h-4 text-gray-500" />
-                    </div>
-                  )}
-                </div>
+            {alignedRows.map((row, index) => (
+              <div key={`groundtruth-${index}`}>
+                {renderProductCard(row.groundTruth, row.isMatched, 'groundTruth')}
               </div>
             ))}
           </div>
@@ -232,9 +269,9 @@ const UserPrediction: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={handleReset}
-                icon={RefreshCw}
+                icon={TrendingUp}
               >
-                Reset Analysis
+                Try More Users!
               </Button>
             )
           }
@@ -273,7 +310,7 @@ const UserPrediction: React.FC = () => {
                     icon={Search}
                     disabled={!userIdInput.trim()}
                   >
-                    Analyze User
+                    Compare 
                   </Button>
                 </div>
               </div>

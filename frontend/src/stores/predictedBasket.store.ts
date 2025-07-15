@@ -35,9 +35,7 @@ interface PredictedBasketState {
   hasUnsavedEdits: boolean;
   
   // Core Actions
-  setBasket: (predictionResponse: {
-    items: { product: Product; quantity: number }[];
-  }) => void;
+  setBasket: (items: { product: Product; quantity: number }[]) => void;
   updateItemQuantity: (itemId: string, quantity: number) => void;
   toggleItemAcceptance: (itemId: string) => void;
   removeItem: (itemId: string) => void;

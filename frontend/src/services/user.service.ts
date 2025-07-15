@@ -1,6 +1,4 @@
 // frontend/src/services/user.service.ts
-// MINIMAL FIX: Updated for Option B consistency and getCurrentUserId pattern
-// CONSISTENCY: Aligned with other services structure and URL patterns
 
 import { api } from '@/services/api.client';
 import { useAuthStore } from '@/stores/auth.store';

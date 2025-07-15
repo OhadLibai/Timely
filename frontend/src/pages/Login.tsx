@@ -9,7 +9,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import toast from 'react-hot-toast';
 import { FormInput } from '@/components/forms/FormInput';
 import { Button } from '@/components/common/Button';
-import timelyLogo from '@/assets/timely-logo.png';
+import TimelyBrandLogo from '@/components/common/TimelyBrandLogo';
 
 interface LoginFormData {
   email: string;
@@ -39,11 +39,15 @@ const Login: React.FC = () => {
 
   const onSubmit = async (data: LoginFormData) => {
     try {
+      console.log('🔐 Starting login process...');
       await login(data.email, data.password);
+      console.log('✅ Login successful, navigating to:', from);
       
       // Redirect to intended page or home
       navigate(from, { replace: true });
+      console.log('🚀 Navigation triggered');
     } catch (error: any) {
+      console.error('❌ Login failed:', error);
       if (error.response?.data?.error) {
         setError('root', { message: error.response.data.error });
       } else {
@@ -62,7 +66,7 @@ const Login: React.FC = () => {
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center justify-center gap-2 mb-6">
-            <img src={timelyLogo} alt="Timely Logo" className="h-10" />
+            <TimelyBrandLogo size="xl" variant="hero" animated={true} />
           </Link>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back

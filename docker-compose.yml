@@ -34,12 +34,13 @@ services:
       - initialization_flags:/shared/flags  # Shared flag storage
     environment:
       - PYTHONUNBUFFERED=1
-    deploy:
-      resources:
-        limits:
-          memory: 8g 
-        reservations:
-          memory: 2g 
+      - USER_LOAD_FRACTION=0.01 # Determines how many users will be available from the dataset
+      - RANDOM=0 # is the sampling of the users from the csv should be random or not (1-True, 0-False)
+      - KNN_NEIGHBOR_LOADING_SAMPLE=100  # KNN search optimization, controls the real-time prediction speed
+      - MAX_VECTORS=500  # Limit to avoid memory issues, managed during the build process
+      - EVALUATE_AT=10  
+      - PREDICTED_BASKET_SIZE=10 # TOP_K parameter
+    mem_limit: 8g
 
   frontend:
     build: ./frontend
@@ -51,7 +52,6 @@ services:
     environment:
       - API_URL=http://localhost:5000/api
       - NODE_ENV=development
-      - EVALUATION_SAMPLE_SIZE=100
 
 volumes:
   postgres_data:

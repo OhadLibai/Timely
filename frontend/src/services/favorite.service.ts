@@ -28,9 +28,9 @@ class FavoriteService {
   /**
    * Add product to favorites
    */
-  async addFavorite(productId: string): Promise<Favorite> {
+  async addFavorite(productId: string): Promise<{message : string}> {
     const userId = useAuthStore.getState().getCurrentUserId();
-    return api.post<Favorite>(`/favorites/user/${userId}/add`, { productId });
+    return api.post<{message : string}>(`/favorites/user/${userId}/add`, { productId });
   }
 
   /**

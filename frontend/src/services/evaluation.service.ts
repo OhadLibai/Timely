@@ -7,13 +7,15 @@ import { api } from '@/services/api.client';
 // ============================================================================
 
 export interface ModelMetrics {
-  PrecisionAt20: number;
-  RecallAt20: number;
-  F1ScoreAt20: number;
-  NDCGAt20: number;
+  PrecisionAt: number;
+  RecallAt: number;
+  F1ScoreAt: number;
+  NDCGAt: number;
   JaccardSimilarity: number;
   sampleSize?: number;
 }
+
+const DEFUALT_SAMPLE_SIZE = 10
 
 // ============================================================================
 // METRICS SERVICE CLASS
@@ -24,7 +26,7 @@ class EvaluationService {
    * DEMAND 2: Get model performance metrics
    * Used to evaluate ML model quality
    */
-  async getModelMetricsScores(sampleSize: number = (typeof process !== 'undefined' && Number(process.env.EVALUATION_SAMPLE_SIZE)) || 100): Promise<ModelMetrics> {
+  async getModelMetricsScores(sampleSize: number = DEFUALT_SAMPLE_SIZE): Promise<ModelMetrics> {
     try {
       const response = await api.post<ModelMetrics>(`/evaluations/metrics/${sampleSize}`);
       return response;
@@ -32,10 +34,10 @@ class EvaluationService {
       console.error('Failed to get model metrics:', error);
       // Return fallback metrics if evaluation fails - UPDATED FOR NEW INTERFACE
       return {
-        PrecisionAt20: 0.85,
-        RecallAt20: 0.78,
-        F1ScoreAt20: 0.81,
-        NDCGAt20: 0.82,
+        PrecisionAt: 0.85,
+        RecallAt: 0.78,
+        F1ScoreAt: 0.81,
+        NDCGAt: 0.82,
         JaccardSimilarity: 0.75,
       };
     }

@@ -6,6 +6,7 @@ Updated for proper Docker environment and error handling
 STRICT: Fails immediately if required data files are missing
 """
 
+import os
 import numpy as np
 import json
 import pickle
@@ -23,12 +24,14 @@ WITHIN_DECAY_RATE = 0.9
 GROUP_DECAY_RATE = 0.7
 ALPHA = 0.9
 GROUP_SIZE = 3
-TOPK = 10
+
+# Basket size 
+TOPK = int(os.getenv("PREDICTED_BASKET_SIZE", 10)) 
 
 # Production and Runtime Optimizations
 TOP_CANDIDATES = 100  # Top candidates (products) before final selection
-KNN_NEIGHBOR_LOADING_SAMPLE = 1000  # KNN search optimization, controls the real-time prediction speed
-MAX_VECTORS = 5000  # Limit to avoid memory issues, managed during the build process
+KNN_NEIGHBOR_LOADING_SAMPLE = int(os.getenv("KNN_NEIGHBOR_LOADING_SAMPLE"))  # KNN search optimization, controls the real-time prediction speed
+MAX_VECTORS = int(os.getenv("MAX_VECTORS")) # Limit to avoid memory issues, managed during the build process
 
 # Updated paths for new structure
 DATA_PATH = Path('/app/data')

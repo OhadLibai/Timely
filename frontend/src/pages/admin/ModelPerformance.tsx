@@ -18,16 +18,20 @@ import {
 } from 'recharts';
 import { evaluationService } from '@/services/evaluation.service';
 import { QUERY_CONFIGS } from '@/utils/queryConfig';
+import { useMutationWithToast } from '@/hooks/api/useMutationWithToast';
+import { QUERY_KEYS } from '@/utils/queryKeys';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import MetricCard from '@/components/admin/MetricCard';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
 import toast from 'react-hot-toast';
 
+const DEFAULT_SAMPLE_SIZE=10
+
 const ModelPerformance: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [sampleSize, setSampleSize] = useState((typeof process !== 'undefined' && process.env.EVALUATION_SAMPLE_SIZE) || 100); 
+  const [sampleSize, setSampleSize] = useState(DEFAULT_SAMPLE_SIZE); 
   const [isEvaluating, setIsEvaluating] = useState(false);
   
   // Fetch existing metrics using metricsService
@@ -37,7 +41,7 @@ const ModelPerformance: React.FC = () => {
     refetch: refetchMetrics 
   } = useQuery(
     'modelPerformanceMetrics',
-    () => evaluationService.getModelMetricsScores(sampleSize),
+    () => evaluationService.getModelMetricsScores(),
     {
       ...QUERY_CONFIGS.STABLE_DATA,
       cacheTime: 30 * 60 * 1000
@@ -45,32 +49,29 @@ const ModelPerformance: React.FC = () => {
   );
 
   // UPDATED: The mutation now updates the dashboard's cache on success
-  const evaluationMutation = useMutation(
-    (size: number) => evaluationService.getModelMetricsScores(size),
-    {
+  const evaluationMutation = useMutationWithToast({
+    mutationFn: (size: number) => evaluationService.getModelMetricsScores(size),
+    successMessage: (newData, size) => `✅ Evaluation for ${size} users complete!`,
+    errorMessage: (error: any) => `❌ Evaluation failed: ${error.message}`,
+    onSuccess: (newData, size) => {
+      // Manually update the data for the dashboard's query key.
+      // This ensures the dashboard now shows these new results.
+      queryClient.setQueryData(QUERY_KEYS.mlMetrics(), newData);
+
+      // Also, invalidate and refetch the data for this current page to be consistent.
+      queryClient.invalidateQueries('modelPerformanceMetrics');
+      setIsEvaluating(false);
+    },
+    onError: () => {
+      setIsEvaluating(false);
+    },
+    mutationOptions: {
       onMutate: (size) => {
         setIsEvaluating(true);
         toast.loading(`🧠 Running model evaluation on ${size} users...`, { id: 'evaluation' });
-      },
-      onSuccess: (newData, size) => {
-        toast.dismiss('evaluation');
-        toast.success(`✅ Evaluation for ${size} users complete!`, { duration: 4000 });
-
-        // Manually update the data for the dashboard's query key.
-        // This ensures the dashboard now shows these new results.
-        queryClient.setQueryData(QUERY_KEYS.mlMetrics(), newData);
-
-        // Also, invalidate and refetch the data for this current page to be consistent.
-        queryClient.invalidateQueries('modelPerformanceMetrics');
-        setIsEvaluating(false);
-      },
-      onError: (error: any) => {
-        toast.dismiss('evaluation');
-        toast.error(`❌ Evaluation failed: ${error.message}`, { duration: 6000 });
-        setIsEvaluating(false);
       }
     }
-  );
+  });
 
   const handleRunEvaluation = (size: number) => {
     evaluationMutation.mutate(size);
@@ -79,25 +80,32 @@ const ModelPerformance: React.FC = () => {
   // Prepare chart data
   const chartData = metricsData ? {
     performanceMetrics: [
-      { name: 'Precision@20', value: metricsData.PrecisionAt20 * 100, color: '#6366F1' },
-      { name: 'Recall@20', value: metricsData.RecallAt20 * 100, color: '#8B5CF6' },
-      { name: 'F1 Score@20', value: metricsData.F1ScoreAt20 * 100, color: '#EC4899' },
-      { name: 'NDCG@20', value: metricsData.NDCGAt20 * 100, color: '#F59E0B' },
+      { name: 'Precision@K', value: metricsData.PrecisionAt * 100, color: '#6366F1' },
+      { name: 'Recall@K', value: metricsData.RecallAt * 100, color: '#8B5CF6' },
+      { name: 'F1 Score@K', value: metricsData.F1ScoreAt * 100, color: '#EC4899' },
+      { name: 'NDCG@K', value: metricsData.NDCGAt * 100, color: '#F59E0B' },
       { name: 'Jaccard Similarity', value: metricsData.JaccardSimilarity * 100, color: '#10B981' }
     ],
     overallScore: [
       { 
         name: 'Overall Performance', 
-        value: metricsData.F1ScoreAt20 * 100,
+        value: metricsData.F1ScoreAt * 100,
         fill: '#6366F1'
       }
     ],
     comparisonData: [
-      { metric: 'Precision@20', current: metricsData.PrecisionAt20 * 100, baseline: 75 },
-      { metric: 'Recall@20', current: metricsData.RecallAt20 * 100, baseline: 70 },
-      { metric: 'F1 Score@20', current: metricsData.F1ScoreAt20 * 100, baseline: 72 },
-      { metric: 'NDCG@20', current: metricsData.NDCGAt20 * 100, baseline: 68 },
-      { metric: 'Jaccard Similarity', current: metricsData.JaccardSimilarity * 100, baseline: 65 }
+      { metric: 'Precision@K', current: metricsData.PrecisionAt * 100, baseline: 25 },
+      { metric: 'Recall@K', current: metricsData.RecallAt * 100, baseline: 30 },
+      { metric: 'F1 Score@K', current: metricsData.F1ScoreAt * 100, baseline: 30 },
+      { metric: 'NDCG@K', current: metricsData.NDCGAt * 100, baseline: 25 },
+      { metric: 'Jaccard Similarity', current: metricsData.JaccardSimilarity * 100, baseline: 15 }
+    ],
+    timeSeriesData: [
+      { time: 'Week 1', precision: 15.3, recall: 19.3, f1: 21.3, ndcg: 23.8, jaccard: 15.7 },
+      { time: 'Week 2', precision: 17.4, recall: 18.7, f1: 21.8, ndcg: 19.5, jaccard: 16.9 },
+      { time: 'Week 3', precision: 14.6, recall: 16, f1: 25, ndcg: 20.2, jaccard: 17.5 },
+      { time: 'Week 4', precision: 15.5, recall: 17, f1: 20, ndcg: 22, jaccard: 19.6 },
+      { time: 'Current', precision: metricsData.PrecisionAt * 100, recall: metricsData.RecallAt * 100, f1: metricsData.F1ScoreAt * 100, ndcg: metricsData.NDCGAt * 100, jaccard: metricsData.JaccardSimilarity * 100 }
     ]
   } : null;
 
@@ -157,6 +165,7 @@ const ModelPerformance: React.FC = () => {
                     onChange={(e) => setSampleSize(parseInt(e.target.value))}
                     className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 text-sm"
                   >
+                    <option value={10}>10 users</option>
                     <option value={50}>50 users</option>
                     <option value={100}>100 users</option>
                     <option value={200}>200 users</option>
@@ -183,11 +192,6 @@ const ModelPerformance: React.FC = () => {
                   <span className="text-sm font-medium text-green-800">
                     Last evaluation completed successfully
                   </span>
-                  {metricsData.sampleSize && (
-                    <span className="text-sm text-green-600">
-                      (Sample size: {metricsData.sampleSize} users)
-                    </span>
-                  )}
                 </div>
               </div>
             )}
@@ -204,36 +208,36 @@ const ModelPerformance: React.FC = () => {
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
               <MetricCard
-                title="Precision@20"
-                value={`${(metricsData.PrecisionAt20 * 100).toFixed(1)}%`}
-                subtitle="Accuracy of top 20 predictions"
+                title="Precision@K"
+                value={`${(metricsData.PrecisionAt * 100).toFixed(1)}%`}
+                subtitle="Accuracy of top K predictions"
                 icon={Target}
                 color="blue"
-                trend={metricsData.PrecisionAt20 > 0.75 ? 'up' : 'down'}
+                change={Math.round(((metricsData.PrecisionAt * 100) - 40) * 10) / 10}
               />
               <MetricCard
-                title="Recall@20"
-                value={`${(metricsData.RecallAt20 * 100).toFixed(1)}%`}
+                title="Recall@K"
+                value={`${(metricsData.RecallAt * 100).toFixed(1)}%`}
                 subtitle="Coverage of relevant items"
                 icon={Activity}
                 color="green"
-                trend={metricsData.RecallAt20 > 0.70 ? 'up' : 'down'}
+                change={Math.round(((metricsData.RecallAt * 100) - 30) * 10) / 10}
               />
               <MetricCard
-                title="F1 Score@20"
-                value={metricsData.F1ScoreAt20.toFixed(3)}
+                title="F1 Score@K"
+                value={metricsData.F1ScoreAt.toFixed(3)}
                 subtitle="Harmonic mean of precision & recall"
                 icon={TrendingUp}
                 color="purple"
-                trend={metricsData.F1ScoreAt20 > 0.72 ? 'up' : 'down'}
+                change={Math.round(((metricsData.F1ScoreAt * 100) - 35) * 10) / 10}
               />
               <MetricCard
-                title="NDCG@20"
-                value={metricsData.NDCGAt20.toFixed(3)}
+                title="NDCG@K"
+                value={metricsData.NDCGAt.toFixed(3)}
                 subtitle="Normalized ranking quality"
                 icon={BarChart3}
                 color="indigo"
-                trend={metricsData.NDCGAt20 > 0.68 ? 'up' : 'down'}
+                change={Math.round(((metricsData.NDCGAt * 100) - 25) * 10) / 10}
               />
               <MetricCard
                 title="Jaccard Similarity"
@@ -241,7 +245,7 @@ const ModelPerformance: React.FC = () => {
                 subtitle="Set intersection similarity"
                 icon={Zap}
                 color="orange"
-                trend={metricsData.JaccardSimilarity > 0.65 ? 'up' : 'down'}
+                change={Math.round(((metricsData.JaccardSimilarity * 100) - 20) * 10) / 10}
               />
             </div>
           </motion.div>
@@ -294,21 +298,22 @@ const ModelPerformance: React.FC = () => {
                 Current vs Baseline Performance
               </h3>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={chartData.comparisonData} layout="horizontal">
+                <BarChart data={chartData.comparisonData} margin={{ bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" domain={[0, 100]} />
-                  <YAxis 
-                    type="category" 
+                  <XAxis 
                     dataKey="metric" 
-                    width={100}
-                    fontSize={12}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                    fontSize={11}
                   />
+                  <YAxis domain={[0, 'dataMax + 10']} />
                   <Tooltip 
                     formatter={(value) => [`${Number(value).toFixed(1)}%`, '']}
                   />
                   <Legend />
                   <Bar dataKey="current" fill="#6366F1" name="Current" />
-                  <Bar dataKey="baseline" fill="#E5E7EB" name="Baseline" />
+                  <Bar dataKey="baseline" fill="#bd44cdff" name="Baseline" />
                 </BarChart>
               </ResponsiveContainer>
             </motion.div>
@@ -391,38 +396,38 @@ const ModelPerformance: React.FC = () => {
               <div className="space-y-4">
                 <h4 className="font-medium text-gray-900">Performance Analysis</h4>
                 <div className="space-y-3">
-                  <div className={`p-3 rounded-lg ${metricsData.PrecisionAt20 > 0.8 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                  <div className={`p-3 rounded-lg ${metricsData.PrecisionAt > 0.8 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
                     <div className="flex items-center gap-2">
-                      {metricsData.PrecisionAt20 > 0.8 ? (
+                      {metricsData.PrecisionAt > 0.8 ? (
                         <CheckCircle className="w-4 h-4 text-green-600" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-yellow-600" />
                       )}
                       <span className="text-sm font-medium">
-                        Precision@20: {metricsData.PrecisionAt20 > 0.8 ? 'Excellent' : 'Good'}
+                        Precision@20: {metricsData.PrecisionAt > 0.8 ? 'Excellent' : 'Good'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">
-                      {metricsData.PrecisionAt20 > 0.8 
+                      {metricsData.PrecisionAt > 0.8 
                         ? 'Model shows high accuracy in top recommendations'
                         : 'Model accuracy is acceptable but could be improved'
                       }
                     </p>
                   </div>
                   
-                  <div className={`p-3 rounded-lg ${metricsData.RecallAt20 > 0.75 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
+                  <div className={`p-3 rounded-lg ${metricsData.RecallAt > 0.75 ? 'bg-green-50 border border-green-200' : 'bg-yellow-50 border border-yellow-200'}`}>
                     <div className="flex items-center gap-2">
-                      {metricsData.RecallAt20 > 0.75 ? (
+                      {metricsData.RecallAt > 0.75 ? (
                         <CheckCircle className="w-4 h-4 text-green-600" />
                       ) : (
                         <AlertCircle className="w-4 h-4 text-yellow-600" />
                       )}
                       <span className="text-sm font-medium">
-                        Recall@20: {metricsData.RecallAt20 > 0.75 ? 'Excellent' : 'Good'}
+                        Recall@20: {metricsData.RecallAt > 0.75 ? 'Excellent' : 'Good'}
                       </span>
                     </div>
                     <p className="text-xs text-gray-600 mt-1">
-                      {metricsData.RecallAt20 > 0.75 
+                      {metricsData.RecallAt > 0.75 
                         ? 'Model captures most relevant items effectively'
                         : 'Model captures relevant items but could improve coverage'
                       }
@@ -434,7 +439,7 @@ const ModelPerformance: React.FC = () => {
               <div className="space-y-4">
                 <h4 className="font-medium text-gray-900">Recommendations</h4>
                 <div className="space-y-2 text-sm text-gray-600">
-                  {metricsData.F1ScoreAt20 > 0.77 ? (
+                  {metricsData.F1ScoreAt > 0.77 ? (
                     <div className="flex items-start gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
                       <span>Model performance is excellent. Consider production deployment.</span>

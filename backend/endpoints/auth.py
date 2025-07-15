@@ -52,7 +52,9 @@ def login():
             return jsonify({'error': 'Invalid credentials'}), 401
         
         # Verify password
-        if not bcrypt.verify(password, user['password']):
+        password_valid = bcrypt.verify(password, user['password'])
+        
+        if not password_valid:
             return jsonify({'error': 'Invalid credentials'}), 401
         
         # Return dummy tokens and user data
@@ -145,7 +147,7 @@ def refresh():
         'refreshToken': 'dummy_token'
     })
 
-
+# --- DEPRECATED --- #
 @auth_bp.route('/me', methods=['GET'])
 def get_current_user():
     """

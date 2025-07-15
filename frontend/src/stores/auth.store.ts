@@ -91,7 +91,7 @@ export const useAuthStore = create<AuthState>()(
 
         refreshAuth: async () => {
           try {
-            const user = await authService.getCurrentUser();
+            const user = await authService.getUser();
             set({
               user,
               isAuthenticated: true
@@ -116,10 +116,13 @@ export const useAuthStore = create<AuthState>()(
         },
 
         // ✅ ADDED: Standardized method for getting current user ID
-        // Simplifies service calls and eliminates duplication across the app
+        // Simplifies service calls 
         getCurrentUserId: () => {
           const state = get();
-          return state.user?.id || '';
+          if (!state.user?.id) {
+            throw new Error('User not authenticated');
+          }
+          return state.user.id;
         }
       }),
       {

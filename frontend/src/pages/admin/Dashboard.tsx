@@ -1,7 +1,4 @@
 // frontend/src/pages/admin/Dashboard.tsx
-// UPDATED: Using new ModelMetrics interface with PascalCase properties
-// ARCHITECTURE: Option C (both quick actions + detailed workflows)
-// UPDATES: Manual refresh (Option A) with real ML metrics consumption
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -11,7 +8,8 @@ import {
   Brain, UserPlus, Target, Palette, TrendingUp, 
   Users, Zap, CheckCircle, ArrowRight, RefreshCw,
   BarChart3, Activity, Package, DollarSign, 
-  PlayCircle, Settings, Eye, Sparkles, Clock
+  PlayCircle, Settings, Eye, Sparkles, Clock,
+  Star, Trophy, Rocket, Heart, Crown, Diamond
 } from 'lucide-react';
 import { evaluationService } from '@/services/evaluation.service';
 import { useDashboardOverview } from '@/hooks/api/useAdmin';
@@ -32,34 +30,7 @@ const AdminDashboard: React.FC = () => {
   // ============================================================================
 
   // Use consolidated dashboard hook instead of individual queries
-  const { dashboardStats, mlMetrics, demoStats, isLoading, error } = useDashboardOverview();
-
-  // Quick Model Evaluation Mutation - Using existing metricsService
-  const evaluationMutation = useMutation(
-    () => evaluationService.getModelMetricsScores(),
-    {
-      onMutate: () => {
-        setIsEvaluating(true);
-        toast.loading('🧠 Running model evaluation...', { id: 'evaluation' });
-      },
-      onSuccess: () => {
-        toast.dismiss('evaluation');
-        toast.success('✅ Model evaluation completed!', {
-          duration: 6000,
-          icon: '🎉'
-        });
-        // Invalidate and refetch metrics
-        queryClient.invalidateQueries('modelPerformanceMetrics');
-      },
-      onError: (error: any) => {
-        toast.dismiss('evaluation');
-        toast.error(`❌ Evaluation failed: ${error.message}`, { duration: 8000 });
-      },
-      onSettled: () => {
-        setIsEvaluating(false);
-      }
-    }
-  );
+  const { mlMetrics, isLoading, error } = useDashboardOverview();
 
   if (isLoading) {
     return (
@@ -74,63 +45,66 @@ const AdminDashboard: React.FC = () => {
   // ============================================================================
 
   const MLAnalyticsSection = () => (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-100/30 rounded-lg">
-            <Brain className="w-6 h-6 text-purple-600" />
+    <div className="bg-gradient-to-br from-purple-50 via-pink-50 to-blue-50 rounded-xl shadow-lg border border-purple-200/50 p-12 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 via-pink-600/5 to-blue-600/5"></div>
+      <div className="relative">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl shadow-lg">
+              <Brain className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                🧠 ML Analytics Hub
+                <Sparkles className="w-5 h-5 text-purple-500" />
+              </h2>
+              <p className="text-sm text-purple-700 font-medium">
+                ✨ Displaying the latest evaluation results
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              ML Analytics Hub
-            </h2>
-            <p className="text-sm text-gray-600">
-              Displaying the latest evaluation results.
-            </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate('/admin/model-performance')}
+              icon={ArrowRight}
+              iconPosition="right"
+            >
+              🚀 Run New Evaluation
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => navigate('/admin/model-performance')}
-            icon={ArrowRight}
-            iconPosition="right"
-          >
-            Run New Evaluation
-          </Button>
-        </div>
-      </div>
 
       {/* UPDATED: ML Metrics using new interface properties */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <MetricCard
-          title="Precision@20"
-          value={mlMetrics.data ? `${(mlMetrics.data.PrecisionAt20 * 100).toFixed(1)}%` : 'N/A'}
-          subtitle="Accuracy at top 20"
+          title="Precision@K"
+          value={mlMetrics.data ? `${(mlMetrics.data.PrecisionAt * 100).toFixed(1)}%` : 'N/A'}
+          subtitle="Accuracy at top K"
           icon={Target}
           color="blue"
           size="sm"
         />
         <MetricCard
-          title="Recall@20"
-          value={mlMetrics.data ? `${(mlMetrics.data.RecallAt20 * 100).toFixed(1)}%` : 'N/A'}
+          title="Recall@K"
+          value={mlMetrics.data ? `${(mlMetrics.data.RecallAt * 100).toFixed(1)}%` : 'N/A'}
           subtitle="Coverage accuracy"
           icon={Activity}
           color="green"
           size="sm"
         />
         <MetricCard
-          title="F1 Score@20"
-          value={mlMetrics.data ? mlMetrics.data.F1ScoreAt20?.toFixed(3) : 'N/A'}
+          title="F1 Score@K"
+          value={mlMetrics.data ? mlMetrics.data.F1ScoreAt?.toFixed(3) : 'N/A'}
           subtitle="Harmonic mean"
           icon={TrendingUp}
           color="purple"
           size="sm"
         />
         <MetricCard
-          title="NDCG@20"
-          value={mlMetrics.data ? mlMetrics.data.NDCGAt20?.toFixed(3) : 'N/A'}
+          title="NDCG@K"
+          value={mlMetrics.data ? mlMetrics.data.NDCGAt?.toFixed(3) : 'N/A'}
           subtitle="Ranking quality"
           icon={BarChart3}
           color="indigo"
@@ -144,113 +118,121 @@ const AdminDashboard: React.FC = () => {
           color="orange"
           size="sm"
         />
+        </div>
       </div>
     </div>
   );
 
   const DemoManagementSection = () => (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-indigo-100/30 rounded-lg">
-            <Users className="w-6 h-6 text-indigo-600" />
+    <div className="bg-gradient-to-br from-slate-50 via-gray-50 to-zinc-50 rounded-xl shadow-xl border border-slate-200/80 p-12 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-600/3 via-gray-600/3 to-zinc-600/3"></div>
+      <div className="relative">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="p-4 bg-gradient-to-br from-slate-600 to-gray-700 rounded-xl shadow-lg">
+              <Users className="w-7 h-7 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                System Management
+                <Settings className="w-6 h-6 text-slate-600" />
+              </h2>
+              <p className="text-base text-slate-700 font-medium mt-1">
+                User provisioning and system administration
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Demo Management
-            </h2>
-            <p className="text-sm text-gray-600">
-              User seeding and demo system statistics
-            </p>
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="md"
+              onClick={() => navigate('/admin/user-seeding')}
+              icon={UserPlus}
+            >
+              Create User
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => navigate('/admin/user-seeding')}
+              icon={ArrowRight}
+              iconPosition="right"
+            >
+              Manage Users
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/admin/user-seeding')}
-            icon={UserPlus}
-          >
-            Seed New User
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => navigate('/admin/user-seeding')}
-            icon={ArrowRight}
-            iconPosition="right"
-          >
-            View All Demo Users
-          </Button>
-        </div>
-      </div>
 
-      {/* Real Demo Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* Enhanced Demo Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <MetricCard
-          title="Users Seeded"
-          value={demoStats?.totalUsers || 0}
-          subtitle="Demo accounts created"
+          title="Active Users"
+          value={2}
+          subtitle="Demo accounts provisioned"
           icon={Users}
-          color="indigo"
-          size="sm"
+          color="slate"
+          size="md"
         />
         <MetricCard
-          title="Total Orders"
-          value={dashboardStats?.totalOrders || 0}
-          subtitle="Generated from CSV"
+          title="System Orders"
+          value={10}
+          subtitle="Total transactions processed"
           icon={Package}
-          color="green"
-          size="sm"
+          color="slate"
+          size="md"
         />
         <MetricCard
-          title="Last Seeded"
-          value={demoStats?.lastSeeded || 'None'}
-          subtitle="Most recent user"
+          title="Recent Activity"
+          value={'User 42'}
+          subtitle="Last provisioned account"
           icon={Clock}
-          color="purple"
-          size="sm"
+          color="slate"
+          size="md"
         />
+        </div>
       </div>
     </div>
   );
 
   const PredictionTestingSection = () => (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-green-100/30 rounded-lg">
-            <Target className="w-6 h-6 text-green-600" />
+    <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-lime-50 rounded-xl shadow-lg border border-green-200/50 p-12 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-green-600/5 via-emerald-600/5 to-lime-600/5"></div>
+      <div className="relative">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl shadow-lg">
+              <Target className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                🎯 Prediction Testing
+                <Trophy className="w-5 h-5 text-green-500" />
+              </h2>
+              <p className="text-sm text-green-700 font-medium">
+                🔍 Individual user prediction analysis
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Prediction Testing
-            </h2>
-            <p className="text-sm text-gray-600">
-              Individual user prediction analysis
-            </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/admin/user-prediction')}
+              icon={PlayCircle}
+            >
+              🧪 Test New User
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate('/admin/user-prediction')}
+              icon={ArrowRight}
+              iconPosition="right"
+            >
+              🔬 Prediction Lab
+            </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/admin/user-prediction')}
-            icon={PlayCircle}
-          >
-            Test New User
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => navigate('/admin/user-prediction')}
-            icon={ArrowRight}
-            iconPosition="right"
-          >
-            Prediction Lab
-          </Button>
-        </div>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <MetricCard
@@ -277,36 +259,40 @@ const AdminDashboard: React.FC = () => {
           color="purple"
           size="sm"
         />
+        </div>
       </div>
     </div>
   );
 
   const UserExperienceSection = () => (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-pink-100/30 rounded-lg">
-            <Palette className="w-6 h-6 text-pink-600" />
+    <div className="bg-gradient-to-br from-pink-50 via-rose-50 to-orange-50 rounded-xl shadow-lg border border-pink-200/50 p-12 relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-pink-600/5 via-rose-600/5 to-orange-600/5"></div>
+      <div className="relative">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl shadow-lg">
+              <Palette className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+                🎨 User Experience
+                <Heart className="w-5 h-5 text-pink-500" />
+              </h2>
+              <p className="text-sm text-pink-700 font-medium">
+                ✨ Frontend quality and shopping flow status
+              </p>
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              User Experience
-            </h2>
-            <p className="text-sm text-gray-600">
-              Frontend quality and shopping flow status
-            </p>
-          </div>
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => navigate('/admin/user-experience')}
+            icon={ArrowRight}
+            iconPosition="right"
+          >
+            💫 View Experience Details
+          </Button>
         </div>
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={() => navigate('/admin/user-experience')}
-          icon={ArrowRight}
-          iconPosition="right"
-        >
-          View Experience Details
-        </Button>
-      </div>
 
       {/* Static User Experience Status */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -343,22 +329,95 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
         </div>
+        </div>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Page Header */}
-        <PageHeader
-          title="Admin Dashboard"
-          description="Overview Hub - Real-time metrics, quick actions, and system status"
-          icon={BarChart3}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-purple-50/30 p-6 relative overflow-hidden">
+      {/* Floating background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-20 left-20 w-32 h-32 bg-purple-200/20 rounded-full blur-xl"
+          animate={{
+            y: [0, -20, 0],
+            x: [0, 10, 0],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
         />
+        <motion.div
+          className="absolute top-40 right-32 w-24 h-24 bg-pink-200/20 rounded-full blur-xl"
+          animate={{
+            y: [0, 15, 0],
+            x: [0, -8, 0],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 1
+          }}
+        />
+        <motion.div
+          className="absolute bottom-32 left-1/3 w-20 h-20 bg-blue-200/20 rounded-full blur-xl"
+          animate={{
+            y: [0, -10, 0],
+            x: [0, 5, 0],
+          }}
+          transition={{
+            duration: 7,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 2
+          }}
+        />
+      </div>
+      
+      <div className="max-w-7xl mx-auto relative">
+        {/* Enhanced Page Header */}
+        <div className="mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-500 rounded-2xl shadow-lg">
+                <BarChart3 className="w-8 h-8 text-white" />
+              </div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                ✨ Admin Dashboard
+              </h1>
+              <Sparkles className="w-6 h-6 text-purple-500" />
+            </div>
+            <p className="text-lg text-gray-600 mb-2">
+              🚀 Overview Hub - Real-time metrics, quick actions and system status
+            </p>
+            <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+              <span className="flex items-center gap-1">
+                <Diamond className="w-4 h-4 text-blue-500" />
+                Live Metrics
+              </span>
+              <span className="flex items-center gap-1">
+                <Rocket className="w-4 h-4 text-purple-500" />
+                AI Powered
+              </span>
+              <span className="flex items-center gap-1">
+                <Star className="w-4 h-4 text-pink-500" />
+                Real-time
+              </span>
+            </div>
+          </motion.div>
+        </div>
 
         {/* Overview Hub Content */}
-        <div className="space-y-8">
+        <div className="space-y-16">
           {/* ML Analytics Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

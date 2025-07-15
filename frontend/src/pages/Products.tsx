@@ -65,14 +65,21 @@ const Products: React.FC = () => {
   }, [sortOption]);
 
   const products = data?.products || [];
-  const pagination = data?.pagination || {};
+  const pagination = {
+    totalPages: data?.totalPages || 1,
+    total: data?.total || 0,
+    hasMore: data?.hasMore || false,
+    page: data?.page || 1
+  };
+
+
 
   const filtersComponent = (
     <div className="space-y-6">
       <CategoryFilter
         categories={categories || []}
-        selectedCategories={filters.categories}
-        onCategoryChange={(categories) => handleFilterChange({ categories })}
+        selectedCategory={filters.categories[0] || ''}
+        onCategoryChange={(categoryId) => handleFilterChange({ categories: categoryId ? [categoryId] : [] })}
       />
       
       <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -125,10 +132,10 @@ const Products: React.FC = () => {
       currentPage={currentPage}
       totalPages={pagination.totalPages || 1}
       onPageChange={setCurrentPage}
-      renderGridItem={(product) => (
+      renderGridItem={(product: any) => (
         <ProductCard key={product.id} product={product} />
       )}
-      renderListItem={(product) => (
+      renderListItem={(product: any) => (
         <motion.div key={product.id}>
           <ProductListItem 
             product={product} 

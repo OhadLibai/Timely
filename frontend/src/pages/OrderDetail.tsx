@@ -107,12 +107,12 @@ const OrderDetail: React.FC = () => {
                 Order Date
               </p>
               <p className="text-sm text-gray-600">
-                {new Date(order.createdAt).toLocaleDateString('en-US', {
+                {order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-US', {
                   weekday: 'long',
                   year: 'numeric',
                   month: 'long',
                   day: 'numeric'
-                })}
+                }) : 'N/A'}
               </p>
             </div>
           </div>
@@ -175,7 +175,7 @@ const OrderDetail: React.FC = () => {
       backLabel="Back to Orders"
       backUrl="/orders"
       title={order ? `Order ${formatOrderNumber(order.orderNumber)}` : ''}
-      subtitle={order ? `Placed on ${new Date(order.createdAt).toLocaleDateString()}` : ''}
+      subtitle={order ? `Placed on ${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : 'N/A'}` : ''}
       headerActions={headerActions}
       leftColumn={leftColumn}
       rightColumn={rightColumn}

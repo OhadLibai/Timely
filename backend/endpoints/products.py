@@ -100,18 +100,24 @@ def get_products():
         return jsonify({'error': 'Failed to fetch products'}), 500
 
 
-@products_bp.route('/<int:product_id>', methods=['GET'])
+@products_bp.route('/<string:product_id>', methods=['GET'])
 def get_product(product_id):
     """
     Get single product by ID
     """
     try:
+        # Convert string ID to int for database query (database expects int)
+        try:
+            product_id_int = int(product_id)
+        except ValueError:
+            return jsonify({'error': 'Invalid product ID'}), 400
+            
         product = execute_query("""
             SELECT p.*, c.name as category_name, c.image_url as category_image
             FROM products p
             JOIN categories c ON p.department_id = c.department_id
             WHERE p.instacart_product_id = %s
-        """, [product_id], fetch_one=True)
+        """, [product_id_int], fetch_one=True)
         
         if not product:
             return jsonify({'error': 'Product not found'}), 404

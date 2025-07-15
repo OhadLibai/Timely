@@ -6,13 +6,15 @@ Updated paths for new project structure
 """
 
 import pandas as pd
+import math
 import os
 
 # Updated data paths for new structure
 DATA_DIR = "/app/data/dataset"  # Local copy in backend container
 OUTPUT_DIR = "/app/data/dataset"
 
-USER_FRACTION = 0.1 # Determines how many users will be available from the dataset
+USER_LOAD_FRACTION = float(os.getenv("USER_LOAD_FRACTION")) 
+RANDOM = True if os.getenv("RANDOM")=="1" else False
 
 def preprocess_instacart():
     """
@@ -42,7 +44,11 @@ def preprocess_instacart():
     
     # Take a sample of orders
     unique_users = orders['user_id'].unique()
-    sample_users = pd.Series(unique_users).sample(frac=USER_FRACTION, random_state=42)
+    if RANDOM:
+        sample_users = pd.Series(unique_users).sample(frac=USER_LOAD_FRACTION, random_state=42)
+    else:
+        n_users = math.ceil(len(unique_users) * USER_LOAD_FRACTION)
+        sample_users = pd.Series(unique_users).iloc[:n_users]
     sample_orders = orders[orders['user_id'].isin(sample_users)]
     
     print(f"Sampled {len(sample_orders)} orders from {len(sample_users)} users")

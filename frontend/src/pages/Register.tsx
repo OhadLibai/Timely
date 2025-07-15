@@ -6,11 +6,12 @@ import { AnimatedContainer } from '@/components/common/AnimatedContainer';
 import { useForm } from 'react-hook-form';
 import { 
   Mail, Lock, Eye, EyeOff, User, Phone, 
-  ShoppingCart, Check, Loader2, Sparkles 
+  Check, Loader2, Sparkles 
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import toast from 'react-hot-toast';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
+import TimelyBrandLogo from '@/components/common/TimelyBrandLogo';
 
 interface RegisterFormData {
   firstName: string;
@@ -148,10 +149,7 @@ const Register: React.FC = () => {
           {/* Logo and Header */}
           <div className="text-center mb-8">
             <Link to="/" className="inline-flex items-center justify-center gap-2 mb-6">
-              <div className="p-3 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl">
-                <ShoppingCart className="w-8 h-8 text-white" />
-              </div>
-              <span className="text-2xl font-bold text-gray-900">Timely</span>
+              <TimelyBrandLogo size="lg" variant="hero" animated={true} />
             </Link>
             <h2 className="text-3xl font-bold text-gray-900 mb-2">
               Create your account

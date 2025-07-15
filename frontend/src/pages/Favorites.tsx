@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { useQueryClient } from 'react-query';
+import { useNavigate } from 'react-router-dom';
 import { useFavorites } from '@/hooks/api/useFavorites';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, ShoppingCart, Package, Plus } from 'lucide-react';
@@ -19,6 +20,7 @@ const Favorites: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
   const { addToCart, addMultipleItems, isUpdating } = useCartStore();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Fetch favorites
   const { data: favorites, isLoading, error } = useFavorites();
@@ -54,7 +56,7 @@ const Favorites: React.FC = () => {
           description="You need to sign in to view your favorites."
           action={{
             label: "Sign In",
-            href: "/login"
+            onClick: () => navigate('/login')
           }}
         />
       </div>
@@ -64,7 +66,7 @@ const Favorites: React.FC = () => {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner size="large" />
       </div>
     );
   }
@@ -90,7 +92,7 @@ const Favorites: React.FC = () => {
           description="Start adding products to your favorites to see them here."
           action={{
             label: "Browse Products",
-            href: "/products"
+            onClick: () => navigate('/products')
           }}
         />
       </div>
