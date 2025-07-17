@@ -12,7 +12,7 @@ import {
   Star, Trophy, Rocket, Heart, Crown, Diamond
 } from 'lucide-react';
 import { evaluationService } from '@/services/evaluation.service';
-import { useDashboardOverview } from '@/hooks/api/useAdmin';
+import { useMetricsOverview } from '@/hooks/api/useAdmin';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import MetricCard from '@/components/admin/MetricCard';
 import { PageHeader } from '@/components/common/PageHeader';
@@ -30,12 +30,12 @@ const AdminDashboard: React.FC = () => {
   // ============================================================================
 
   // Use consolidated dashboard hook instead of individual queries
-  const { mlMetrics, isLoading, error } = useDashboardOverview();
+  const { mlMetrics, isLoading, error } = useMetricsOverview();
 
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="large" />
+        <LoadingSpinner fullScreen />
       </div>
     );
   }
@@ -291,7 +291,7 @@ const AdminDashboard: React.FC = () => {
           </div>
           <Button
             variant="primary"
-            size="sm"
+            size="md"
             onClick={() => navigate('/admin/user-experience')}
             icon={ArrowRight}
             iconPosition="right"
@@ -424,38 +424,38 @@ const AdminDashboard: React.FC = () => {
 
         {/* Overview Hub Content */}
         <div className="space-y-16">
-          {/* ML Analytics Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <MLAnalyticsSection />
-          </motion.div>
-
           {/* System Management Section (Full Width) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.1 }}
+            transition={{ duration: 0.5, delay: 0.0 }}
           >
             <DemoManagementSection />
+          </motion.div>
+
+          {/* ML Analytics Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay:0.4 }}
+          >
+            <MLAnalyticsSection />
           </motion.div>
 
           {/* Prediction Testing Section (Full Width) */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.2 }}
+            transition={{ duration: 0.5, delay: 0.8 }}
           >
             <PredictionTestingSection />
-          </motion.div>
+          </motion.div>               
 
           {/* User Experience Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
+            transition={{ duration: 0.5, delay: 1.2 }}
           >
             <UserExperienceSection />
           </motion.div>

@@ -77,13 +77,13 @@ const Home: React.FC = () => {
             <div className="flex justify-center gap-4 mt-6">
               <button
                 onClick={() => navigate('/products')}
-                className="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="px-12 py-5 text-lg bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 Browse Products
               </button>
               <button
                 onClick={() => navigate('/orders')}
-                className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="px-12 py-5 text-lg bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 View Past Orders
               </button>

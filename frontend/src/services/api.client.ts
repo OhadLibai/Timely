@@ -13,7 +13,7 @@ const API_URL = (typeof process !== 'undefined' && process.env.API_URL) || 'http
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
-  timeout: 15000,
+  timeout: 60 * 1000,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -61,12 +61,30 @@ apiClient.interceptors.response.use(
       }
     }
 
-    // Handle other errors
-    const errorMessage = error.response?.data?.error || error.message || 'An error occurred';
+    // Handle specific error codes
+    let errorMessage = 'An error occurred';
     
-    // Don't show toast for cancelled requests
-    if (error.code !== 'ERR_CANCELED') {
-      toast.error(errorMessage);
+    if (error.response?.status === 400) {
+      errorMessage = error.response?.data?.error || 'Invalid request data';
+      // Don't show toast for cancelled requests
+      if (error.code !== 'ERR_CANCELED') {
+        toast.error(errorMessage);
+      }
+    } else if (error.response?.status === 404) {
+      errorMessage = error.response?.data?.error || 'Resource not found';
+      // For 404s, redirect to home or show appropriate page
+      // Don't show toast for cancelled requests
+      if (error.code !== 'ERR_CANCELED') {
+        toast.error(errorMessage);
+      }
+      // Optional: redirect to 404 page or home
+      // window.location.href = '/404';
+    } else {
+      errorMessage = error.response?.data?.error || error.message || 'An error occurred';
+      // Don't show toast for cancelled requests
+      if (error.code !== 'ERR_CANCELED') {
+        toast.error(errorMessage);
+      }
     }
 
     return Promise.reject(error);

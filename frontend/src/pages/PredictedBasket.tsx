@@ -10,6 +10,7 @@ import {
   ChevronRight, Plus, Minus, Trash2, Star, Award,
   Plane
 } from 'lucide-react';
+import { BsFillLightningChargeFill } from "react-icons/bs";
 import { predictionService } from '@/services/prediction.service';
 import { usePredictedBasketStore, usePredictedBasketActions } from '@/stores/predictedBasket.store';
 import { useCartStore } from '@/stores/cart.store';
@@ -123,7 +124,7 @@ const PredictedBasket: React.FC = () => {
     () => predictionService.getPredictedBasket(),
     {
       onMutate: () => {
-        toast.loading('🧠 AI is analyzing your shopping patterns...', {
+        toast.loading('🧠 Generating basket...', {
           id: 'generate-basket'
         });
       },
@@ -138,7 +139,7 @@ const PredictedBasket: React.FC = () => {
           }));
           
           setBasket(items);
-          toast.success(`🎉 Generated ${items.length} items for your basket!`, {
+          toast.success(`🎉 Timely basket Generated for you! Check it out!`, {
             duration: 5000
           });
         } else {
@@ -240,7 +241,7 @@ const PredictedBasket: React.FC = () => {
                 disabled={generateMutation.isLoading}
                 className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
               >
-                <Plane size={18} className={generateMutation.isLoading ? 'animate-spin' : ''} />
+                <BsFillLightningChargeFill size={18} className={generateMutation.isLoading ? 'animate-spin' : ''} />
                 Generate Again!  
               </button>
               

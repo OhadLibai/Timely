@@ -131,7 +131,7 @@ const ProductListItem: React.FC<ProductListItemProps> = ({
             icon={Heart}
             className={`${
               isFavorite 
-                ? 'text-red-600' 
+                ? 'text-red-600 [&>span>svg]:fill-red-600' 
                 : 'text-gray-400 hover:text-red-600'
             }`}
             title={isFavorite ? 'Remove from favorites' : 'Add to favorites'}

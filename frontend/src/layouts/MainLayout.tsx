@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart, Search, Menu, X, User, Heart, Package,
   LogOut, Settings, ChevronDown, Brain,
-  Home
+  Home,
+  ShoppingBasket
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { useCartStore } from '@/stores/cart.store';
@@ -39,13 +40,13 @@ const MainLayout: React.FC = () => {
 
 
   const handleLogout = async () => {
-    await logout();
+    logout();
     navigate('/');
   };
 
   const navLinks = [
     { path: '/', label: 'Home', icon: Home },
-    { path: '/products', label: 'Shop', icon: Package },
+    { path: '/products', label: 'Shop', icon: ShoppingBasket },
     { path: '/predicted-basket', label: 'Predicted Basket', icon: Brain, authRequired: true },
   ];
 
@@ -196,7 +197,7 @@ const MainLayout: React.FC = () => {
                               className="flex items-center gap-3 px-4 py-2 text-md text-gray-700 hover:bg-gray-100"
                             >
                               <Settings size={16} />
-                              Admin Dashboard
+                              Admin Hub
                             </Link>
                           )}
                         </div>

@@ -1,7 +1,7 @@
 // frontend/src/components/common/index.ts
 
 export { Button } from './Button';
-export { Card, FeatureCard } from './Card';
+export { Card } from './Card';
 export { StatusIndicator, getStatusIndicator } from './StatusIndicator';
 export { Dropdown } from './Dropdown';
 export { PageHeader } from './PageHeader';

@@ -4,6 +4,7 @@
 import { api } from '@/services/api.client';
 import { useAuthStore } from '@/stores/auth.store';
 import { Product } from '@/services/product.service';
+import { authService } from './auth.service';
 
 export interface Favorite {
   id: string;
@@ -22,7 +23,7 @@ class FavoriteService {
    * UPDATED: Uses userId in URL path for Option B consistency
    */
   async getFavorites(): Promise<Favorite[]> {
-    const userId = useAuthStore.getState().getCurrentUserId();
+    const userId = authService.getUser()?.id;
     return api.get<Favorite[]>(`/favorites/user/${userId}`);
   }
 
@@ -30,7 +31,7 @@ class FavoriteService {
    * Add product to favorites
    */
   async addFavorite(productId: string): Promise<{message : string}> {
-    const userId = useAuthStore.getState().getCurrentUserId();
+    const userId = authService.getUser()?.id;
     return api.post<{message : string}>(`/favorites/user/${userId}/add`, { productId });
   }
 
@@ -38,21 +39,16 @@ class FavoriteService {
    * Remove product from favorites
    */
   async removeFavorite(productId: string): Promise<void> {
-    const userId = useAuthStore.getState().getCurrentUserId();
+    const userId = authService.getUser()?.id;
     return api.delete(`/favorites/user/${userId}/${productId}`);
   }
 
   /**
-   * Check if product is favorited
+   * Check if a product is favorited by the current user
    */
   async isProductFavorited(productId: string): Promise<boolean> {
-    try {
-      const userId = useAuthStore.getState().getCurrentUserId();
-      const response = await api.get<{ isFavorited: boolean }>(`/favorites/user/${userId}/check/${productId}`);
-      return response.isFavorited;
-    } catch (error) {
-      return false;
-    }
+    const favorites = await this.getFavorites();
+    return favorites.some(favorite => favorite.product.id === productId);
   }
 }
 

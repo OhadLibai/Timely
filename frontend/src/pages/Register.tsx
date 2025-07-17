@@ -9,7 +9,7 @@ import {
   Check, Loader2, Sparkles 
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
-import toast from 'react-hot-toast';
+import { useMutationWithToast } from '@/hooks/api/useMutationWithToast';
 import { ResponsiveGrid } from '@/components/layout/ResponsiveGrid';
 import TimelyBrandLogo from '@/components/common/TimelyBrandLogo';
 
@@ -17,15 +17,15 @@ interface RegisterFormData {
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
   password: string;
   confirmPassword: string;
+  phone?: string;
   agreeToTerms: boolean;
 }
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const { register: registerUser, isLoading } = useAuthStore();
+  const { register: registerUser } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -51,8 +51,8 @@ const Register: React.FC = () => {
     'Free delivery on orders over $50'
   ];
 
-  const onSubmit = async (data: RegisterFormData) => {
-    try {
+  const registerMutation = useMutationWithToast({
+    mutationFn: async (data: RegisterFormData) => {
       await registerUser({
         email: data.email,
         password: data.password,
@@ -60,16 +60,24 @@ const Register: React.FC = () => {
         lastName: data.lastName,
         phone: data.phone
       });
-      
-      toast.success('Account created successfully!');
-      navigate('/');
-    } catch (error: any) {
+    },
+    successMessage: 'Account created successfully!',
+    errorMessage: (error: any) => error.response?.data?.error || 'Registration failed. Please try again.',
+    onSuccess: () => {
+      // Use setTimeout to ensure state update has propagated
+      setTimeout(() => {
+        navigate('/', { replace: true });
+      }, 100);
+    },
+    onError: (error: any) => {
       if (error.response?.data?.error) {
         setError('root', { message: error.response.data.error });
-      } else {
-        toast.error('Registration failed. Please try again.');
       }
     }
+  });
+
+  const onSubmit = (data: RegisterFormData) => {
+    registerMutation.mutate(data);
   };
 
   const handleNextStep = async () => {
@@ -464,10 +472,10 @@ const Register: React.FC = () => {
                     </button>
                     <button
                       type="submit"
-                      disabled={isLoading}
+                      disabled={registerMutation.isLoading}
                       className="flex-1 py-3 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-lg hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-[1.02]"
                     >
-                      {isLoading ? (
+                      {registerMutation.isLoading ? (
                         <span className="flex items-center justify-center gap-2">
                           <Loader2 className="w-5 h-5 animate-spin" />
                           Creating account...

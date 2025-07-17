@@ -14,7 +14,7 @@ export const useProducts = (
     QUERY_KEYS.products(filters),
     () => productService.getProducts(filters),
     {
-      staleTime: 'frequent',
+      staleTime: 'stable',
       keepPreviousData: true,
     }
   );

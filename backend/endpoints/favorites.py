@@ -14,6 +14,10 @@ favorites_bp = Blueprint('favorites', __name__)
 def get_favorites(user_id):
     """Get user's favorites"""
     try:
+        # Handle unauthenticated users gracefully
+        if user_id == 'undefined' or user_id == 'null' or not user_id:
+            return jsonify([])
+
         # Convert string ID to int for database query
         try:
             user_id_int = int(user_id)
@@ -160,25 +164,3 @@ def remove_favorite(user_id, product_id):
         return jsonify({'error': 'Failed to remove favorite'}), 500
 
 
-@favorites_bp.route('/user/<string:user_id>/check/<string:product_id>', methods=['GET'])
-def check_favorite(user_id, product_id):
-    """Check if product is favorited"""
-    try:
-        # Convert string IDs to int for database query
-        try:
-            user_id_int = int(user_id)
-            product_id_int = int(product_id)
-        except ValueError:
-            return jsonify({'isFavorited': False})
-
-        favorite = execute_query(
-            "SELECT id FROM favorites WHERE user_id = %s AND product_id = %s",
-            [user_id_int, product_id_int],
-            fetch_one=True
-        )
-
-        return jsonify({'isFavorited': favorite is not None})
-
-    except Exception as e:
-        print(f"Check favorite error: {str(e)}")
-        return jsonify({'isFavorited': False})

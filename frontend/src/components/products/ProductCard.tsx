@@ -80,13 +80,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <button
               onClick={handleToggleFavorite}
               disabled={isToggling}
-              className={`p-2 rounded-full backdrop-blur-sm transition-all ${
+              className={`p-2 rounded-full backdrop-blur-sm transition-all duration-300 ${
                 isFavorite
-                  ? 'bg-red-500 text-white'
-                  : 'bg-white/80 text-gray-600 hover:bg-red-50 hover:text-red-500'
+                  ? 'bg-red-500 text-white shadow-lg'
+                  : 'bg-white/80 text-gray-600 hover:bg-red-50 hover:text-red-500 hover:shadow-md focus:ring-2 focus:ring-red-500/30 focus:ring-offset-1'
               }`}
             >
-              <Heart size={16} className={isFavorite ? 'fill-current' : ''} />
+              <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} />
             </button>
             
             <button
@@ -94,7 +94,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 e.preventDefault();
                 // Quick view functionality could go here
               }}
-              className="p-2 rounded-full bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-blue-50 hover:text-blue-500 transition-all"
+              className="p-2 rounded-full bg-white/80 backdrop-blur-sm text-gray-600 hover:bg-blue-50 hover:text-blue-500 hover:shadow-md focus:ring-2 focus:ring-blue-500/30 focus:ring-offset-1 transition-all duration-300"
             >
               <Eye size={16} />
             </button>

@@ -1,12 +1,12 @@
 // frontend/src/pages/Login.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AnimatedContainer } from '@/components/common/AnimatedContainer';
 import { useForm } from 'react-hook-form';
 import { Mail, Lock, Brain } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
-import toast from 'react-hot-toast';
+import { useMutationWithToast } from '@/hooks/api/useMutationWithToast';
 import { FormInput } from '@/components/forms/FormInput';
 import { Button } from '@/components/common/Button';
 import TimelyBrandLogo from '@/components/common/TimelyBrandLogo';
@@ -20,9 +20,16 @@ interface LoginFormData {
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, isLoading } = useAuthStore();
-
+  const { login, isAuthenticated } = useAuthStore();
   const from = (location.state as any)?.from?.pathname || '/';
+
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
 
   const {
     register,
@@ -37,23 +44,25 @@ const Login: React.FC = () => {
     }
   });
 
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      console.log('🔐 Starting login process...');
-      await login(data.email, data.password);
-      console.log('✅ Login successful, navigating to:', from);
-      
-      // Redirect to intended page or home
+  const loginMutation = useMutationWithToast({
+    mutationFn: async (data: LoginFormData) => {
+      const response = await login(data.email, data.password);
+      return response;
+    },
+    successMessage: (data) => `Welcome back, ${data.user.firstName}!`,
+    errorMessage: (error: any) => error.response?.data?.error || 'Login failed. Please try again.',
+    onSuccess: () => {
       navigate(from, { replace: true });
-      console.log('🚀 Navigation triggered');
-    } catch (error: any) {
-      console.error('❌ Login failed:', error);
+    },
+    onError: (error: any) => {
       if (error.response?.data?.error) {
         setError('root', { message: error.response.data.error });
-      } else {
-        toast.error('Login failed. Please try again.');
       }
     }
+  });
+
+  const onSubmit = (data: LoginFormData) => {
+    loginMutation.mutate(data);
   };
 
   return (
@@ -144,11 +153,11 @@ const Login: React.FC = () => {
             {/* Submit Button */}
             <Button
               type="submit"
-              loading={isLoading}
+              loading={loginMutation.isLoading}
               fullWidth
               className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 transform hover:scale-[1.02]"
             >
-              {isLoading ? 'Signing in...' : 'Sign In'}
+              {loginMutation.isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
 
             {/* Divider */}

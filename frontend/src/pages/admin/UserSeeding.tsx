@@ -106,9 +106,9 @@ const UserSeeding: React.FC = () => {
               variant="ghost"
               onClick={() => navigate('/admin')}
               icon={ArrowLeft}
-              size="sm"
+              size="md"
             >
-              Back to Dashboard
+              Back to the Hub
             </Button>
           }
         />
@@ -415,7 +415,7 @@ const UserSeeding: React.FC = () => {
                               <div className="p-4 bg-green-100/40 rounded-xl">
                                 <p className="text-base text-green-800">
                                   💡 <strong>Next Step:</strong> This user can now log in and experience ML-powered basket predictions! 
-                                  Their purchase history has been populated with real Instacart data.
+                                  Their purchase history has been populated with real world data.
                                 </p>
                               </div>
                             </>

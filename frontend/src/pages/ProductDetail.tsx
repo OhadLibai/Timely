@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useProduct } from '@/hooks';
 import { useCartStore } from '@/stores/cart.store';
+import { useAuthenticatedAction } from '@/hooks/auth/useAuthenticatedAction';
 import ProductImage from '@/components/products/ProductImage';
 import DetailPage from '@/components/common/DetailPage';
 import toast from 'react-hot-toast';
@@ -16,28 +17,33 @@ const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { addToCart } = useCartStore();
+  const { withAuthCheck } = useAuthenticatedAction();
   const [quantity, setQuantity] = useState(1);
 
   const { data: product, isLoading, error } = useProduct(id!);
 
-  const handleAddToCart = () => {
-    if (!product) return;
-    
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      imageUrl: product.imageUrl,
-      quantity: quantity
-    });
-    
-    toast.success(`Added ${quantity} ${product.name} to cart`);
-  };
+  const handleAddToCart = withAuthCheck(
+    () => {
+      if (!product) return;
+      
+      addToCart(product, quantity);
+      
+      toast.success(`Added ${quantity} ${product.name} to cart`);
+    },
+    'Please login to add items to cart'
+  );
 
-  const handleBuyNow = () => {
-    handleAddToCart();
-    navigate('/cart');
-  };
+  const handleBuyNow = withAuthCheck(
+    () => {
+      if (!product) return;
+      
+      addToCart(product, quantity);
+      
+      toast.success(`Added ${quantity} ${product.name} to cart`);
+      navigate('/cart');
+    },
+    'Please login to add items to cart'
+  );
 
   const leftColumn = product && (
     <motion.div

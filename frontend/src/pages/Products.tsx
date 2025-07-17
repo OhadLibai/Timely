@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Package } from 'lucide-react';
+import { Package, ShoppingBasket } from 'lucide-react';
 import { useProducts, useCategories } from '@/hooks';
 import ProductCard from '@/components/products/ProductCard';
 import ProductListItem from '@/components/products/ProductListItem';
@@ -64,6 +64,11 @@ const Products: React.FC = () => {
     setCurrentPage(1);
   }, [sortOption]);
 
+  // Scroll to top when page changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
   const products = data?.products || [];
   const pagination = {
     totalPages: data?.totalPages || 1,
@@ -111,9 +116,9 @@ const Products: React.FC = () => {
 
   return (
     <ListPage
-      title="Products"
+      title="Grocery"
       subtitle="Discover our collection of fresh groceries and everyday essentials"
-      icon={Package}
+      icon={ShoppingBasket}
       data={products}
       isLoading={isLoading}
       error={error}

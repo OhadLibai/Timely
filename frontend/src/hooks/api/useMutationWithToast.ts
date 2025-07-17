@@ -4,10 +4,12 @@ import toast from 'react-hot-toast';
 interface MutationWithToastOptions<TData, TVariables, TError = unknown> {
   mutationFn: (variables: TVariables) => Promise<TData>;
   successMessage?: string | ((data: TData, variables: TVariables) => string);
+  warningMessage?: string | ((data: TData, variables: TVariables) => string);
   errorMessage?: string | ((error: TError, variables: TVariables) => string);
   onSuccess?: (data: TData, variables: TVariables) => void;
   onError?: (error: TError, variables: TVariables) => void;
   showSuccessToast?: boolean;
+  showWarningToast?: boolean;
   showErrorToast?: boolean;
   mutationOptions?: Omit<UseMutationOptions<TData, TError, TVariables>, 'mutationFn'>;
 }
@@ -15,22 +17,41 @@ interface MutationWithToastOptions<TData, TVariables, TError = unknown> {
 export const useMutationWithToast = <TData, TVariables, TError = unknown>({
   mutationFn,
   successMessage,
+  warningMessage,
   errorMessage = 'Operation failed',
   onSuccess,
   onError,
   showSuccessToast = true,
+  showWarningToast = true,
   showErrorToast = true,
   mutationOptions = {}
 }: MutationWithToastOptions<TData, TVariables, TError>): UseMutationResult<TData, TError, TVariables> => {
   return useMutation(mutationFn, {
     ...mutationOptions,
     onSuccess: (data, variables, context) => {
+      // Show warning toast if warningMessage is provided
+      if (showWarningToast && warningMessage) {
+        const message = typeof warningMessage === 'function' 
+          ? warningMessage(data, variables)
+          : warningMessage;
+        if (message) {
+          toast('⚠️ ' + message, {
+            style: {
+              background: '#FEF3C7',
+              color: '#92400E',
+              border: '1px solid #F59E0B',
+            },
+          });
+        }
+      }
       // Show success toast
-      if (showSuccessToast && successMessage) {
+      else if (showSuccessToast && successMessage) {
         const message = typeof successMessage === 'function' 
           ? successMessage(data, variables)
           : successMessage;
-        toast.success(message);
+        if (message) {
+          toast.success(message);
+        }
       }
       
       // Call custom onSuccess handler

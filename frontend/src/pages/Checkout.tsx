@@ -3,12 +3,12 @@
 // FOCUSED: Clean checkout flow for ML prediction demonstrations
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import {
   CreditCard, MapPin, Package, CheckCircle, 
-  ArrowLeft, User
+  ArrowLeft, User, Lock
 } from 'lucide-react';
 import { useCartStore } from '@/stores/cart.store';
 import { useAuthStore } from '@/stores/auth.store';
@@ -41,7 +41,7 @@ interface CheckoutFormData {
 
 const Checkout: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuthStore();
+  const { user, isAuthenticated } = useAuthStore();
   const { cart, getTotal, clearCart } = useCartStore();
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -69,6 +69,53 @@ const Checkout: React.FC = () => {
     }
   }, [cart, navigate]);
 
+  // Check authentication before allowing checkout
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-md mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-lg shadow-xl p-8 text-center"
+          >
+            <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-8 h-8 text-indigo-600" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-4">
+              Sign in to Continue
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Please sign in to your account to complete your order.
+            </p>
+            <div className="space-y-3">
+              <Link
+                to="/login"
+                className="w-full inline-flex justify-center py-3 px-4 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className="w-full inline-flex justify-center py-3 px-4 bg-gray-100 text-gray-800 font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Create Account
+              </Link>
+            </div>
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <button
+                onClick={() => navigate('/cart')}
+                className="text-indigo-600 hover:text-indigo-500 text-sm font-medium"
+              >
+                ← Back to Cart
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   if (!cart || cart.items.length === 0) {
     return <LoadingSpinner fullScreen />;
   }
@@ -86,13 +133,13 @@ const Checkout: React.FC = () => {
         cartId: cart.id,
         paymentMethod: 'credit_card',
         deliveryAddress: {
-          firstName: data.firstName,
-          lastName: data.lastName,
-          address: data.address,
-          city: data.city,
-          state: data.state,
-          zipCode: data.zipCode,
-          phone: data.phone
+          firstName: data.firstName || 'Demo',
+          lastName: data.lastName || 'User',
+          address: data.address || 'Demo Address',
+          city: data.city || 'Demo City',
+          state: data.state || 'Demo State',
+          zipCode: data.zipCode || '12345',
+          phone: data.phone || '555-0123'
         },
         notes: 'Demo order from Timely checkout'
       };
@@ -100,7 +147,7 @@ const Checkout: React.FC = () => {
       const order = await orderService.createOrder(orderData);
       
       // Clear cart after successful order
-      await clearCart();
+      clearCart();
       
       toast.success('Order placed successfully! 🎉');
       navigate(`/orders/${order.id}`);
@@ -193,7 +240,7 @@ const Checkout: React.FC = () => {
                         First Name
                       </label>
                       <input
-                        {...register('firstName', { required: 'First name is required' })}
+                        {...register('firstName')}
                         type="text"
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
@@ -207,7 +254,7 @@ const Checkout: React.FC = () => {
                         Last Name
                       </label>
                       <input
-                        {...register('lastName', { required: 'Last name is required' })}
+                        {...register('lastName')}
                         type="text"
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
@@ -223,13 +270,7 @@ const Checkout: React.FC = () => {
                         Email
                       </label>
                       <input
-                        {...register('email', { 
-                          required: 'Email is required',
-                          pattern: {
-                            value: /^\S+@\S+$/i,
-                            message: 'Invalid email address'
-                          }
-                        })}
+                        {...register('email')}
                         type="email"
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
@@ -243,7 +284,7 @@ const Checkout: React.FC = () => {
                         Phone
                       </label>
                       <input
-                        {...register('phone', { required: 'Phone number is required' })}
+                        {...register('phone')}
                         type="tel"
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                       />
@@ -266,7 +307,7 @@ const Checkout: React.FC = () => {
                           Address
                         </label>
                         <input
-                          {...register('address', { required: 'Address is required' })}
+                          {...register('address')}
                           type="text"
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         />
@@ -281,7 +322,7 @@ const Checkout: React.FC = () => {
                             City
                           </label>
                           <input
-                            {...register('city', { required: 'City is required' })}
+                            {...register('city')}
                             type="text"
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
@@ -295,7 +336,7 @@ const Checkout: React.FC = () => {
                             State
                           </label>
                           <input
-                            {...register('state', { required: 'State is required' })}
+                            {...register('state')}
                             type="text"
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
@@ -309,7 +350,7 @@ const Checkout: React.FC = () => {
                             ZIP Code
                           </label>
                           <input
-                            {...register('zipCode', { required: 'ZIP code is required' })}
+                            {...register('zipCode')}
                             type="text"
                             className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                           />
@@ -351,7 +392,7 @@ const Checkout: React.FC = () => {
                         Card Number
                       </label>
                       <input
-                        {...register('cardNumber', { required: 'Card number is required' })}
+                        {...register('cardNumber')}
                         type="text"
                         placeholder="1234 5678 9012 3456"
                         className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -367,7 +408,7 @@ const Checkout: React.FC = () => {
                           Expiry Date
                         </label>
                         <input
-                          {...register('expiryDate', { required: 'Expiry date is required' })}
+                          {...register('expiryDate')}
                           type="text"
                           placeholder="MM/YY"
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"

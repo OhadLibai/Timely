@@ -45,6 +45,9 @@ def evaluate_metrics(sample_size):
         val_users = [str(uid) for uid in ml_engine.keyset.get('val', [])]
         
         # Combine and sample
+        # In this iteration of building the project,
+        # We use both val users and test users for testing 
+        # Predictions results
         all_eval_users = test_users + val_users
         if sample_size < len(all_eval_users):
             eval_users = random.sample(all_eval_users, sample_size)

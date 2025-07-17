@@ -99,10 +99,10 @@ const Hero: React.FC = () => {
             <div className="text-left mb-18 group cursor-default">
               <h2 className="text-4xl lg:text-6xl font-bold leading-tight">
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-slate-800 via-purple-700 to-violet-600 mb-4 transition-all duration-500 group-hover:from-purple-600 group-hover:via-slate-700 group-hover:to-purple-700">
-                  Be The Best Version of Yourself.
+                  Save Time.
                 </span>
                 <span className="block text-transparent bg-clip-text bg-gradient-to-r from-violet-600 via-purple-700 to-slate-800 transition-all duration-500 group-hover:from-purple-700 group-hover:via-slate-700 group-hover:to-purple-600">
-                  With Timely on Your Side.
+                  Shop Smarter.
                 </span>
               </h2>
             </div>
@@ -117,7 +117,7 @@ const Hero: React.FC = () => {
                     <TimelyBrandLogo size="xl" variant="signature" animated={true} />
                   </div>
                   <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-violet-600 mb-6 hover:from-purple-600 hover:to-violet-500 transition-all duration-300">Smart Recommendations</h3>
-                  <p className="text-lg text-gray-700 font-medium hover:text-gray-800 transition-colors duration-300">Be Productive. Save Time. Delegate Timely. Embrace Timely.</p>
+                  <p className="text-lg text-gray-700 font-medium hover:text-gray-800 transition-colors duration-300">Be Productive. Delegate Timely. Embrace Timely.</p>
                 </div>
               </div>
             </div>

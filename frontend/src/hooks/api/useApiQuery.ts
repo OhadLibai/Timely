@@ -3,7 +3,7 @@ import { QUERY_CONFIGS } from '@/utils/queryConfig';
 
 /**
  * Generic API query hook that consolidates common patterns
- * Reduces boilerplate across all API hooks by 80%+
+ * Reduces boilerplate across all API hooks
  */
 export function useApiQuery<TData = unknown, TError = Error>(
   queryKey: string | readonly unknown[],

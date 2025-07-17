@@ -51,13 +51,14 @@ def create_keyset_fold(dataset='instacart', fold_id=0):
         random.shuffle(user)
         user = [str(user_id) for user_id in user]
         
-        # Create splits: 80% train, 10% validation, 10% test (or by the paramaters in docker-compose)
-        train_end = int(user_num * TRAIN_SPLIT) # 80%
-        val_end = int(user_num * (TRAIN_SPLIT+VALIDATION_SPLIT)) # 90%
+        # Create splits: X% train, Y% validation, Z% test
+        # Where X+Y+Z = 100 (paramaters in docker-compose)
+        train_end = int(user_num * TRAIN_SPLIT) 
+        val_end = int(user_num * (TRAIN_SPLIT + VALIDATION_SPLIT)) 
         
-        train_user = user[:train_end]
-        val_user = user[train_end:val_end]
-        test_user = user[val_end:] # 100%
+        train_user = user[:train_end] # list of users who's going to be trained on
+        val_user = user[train_end:val_end] # list of users to use validation
+        test_user = user[val_end:] # list of users to be test the model
         
         print(f"📊 Train users: {len(train_user)} ({len(train_user)/user_num*100:.1f}%)")
         print(f"📊 Validation users: {len(val_user)} ({len(val_user)/user_num*100:.1f}%)")
@@ -65,7 +66,7 @@ def create_keyset_fold(dataset='instacart', fold_id=0):
         
         # Get maximum product ID for model dimensions
         item_num = max(data['product_id'].tolist()) + 1
-        print(f"📦 Total items in dataset: {item_num}")
+        print(f"Vectors dimensionality: {item_num}")
         
         # Create keyset dictionary
         keyset_dict = {
@@ -76,10 +77,10 @@ def create_keyset_fold(dataset='instacart', fold_id=0):
         }
         
         print("\nKeyset summary:")
-        print(f"  Item count: {keyset_dict['item_num']}")
-        print(f"  Train users: {len(keyset_dict['train'])}")
-        print(f"  Val users: {len(keyset_dict['val'])}")
-        print(f"  Test users: {len(keyset_dict['test'])}")
+        print(f"📦 Item count: {keyset_dict['item_num']}")
+        print(f"🏋️  Train users: {len(keyset_dict['train'])}")
+        print(f"🔍 Val users: {len(keyset_dict['val'])}")
+        print(f"🧪 Test users: {len(keyset_dict['test'])}")
         
         # Create keyset directory if it doesn't exist
         keyset_dir = os.path.join(DATA_DIR, 'keyset')
@@ -87,16 +88,10 @@ def create_keyset_fold(dataset='instacart', fold_id=0):
             os.makedirs(keyset_dir)
         
         # Save keyset file
-        keyset_file = os.path.join(keyset_dir, f'{dataset}_keyset_{fold_id}.json')
-        with open(keyset_file, 'w') as f:
-            json.dump(keyset_dict, f)
-        
-        # Also save to root of dataset directory for easier access
         keyset_file_root = os.path.join(DATA_DIR, f'{dataset}_keyset_{fold_id}.json')
         with open(keyset_file_root, 'w') as f:
             json.dump(keyset_dict, f)
         
-        print(f"✅ Keyset saved to: {keyset_file}")
         print(f"✅ Keyset saved to: {keyset_file_root}")
         print("🎯 Keyset creation complete!")
     

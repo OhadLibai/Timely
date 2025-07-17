@@ -4,12 +4,13 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQueryClient } from 'react-query';
 import { motion } from 'framer-motion';
 import {
   Brain, TrendingUp, BarChart3, Activity, RefreshCw,
   CheckCircle, AlertCircle, Info, Zap, Target, Users, ArrowLeft,
-  PlayCircle, Clock, Database, Settings
+  PlayCircle, Clock, Database, Settings,
+  CandlestickChart
 } from 'lucide-react';
 import {
   BarChart, Bar, LineChart, Line, RadialBarChart, RadialBar,
@@ -17,8 +18,8 @@ import {
   Cell, PieChart, Pie, AreaChart, Area
 } from 'recharts';
 import { evaluationService } from '@/services/evaluation.service';
-import { QUERY_CONFIGS } from '@/utils/queryConfig';
 import { useMutationWithToast } from '@/hooks/api/useMutationWithToast';
+import { useMetricsOverview } from '@/hooks/api/useAdmin';
 import { QUERY_KEYS } from '@/utils/queryKeys';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import MetricCard from '@/components/admin/MetricCard';
@@ -26,6 +27,7 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
 import toast from 'react-hot-toast';
 
+// Default for evaluation sampling 
 const DEFAULT_SAMPLE_SIZE=10
 
 const ModelPerformance: React.FC = () => {
@@ -34,32 +36,20 @@ const ModelPerformance: React.FC = () => {
   const [sampleSize, setSampleSize] = useState(DEFAULT_SAMPLE_SIZE); 
   const [isEvaluating, setIsEvaluating] = useState(false);
   
-  // Fetch existing metrics using metricsService
-  const { 
-    data: metricsData, 
-    isLoading: isLoadingMetrics,
-    refetch: refetchMetrics 
-  } = useQuery(
-    'modelPerformanceMetrics',
-    () => evaluationService.getModelMetricsScores(),
-    {
-      ...QUERY_CONFIGS.STABLE_DATA,
-      cacheTime: 30 * 60 * 1000
-    }
-  );
+  // Use the same hook as Dashboard for consistency
+  const metricsData = useMetricsOverview();
 
   // UPDATED: The mutation now updates the dashboard's cache on success
   const evaluationMutation = useMutationWithToast({
     mutationFn: (size: number) => evaluationService.getModelMetricsScores(size),
-    successMessage: (newData, size) => `✅ Evaluation for ${size} users complete!`,
+    successMessage: (data, size) => `🎉 Evaluation for ${size} users complete!`,
     errorMessage: (error: any) => `❌ Evaluation failed: ${error.message}`,
     onSuccess: (newData, size) => {
       // Manually update the data for the dashboard's query key.
       // This ensures the dashboard now shows these new results.
       queryClient.setQueryData(QUERY_KEYS.mlMetrics(), newData);
 
-      // Also, invalidate and refetch the data for this current page to be consistent.
-      queryClient.invalidateQueries('modelPerformanceMetrics');
+      // No need to invalidate - data is already updated via setQueryData
       setIsEvaluating(false);
     },
     onError: () => {
@@ -111,14 +101,6 @@ const ModelPerformance: React.FC = () => {
 
   const COLORS = ['#6366F1', '#8B5CF6', '#EC4899', '#F59E0B', '#10B981'];
 
-  if (isLoadingMetrics) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <LoadingSpinner size="large" />
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
@@ -126,15 +108,15 @@ const ModelPerformance: React.FC = () => {
         <PageHeader
           title="Model Performance Evaluation"
           description="Comprehensive ML model metrics analysis and evaluation interface"
-          icon={Brain}
+          icon={CandlestickChart}
           breadcrumb={
             <Button
               variant="ghost"
               onClick={() => navigate('/admin')}
               icon={ArrowLeft}
-              size="sm"
+              size="md"
             >
-              Back to Dashboard
+              Back to the Hub
             </Button>
           }
         />
@@ -152,7 +134,7 @@ const ModelPerformance: React.FC = () => {
                   Run Model Evaluation
                 </h2>
                 <p className="text-sm text-gray-600 mt-1">
-                  Evaluate ML model performance against the Instacart dataset
+                  Evaluate ML model performance against real world data
                 </p>
               </div>
               <div className="flex items-center gap-4">

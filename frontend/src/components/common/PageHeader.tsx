@@ -3,11 +3,12 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { LucideIcon } from 'lucide-react';
+import { IconType } from 'react-icons';
 
 interface PageHeaderProps {
   title: string;
   description?: string;
-  icon?: LucideIcon;
+  icon?: LucideIcon | IconType;
   actions?: React.ReactNode;
   breadcrumb?: React.ReactNode;
   className?: string;

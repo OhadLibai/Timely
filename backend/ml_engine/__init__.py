@@ -30,7 +30,7 @@ TOPK = int(os.getenv("PREDICTED_BASKET_SIZE", 10))
 
 # Production and Runtime Optimizations
 TOP_CANDIDATES = 100  # Top candidates (products) before final selection
-KNN_NEIGHBOR_LOADING_SAMPLE = int(os.getenv("KNN_NEIGHBOR_LOADING_SAMPLE"))  # KNN search optimization, controls the real-time prediction speed
+KNN_NEIGHBOR_SEARCH_LIMIT = int(os.getenv("KNN_NEIGHBOR_SEARCH_LIMIT"))  # KNN search optimization, controls the real-time prediction speed
 MAX_VECTORS = int(os.getenv("MAX_VECTORS")) # Limit to avoid memory issues, managed during the build process
 
 # Updated paths for new structure
@@ -93,14 +93,13 @@ class TifuKnnEngine:
         """
         Pre-compute vectors for all training users
         This enables fast KNN search during predictions
-        OPTIMIZED: Process in batches to avoid memory overload
         """
         print("⚒️  Start precompute vectors")
 
         training_users = [str(uid) for uid in self.keyset.get('train', [])]
         
         if len(training_users) > MAX_VECTORS:
-            training_users = random.sample(training_users, MAX_VECTORS)
+            training_users = random.sample(training_users, MAX_VECTORS) # Choose them in random
             print(f"⚡ Limiting vector computation to {MAX_VECTORS} users for feasible memory load")
         
         print(f"🧮 Pre-computing vectors for {len(training_users)} training users...")
@@ -247,8 +246,8 @@ class TifuKnnEngine:
         user_ids = list(self.training_vectors.keys())
         
         # Limit search space for performance (random sampling)
-        if len(user_ids) > KNN_NEIGHBOR_LOADING_SAMPLE:
-            sampled_ids = random.sample(user_ids, KNN_NEIGHBOR_LOADING_SAMPLE)
+        if len(user_ids) > KNN_NEIGHBOR_SEARCH_LIMIT:
+            sampled_ids = random.sample(user_ids, KNN_NEIGHBOR_SEARCH_LIMIT)
         else:
             sampled_ids = user_ids
         

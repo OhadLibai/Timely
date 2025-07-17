@@ -5,12 +5,9 @@ export { useProducts, useProduct, useCategories } from './api/useProducts';
 export { useOrders, useOrder } from './api/useOrders';
 export { useFavorites } from './api/useFavorites';
 export { 
-  useDashboardOverview, 
+  useMetricsOverview, 
   useDemoUserSeeding, 
-  useModelPerformance, 
-  useUserPredictionAnalysis, 
-  useSystemStatus, 
-  useAdminDataViews 
+  useUserPredictionAnalysis
 } from './api/useAdmin';
 export { usePredictedBasket } from './api/usePredictions';
 

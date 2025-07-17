@@ -10,7 +10,7 @@ export const useOrders = (
     QUERY_KEYS.orders(filters),
     () => orderService.getOrders(filters),
     {
-      staleTime: 'frequent',
+      staleTime: 'stable',
     }
   );
 };
@@ -23,7 +23,7 @@ export const useOrder = (
     () => orderService.getOrder(orderId),
     {
       enabled: !!orderId,
-      staleTime: 'admin',
+      staleTime: 'stable',
     }
   );
 };

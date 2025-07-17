@@ -18,6 +18,7 @@ import AdminRoute from '@/components/auth/AdminRoute';
 // Import common components
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
+import ScrollToTop from '@/components/common/ScrollToTop';
 
 // Lazy load pages for better performance
 // Public pages
@@ -35,12 +36,8 @@ const Checkout = lazy(() => import('@/pages/Checkout'));
 const Favorites = lazy(() => import('@/pages/Favorites'));
 const PredictedBasket = lazy(() => import('@/pages/PredictedBasket'));
 
-// ============================================================================
-// ADMIN PAGES - RESTRUCTURED FOR 4 CORE DEMANDS
-// ============================================================================
-
-// Overview Hub Dashboard
-const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
+// Overview Hub
+const AdminHub = lazy(() => import('@/pages/admin/Hub'));
 
 // DEMAND 1: Demo User Creation
 const AdminUserSeeding = lazy(() => import('@/pages/admin/UserSeeding'));
@@ -83,12 +80,9 @@ const protectedRoutes: RouteConfig[] = [
   { path: '/predicted-basket', element: PredictedBasket },
 ];
 
-// ============================================================================
-// CLEANED ADMIN ROUTES - ONLY 4 CORE DEMANDS
-// ============================================================================
 const adminRoutes: RouteConfig[] = [
-  // Overview Hub Dashboard
-  { path: '', element: AdminDashboard },
+  // Overview Hub - default route
+  { path: '', element: AdminHub },
   
   // DEMAND 1: Demo User Creation
   { path: 'user-seeding', element: AdminUserSeeding },
@@ -106,8 +100,6 @@ const adminRoutes: RouteConfig[] = [
 const App: React.FC = () => {
   const { isLoading: authLoading } = useAuthStore();
 
-
-
   if (authLoading) {
     return <PageLoader />;
   }
@@ -115,6 +107,7 @@ const App: React.FC = () => {
   return (
     <ErrorBoundary>
       <BrowserRouter>
+        <ScrollToTop />
         <div className="min-h-screen bg-gray-50">
           <Suspense fallback={<PageLoader />}>
             <Routes>
@@ -146,6 +139,8 @@ const App: React.FC = () => {
                       element={<Component />} 
                     />
                   ))}
+                  {/* Index route for /admin */}
+                  <Route index element={<AdminHub />} />
                 </Route>
               </Route>
 
@@ -156,7 +151,7 @@ const App: React.FC = () => {
 
           {/* Global toast notifications */}
           <Toaster
-            position="top-right"
+            position="top-left"
             toastOptions={{
               duration: 4000,
               style: {

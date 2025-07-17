@@ -3,8 +3,7 @@
 
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
-import { authService, User } from '@/services/auth.service';
-import toast from 'react-hot-toast';
+import { authService, User, AuthResponse } from '@/services/auth.service';
 
 interface AuthState {
   user: User | null;
@@ -12,21 +11,22 @@ interface AuthState {
   isLoading: boolean;
   
   // Actions
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<AuthResponse>;
   register: (data: {
-    email: string;
-    password: string;
     firstName: string;
     lastName: string;
+    email: string;
+    password: string;
     phone?: string;
   }) => Promise<void>;
   logout: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   updateUser: (user: User) => void;
+  updateProfile: (data: {
+    firstName: string;
+    lastName: string;
+  }) => Promise<User>;
   clearAuth: () => void;
-  
-  // ✅ ADDED: Standardized user ID access method
-  getCurrentUserId: () => string;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
               isAuthenticated: true,
               isLoading: false
             });
-            toast.success(`Welcome back, ${response.user.firstName}!`);
+            return response;
           } catch (error: any) {
             set({ isLoading: false });
             throw error;
@@ -62,7 +62,6 @@ export const useAuthStore = create<AuthState>()(
               isAuthenticated: true,
               isLoading: false
             });
-            toast.success('Account created successfully!');
           } catch (error: any) {
             set({ isLoading: false });
             throw error;
@@ -78,20 +77,24 @@ export const useAuthStore = create<AuthState>()(
               isAuthenticated: false,
               isLoading: false
             });
-            toast.success('Logged out successfully');
+            
+            // Clear cart store via its clearCart method
+            const { useCartStore } = await import('./cart.store');
+            useCartStore.getState().clearCart();
+            
+            // Clear other user-related localStorage data
+            localStorage.removeItem('timely-predicted-basket');
+            localStorage.removeItem('recentSearches');
+            
           } catch (error) {
-            // Even if logout fails, clear local state
-            set({
-              user: null,
-              isAuthenticated: false,
-              isLoading: false
-            });
+            set({ isLoading: false });
+            throw error;
           }
         },
 
         refreshAuth: async () => {
           try {
-            const user = await authService.getUser();
+            const user = authService.getUser();
             set({
               user,
               isAuthenticated: true
@@ -108,22 +111,24 @@ export const useAuthStore = create<AuthState>()(
           set({ user });
         },
 
+        updateProfile: async (data) => {
+          const { userService } = await import('@/services/user.service');
+          const updatedProfile = await userService.updateProfile(data);
+          const currentUser = get().user;
+          if (currentUser) {
+            const updatedUser = { ...currentUser, ...updatedProfile };
+            set({ user: updatedUser });
+            return updatedUser;
+          }
+          throw new Error('No user logged in');
+        },
+
         clearAuth: () => {
           set({
             user: null,
             isAuthenticated: false
           });
-        },
-
-        // ✅ ADDED: Standardized method for getting current user ID
-        // Simplifies service calls 
-        getCurrentUserId: () => {
-          const state = get();
-          if (!state.user?.id) {
-            throw new Error('User not authenticated');
-          }
-          return state.user.id;
-        }
+        }        
       }),
       {
         name: 'auth-storage',

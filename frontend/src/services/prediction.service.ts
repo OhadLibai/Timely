@@ -3,7 +3,7 @@
 
 import { api } from '@/services/api.client';
 import { Product } from '@/services/product.service';
-import { useAuthStore } from '@/stores/auth.store';
+import { authService } from './auth.service';
 
 /**
  * Defines the structure of a single item within the AI's prediction.
@@ -40,7 +40,7 @@ class PredictionService {
    */
   async getPredictedBasket(): Promise<PredictionResponse> {
     try {
-      const userId = useAuthStore.getState().getCurrentUserId();
+      const userId = authService.getUser()?.id;
       const response = await api.post<PredictionResponse>(`/predictions/predicted-basket/${userId}`);
       return response;
     } catch (error: any) {
@@ -55,28 +55,6 @@ class PredictionService {
       };
     }
   }
-
-  /*
-    --- Irelavent. We need only getUserPredictionComparison ---
-
-  async getPredictedBasketCSV(userID: string): Promise<PredictionResponse> {
-    try {
-      const response = await api.post<PredictionResponse>(`/predictions/predicted-basket-csv/${userID}`);
-      return response;
-    } catch (error: any) {
-      console.error('Failed to get or generate prediction:', error);
-      
-      // MINIMAL FIX: Extract error message before returning
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to generate predictions';
-      return { 
-        basket: {}, // Empty object for errors
-        error: errorMessage, 
-        success: false 
-      };
-    }
-  }
-
-  */
 }
 
 export const predictionService = new PredictionService();

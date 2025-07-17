@@ -18,17 +18,12 @@ export const QUERY_KEYS = {
   cart: () => ['cart'],
   
   // Admin-related queries
-  adminUsers: (filters?: any) => ['admin', 'users', filters],
-  adminOrders: (filters?: any) => ['admin', 'orders', filters],
-  adminProducts: (filters?: any) => ['admin', 'products', filters],
-  adminDashboardStats: (dateRange?: any) => ['admin', 'dashboard', 'stats', dateRange],
   adminDemoStats: () => ['admin', 'demo', 'stats'],
   adminUserPrediction: (userId: string) => ['admin', 'user', 'prediction', userId],
   
   // ML/Prediction queries
   predictions: () => ['predictions'],
   mlMetrics: () => ['ml', 'metrics'],
-  mlHealth: () => ['ml', 'health'],
 } as const;
 
 export type QueryKey = ReturnType<typeof QUERY_KEYS[keyof typeof QUERY_KEYS]>;

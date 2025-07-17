@@ -8,7 +8,7 @@ from database import execute_query
 
 user_bp = Blueprint('user', __name__)
 
-
+# --- Currently not being called ---
 @user_bp.route('/<string:user_id>/profile', methods=['GET'])
 def get_profile(user_id):
     """Get user profile"""
@@ -32,8 +32,10 @@ def get_profile(user_id):
             'firstName': user['first_name'],
             'lastName': user['last_name'],
             'email': user['email'],
-            'phone': None,
-            'address': None
+            'role': user['role'],
+            'is_active': True,
+            'createdAt': user['created_at'],
+            'updatedAt': user['updated_at']
         })
         
     except Exception as e:
@@ -43,7 +45,10 @@ def get_profile(user_id):
 
 @user_bp.route('/<string:user_id>/profile', methods=['PUT'])
 def update_profile(user_id):
-    """Update user profile"""
+    """
+    Update user profile
+    Symbolicaly just first name and last name
+    """
     try:
         # Convert string ID to int for database query
         try:
@@ -57,15 +62,16 @@ def update_profile(user_id):
             UPDATE users 
             SET first_name = %s, last_name = %s, updated_at = CURRENT_TIMESTAMP
             WHERE instacart_user_id = %s
-        """, [data.get('firstName'), data.get('lastName'), user_id_int])
+            RETURNING *  
+            """, [data.get('firstName'), data.get('lastName'), user_id_int])
         
-        return get_profile(user_id)
+        return get_profile(user_id_int)
         
     except Exception as e:
         print(f"Update profile error: {str(e)}")
         return jsonify({'error': 'Failed to update profile'}), 500
 
-
+# --- Currently not being called ---
 @user_bp.route('/<string:user_id>/account', methods=['DELETE'])
 def delete_account(user_id):
     """Delete user account"""

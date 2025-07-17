@@ -8,7 +8,7 @@ export const useFavorites = (): UseQueryResult<any[]> => {
     QUERY_KEYS.favorites(),
     favoriteService.getFavorites,
     {
-      staleTime: 'frequent',
+      staleTime: 'stable',
     }
   );
 };

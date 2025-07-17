@@ -65,7 +65,7 @@ const generateId = () => `predicted-${Date.now()}-${Math.random().toString(36).s
 
 // Mock confidence score generator (temporary)
 const generateMockConfidence = (): number => {
-  return Math.random() * 0.4 + 0.6; // Between 0.6 and 1.0
+  return Math.random() * 0.3 + 0.7; // Between 0.7 and 1.0
 };
 
 export const usePredictedBasketStore = create<PredictedBasketState>()(

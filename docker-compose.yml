@@ -34,14 +34,14 @@ services:
       - initialization_flags:/shared/flags  # Shared flag storage
     environment:
       - PYTHONUNBUFFERED=1
-      - USER_LOAD_FRACTION=0.01 # Determines how many users will be available from the dataset
+      - USER_LOAD_FRACTION=0.05 # Determines how many users will be available from the dataset
       - RANDOM=0 # is the sampling of the users from the csv should be random or not (1-True, 0-False)
-      - KNN_NEIGHBOR_LOADING_SAMPLE=100  # KNN search optimization, controls the real-time prediction speed
-      - MAX_VECTORS=500  # Limit to avoid memory issues, managed during the build process
-      - EVALUATE_AT=10  
+      - KNN_NEIGHBOR_SEARCH_LIMIT=2500  # KNN search optimization, controls the real-time prediction speed
+      - MAX_VECTORS=3500  # Limit to avoid memory issues, managed during the build process
+      - EVALUATE_AT=10 # On what size of the basket we should evaluate
       - PREDICTED_BASKET_SIZE=10 # TOP_K parameter
-      - TRAIN_SPLIT=0.8
-      - VALIDATION_SPLIT=0.1
+      - TRAIN_SPLIT=0.9 # determine the fraction of which user will be used for training 
+      - VALIDATION_SPLIT=0.05 # which fraction of the users will be used for validation 
     mem_limit: 8g
 
   frontend:

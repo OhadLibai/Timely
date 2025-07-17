@@ -8,8 +8,11 @@ import { motion } from 'framer-motion';
 import { 
   Target, Search, RefreshCw, CheckCircle, X, Check, 
   ArrowLeft, TrendingUp, Sparkles,
-  PlayCircle, AlertCircle
+  PlayCircle, AlertCircle,
+  Plane,
+  Atom
 } from 'lucide-react';
+import { TbTargetArrow } from "react-icons/tb";
 import { useUserPredictionAnalysis } from '@/hooks/api/useAdmin';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ProductImage from '@/components/products/ProductImage';
@@ -77,7 +80,7 @@ const UserPrediction: React.FC = () => {
   React.useEffect(() => {
     if (predictionData && selectedUserId) {
       toast.dismiss('analysis');
-      toast.success(`✅ Analysis complete for User ${selectedUserId}!`, {
+      toast.success(`🎉 Analysis complete for User ${selectedUserId}!`, {
         duration: 4000
       });
     }
@@ -259,17 +262,18 @@ const UserPrediction: React.FC = () => {
               variant="ghost"
               onClick={() => navigate('/admin')}
               icon={ArrowLeft}
-              size="sm"
+              size="md"
             >
-              Back to Dashboard
+              Back to the Hub
             </Button>
           }
           actions={
             selectedUserId && (
               <Button
-                variant="outline"
+                variant="primary"
                 onClick={handleReset}
-                icon={TrendingUp}
+                icon={Plane}
+                size="lg"
               >
                 Try More Users!
               </Button>
@@ -279,15 +283,45 @@ const UserPrediction: React.FC = () => {
 
         {/* User Selection Interface */}
         {!selectedUserId && (
-          <div className="bg-white rounded-lg shadow-sm p-8 mb-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="bg-white rounded-lg shadow-sm p-8 mb-8"
+          >
             <div className="max-w-2xl mx-auto">
               <div className="text-center mb-8">
-                <Target className="w-16 h-16 text-indigo-600 mx-auto mb-4" />
+                <div className="inline-block">
+                  <motion.div
+                    animate={{ 
+                      rotate: 360
+                    }}
+                    transition={{ 
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                    className="relative"
+                  >
+                    <motion.div
+                      animate={{
+                        rotate: -360
+                      }}
+                      transition={{
+                        duration: 6,
+                        repeat: Infinity,
+                        ease: "linear"
+                      }}
+                    >
+                      <Atom className="w-16 h-16 text-indigo-600 mx-auto mb-4" />
+                    </motion.div>
+                  </motion.div>
+                </div>
                 <h2 className="text-2xl font-semibold text-gray-900 mb-2">
                   Select User for Prediction Analysis
                 </h2>
                 <p className="text-gray-600">
-                  Enter any Instacart user ID to compare ML predictions with actual purchase history
+                  Enter any user ID to compare ML predictions with actual purchase history
                 </p>
               </div>
 
@@ -353,7 +387,7 @@ const UserPrediction: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Loading State */}
@@ -376,13 +410,21 @@ const UserPrediction: React.FC = () => {
             <p className="text-gray-600 mb-6">
               Unable to analyze User {selectedUserId}. This user may not exist in the dataset.
             </p>
-            <Button
-              variant="primary"
-              onClick={handleReset}
-              icon={RefreshCw}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.3 }}
             >
-              Try Another User
-            </Button>
+              <Button
+                variant="primary"
+                onClick={handleReset}
+                icon={RefreshCw}
+                size="xl"
+                className="shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+              >
+                Try Others...
+              </Button>
+            </motion.div>
           </div>
         )}
 

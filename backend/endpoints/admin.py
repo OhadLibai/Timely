@@ -7,6 +7,7 @@ from flask import Blueprint, request, jsonify, current_app
 from database import execute_query, get_db_cursor
 from passlib.hash import bcrypt
 import pandas as pd
+import os
 import random
 import string
 import uuid
@@ -128,7 +129,7 @@ def get_user_prediction_comparison(user_id):
             user_future = future_df[future_df['user_id'] == user_id_int]
             
             if not user_future.empty:
-                for product_id in user_future['product_id'].unique()[:10]:
+                for product_id in user_future['product_id'].unique():
                     cur.execute("""
                         SELECT p.*, c.name as category_name
                         FROM products p
@@ -139,6 +140,10 @@ def get_user_prediction_comparison(user_id):
                     product = cur.fetchone()
                     if product:
                         ground_truth_basket.append(format_product(product))
+
+        limit_basket_size = min(len(ground_truth_basket),len(predicted_basket))
+        predicted_basket = predicted_basket[:limit_basket_size]
+        ground_truth_basket = ground_truth_basket[:limit_basket_size]
         
         return jsonify({
             'userId': str(user_id),

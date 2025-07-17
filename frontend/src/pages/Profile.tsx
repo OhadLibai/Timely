@@ -12,7 +12,6 @@ import {
   Edit3, Save, X, CheckCircle, Shield
 } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
-import { userService } from '@/services/user.service';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Button } from '@/components/common/Button';
@@ -30,7 +29,7 @@ interface ProfileFormData {
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { user, updateUser } = useAuthStore();
+  const { user, updateProfile } = useAuthStore();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
 
@@ -44,13 +43,12 @@ const Profile: React.FC = () => {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
       email: user?.email || '',
-      phone: user?.phone || '',
+      phone: '123-456'
     }
   });
 
-  const updateProfileMutation = useMutation(userService.updateProfile, {
-    onSuccess: (data) => {
-      updateUser(data);
+  const updateProfileMutation = useMutation(updateProfile, {
+    onSuccess: () => {
       setIsEditing(false);
       queryClient.invalidateQueries(['user-profile']);
       toast.success('Profile updated successfully! 🎉');
@@ -76,12 +74,13 @@ const Profile: React.FC = () => {
       firstName: user?.firstName || '',
       lastName: user?.lastName || '',
       email: user?.email || '',
-      phone: user?.phone || '',
+      phone: '123-456'
     });
   };
 
   if (!user) {
-    return <LoadingSpinner fullScreen />;
+    navigate('/login');
+    return null;
   }
 
   return (
@@ -221,7 +220,7 @@ const Profile: React.FC = () => {
                   ) : (
                     <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-md">
                       <Phone size={16} className="text-gray-500" />
-                      <span className="text-gray-900">{user.phone || 'Not provided'}</span>
+                      <span className="text-gray-900">{'Not provided'}</span>
                     </div>
                   )}
                 </div>
@@ -243,7 +242,7 @@ const Profile: React.FC = () => {
                     type="submit"
                     variant="primary"
                     icon={Save}
-                    isLoading={updateProfileMutation.isLoading}
+                    loading={updateProfileMutation.isLoading}
                   >
                     Save Changes
                   </Button>

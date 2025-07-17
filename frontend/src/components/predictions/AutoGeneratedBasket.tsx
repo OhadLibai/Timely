@@ -12,7 +12,8 @@ import {
   Rocket,
   Atom,
   LucideWand,
-  LucideWand2
+  LucideWand2,
+  Plane
 } from 'lucide-react';
 import { predictionService, PredictionResponse } from '@/services/prediction.service';
 import { usePredictedBasketStore } from '@/stores/predictedBasket.store';
@@ -42,7 +43,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
     {
       onMutate: () => {
         setShowResult(false);
-        toast.loading('🧠 AI is analyzing your shopping patterns...', {
+        toast.loading('🧠 Generating basket...', {
           id: 'generate-basket'
         });
       },
@@ -61,7 +62,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
           setGeneratedCount(response.basket.items.length);
           setShowResult(true);
           
-          toast.success(`🎉 Generated ${response.basket.items.length} items for your basket!`, {
+          toast.success(`🎉 Timely basket generated for you!`, {
             duration: 5000
           });
 
@@ -124,8 +125,8 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
           </>
         ) : (
           <>
-            <Sparkles size={18} />
-            <span>Generate AI Basket</span>
+            <Sparkles size={20} />
+            <span>Generate Timely Basket</span>
           </>
         )}
       </motion.button>
@@ -203,9 +204,9 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
           className="relative group cursor-pointer"
         >
           {/* Multiple layered backgrounds like Hero */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-3xl transform rotate-1 opacity-15 group-hover:opacity-25 transition-opacity duration-500" />
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-blue-500 rounded-3xl transform -rotate-1 opacity-10 group-hover:opacity-20 transition-opacity duration-500" />
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-300 to-indigo-400 rounded-3xl opacity-8 blur-xl group-hover:opacity-15 transition-opacity duration-500" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-indigo-500 rounded-3xl transform rotate-1 opacity-15 group-hover:opacity-25 transition-opacity duration-0" />
+          <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-blue-500 rounded-3xl transform -rotate-1 opacity-10 group-hover:opacity-20 transition-opacity duration-0" />
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-300 to-indigo-400 rounded-3xl opacity-8 blur-xl group-hover:opacity-15 transition-opacity duration-0" />
           
           {/* Main card */}
           <div className="relative bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl border border-purple-200/50 hover:shadow-purple-300/30 hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] overflow-hidden">
@@ -239,16 +240,16 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
                 {[
                   {
-                    icon: LucideWand2,
-                    title: 'Personalized Magic',
+                    icon: Plane,
+                    title: 'Shopping Agent',
                     description: 'Tailored specifically for your lifestyle',
                     color: 'from-blue-500 to-cyan-600'
                   },
                   {
-                    icon: Atom,
-                    title: 'Precision Targeting',
+                    icon: LucideWand2,
+                    title: 'Highly Personalized',
                     description: 'Pinpoint accuracy for your preferences',
-                    color: 'from-blue-500 to-cyan-600'
+                    color: 'from-green-500 to-emerald-600'
                   }
                 ].map((feature, index) => (
                   <motion.div
@@ -298,7 +299,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover/btn:opacity-75 transition-opacity duration-300"></div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl blur-lg opacity-50 group-hover/btn:opacity-75 transition-opacity duration-0"></div>
                         <div className="relative flex items-center gap-4 px-12 py-6 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-2xl font-bold text-xl shadow-xl hover:shadow-2xl transition-all duration-300">
                           {generateMutation.isLoading ? (
                             <>
@@ -326,7 +327,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
                         <CheckCircle size={32} className="text-green-500" />
                         <div>
                           <h4 className="text-2xl font-bold text-gray-900">
-                            Success! Generated {generatedCount} Perfect Items
+                            Success! Generated Perfect Items for you
                           </h4>
                           <p className="text-gray-600">Your AI-powered basket is ready to view</p>
                         </div>

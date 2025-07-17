@@ -15,6 +15,7 @@ export interface ModelMetrics {
   sampleSize?: number;
 }
 
+// Default paramater for evaluation sample
 const DEFUALT_SAMPLE_SIZE = 10
 
 // ============================================================================
@@ -32,13 +33,13 @@ class EvaluationService {
       return response;
     } catch (error) {
       console.error('Failed to get model metrics:', error);
-      // Return fallback metrics if evaluation fails - UPDATED FOR NEW INTERFACE
+      // Return fallback metrics if evaluation fails 
       return {
-        PrecisionAt: 0.85,
-        RecallAt: 0.78,
-        F1ScoreAt: 0.81,
-        NDCGAt: 0.82,
-        JaccardSimilarity: 0.75,
+        PrecisionAt: 0.000,
+        RecallAt: 0.000,
+        F1ScoreAt: 0.000,
+        NDCGAt: 0.000,
+        JaccardSimilarity: 0.000,
       };
     }
   }

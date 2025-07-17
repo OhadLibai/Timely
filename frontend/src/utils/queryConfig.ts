@@ -6,25 +6,19 @@
  * Based on actual usage patterns found across hooks
  */
 export const QUERY_CONFIGS = {
-  /** 1 minute - for real-time data (predictions, system health) */
+  /** 2 minute - for real-time data */
   REALTIME: {
-    staleTime: 1 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  },
-  
-  /** 2 minutes - for admin/demo data that changes moderately */
-  ADMIN_DATA: {
     staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: false,
   },
   
-  /** 5 minutes - for frequently changing data (orders, products, dashboard) */
+  /** 5 minutes - for frequently changing data */
   FREQUENT_DATA: {
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   },
   
-  /** 10 minutes - for stable data (categories, ML metrics) */
+  /** 12 minutes - for stable data */
   STABLE_DATA: {
     staleTime: 10 * 60 * 1000,
     refetchOnWindowFocus: false,

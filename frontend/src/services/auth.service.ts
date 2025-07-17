@@ -53,13 +53,8 @@ class AuthService {
 
   // Logout
   async logout(): Promise<void> {
-    try {
-      await api.post('/auth/logout');
-    } catch (error) {
-      // Ignore logout errors
-    } finally {
-      this.clearAuth();
-    }
+    await api.post('/auth/logout');
+    this.clearAuth();
   }
 
   // Refresh token

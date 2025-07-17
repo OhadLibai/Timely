@@ -8,7 +8,7 @@ export const usePredictedBasket = (): UseQueryResult<any> => {
     QUERY_KEYS.predictions(),
     predictionService.getPredictedBasket,
     {
-      staleTime: 'realtime',
+      staleTime: 'stable',
     }
   );
 };

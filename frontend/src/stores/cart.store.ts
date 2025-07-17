@@ -204,7 +204,6 @@ export const useCartStore = create<CartState>()(
             },
             isUpdating: false
           });
-          toast.success('Cart cleared');
         },
 
         // ============================================================================

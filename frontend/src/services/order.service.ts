@@ -1,10 +1,9 @@
 // frontend/src/services/order.service.ts
-// COMPLETE FIX: Minimal implementation with consistent getCurrentUserId pattern
-// FOCUS: Correctness and adequate implementation, not security
 
 import { api } from '@/services/api.client';
 import { useAuthStore } from '@/stores/auth.store';
 import { Product } from '@/services/product.service';
+import { authService } from './auth.service';
 
 export interface OrderItem {
   id: string;
@@ -66,10 +65,9 @@ class OrderService {
 
   /**
    * Create order - Backend needs userId to know which user is creating the order
-   * Uses Option B pattern: userId in URL path
    */
   async createOrder(data: CreateOrderData): Promise<Order> {
-    const userId = useAuthStore.getState().getCurrentUserId();
+    const userId = authService.getUser()?.id;
     return api.post<Order>(`/orders/create/${userId}`, data);
   }
 
@@ -78,7 +76,7 @@ class OrderService {
    * MINIMAL: No complex filtering logic, components handle filtering
    */
   async getOrders(filters: OrderFilters = {}): Promise<OrdersResponse> {
-    const userId = useAuthStore.getState().getCurrentUserId();
+    const userId = authService.getUser()?.id;
     const params = new URLSearchParams();
     if (filters.page) {
       params.append('page', filters.page.toString());

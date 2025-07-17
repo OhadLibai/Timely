@@ -176,9 +176,9 @@ const UserExperience: React.FC = () => {
               variant="ghost"
               onClick={() => navigate('/admin')}
               icon={ArrowLeft}
-              size="sm"
+              size="md"
             >
-              Back to Dashboard
+              Back to the Hub
             </Button>
           }
         />
