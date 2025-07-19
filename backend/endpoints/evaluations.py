@@ -49,10 +49,6 @@ def evaluate_metrics(sample_size):
         # We use both val users and test users for testing 
         # Predictions results
         all_eval_users = test_users + val_users
-        if sample_size < len(all_eval_users):
-            eval_users = random.sample(all_eval_users, sample_size)
-        else:
-            eval_users = all_eval_users
         
         # Initialize metric accumulators
         precisions = []
@@ -63,42 +59,42 @@ def evaluate_metrics(sample_size):
         valid_users = 0
         
         # Evaluate each user
-        for user_id in eval_users:
+        while valid_users < sample_size:
+            random_index = random.randrange(len(all_eval_users))
+            random_eval_user_id = all_eval_users.pop(random_index)       
+        
             # Get prediction from ML engine
-            result = ml_engine.predict_basket(user_id, use_csv_data=True)
+            result = ml_engine.predict_basket(random_eval_user_id, use_csv_data=True)
             if not result['success']:
                 continue
-            predicted_set = set(result['items'])
+            predicted_items = result['items']
             
             # Get ground truth
-            user_future = future_df[future_df['user_id'] == int(user_id)]
-            if user_future.empty:
+            user_future = future_df[future_df['user_id'] == int(random_eval_user_id)]
+            true_items = user_future['product_id']
+            if true_items.empty:
                 continue
-            true_items = set(user_future['product_id'].unique())
+
+            valid_users += 1
 
             # basket_limit_size param:
             # For simplicity now, override the EVALUATE_AT env var.
             # This softens the requirements a bit but it is OK.
             basket_limit_size = min(len(true_items), len(predicted_items))
-            predicted_items = predicted_items[:basket_limit_size]
-            true_items = predicted_items[:basket_limit_size]
-            
-            if not true_items:
-                continue
-            
-            valid_users += 1
+            predicted_items_set = set(predicted_items[:basket_limit_size])
+            true_items_set = set(true_items[:basket_limit_size])         
             
             # Calculate Precision@
             # Precision = |predicted ∩ actual| / |predicted|
-            if predicted_set:
-                precision = len(predicted_set & true_items) / len(predicted_set)
+            if predicted_items_set:
+                precision = len(predicted_items_set & true_items_set) / len(predicted_items_set)
                 precisions.append(precision)
             else:
                 precisions.append(0.0)
             
             # Calculate Recall@
             # Recall = |predicted ∩ actual| / |actual|
-            recall = len(predicted_set & true_items) / len(true_items)
+            recall = len(predicted_items_set & true_items_set) / len(true_items)
             recalls.append(recall)
             
             # Calculate F1-Score
@@ -113,7 +109,7 @@ def evaluate_metrics(sample_size):
             # NDCG = DCG / IDCG
             dcg = 0.0
             for i, item in enumerate(predicted_items):
-                if item in true_items:
+                if item in true_items_set:
                     # Relevance is 1 if item was purchased, 0 otherwise
                     dcg += 1.0 / math.log2(i + 2)  # i+2 because position starts at 0
             
@@ -125,9 +121,9 @@ def evaluate_metrics(sample_size):
             
             # Calculate Jaccard Similarity
             # Jaccard = |predicted ∩ actual| / |predicted ∪ actual|
-            if predicted_set or true_items:
-                intersection = len(predicted_set & true_items)
-                union = len(predicted_set | true_items)
+            if predicted_items_set or true_items_set:
+                intersection = len(predicted_items_set & true_items_set)
+                union = len(predicted_items_set | true_items_set)
                 jaccard = intersection / union if union > 0 else 0.0
             else:
                 jaccard = 1.0  # Both empty sets

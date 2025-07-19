@@ -13,27 +13,23 @@
     </linearGradient>
   </defs>
   
-  <!-- Optimized icon without background, centered -->
-  <g transform="translate(2, 2)">
+  <!-- Larger icon filling more of the space -->
+  <g transform="translate(1, 1)">
     <!-- Outer glow effect for visibility on dark backgrounds -->
-    <circle cx="14" cy="14" r="13" fill="url(#primaryGradient)" opacity="0.1"/>
+    <circle cx="15" cy="15" r="14.5" fill="url(#primaryGradient)" opacity="0.1"/>
     
     <!-- Main clock circle -->
-    <circle cx="14" cy="14" r="12" fill="none" stroke="url(#primaryGradient)" stroke-width="2"/>
+    <circle cx="15" cy="15" r="13.5" fill="none" stroke="url(#primaryGradient)" stroke-width="2.5"/>
     
     <!-- Clock face with subtle transparency -->
-    <circle cx="14" cy="14" r="9.5" fill="rgba(255,255,255,0.95)" stroke="url(#acaiGradient)" stroke-width="1"/>
+    <circle cx="15" cy="15" r="11" fill="rgba(255,255,255,0.95)" stroke="url(#acaiGradient)" stroke-width="1.2"/>
     
-    <!-- Clock hands pointing to 3 o'clock -->
-    <line x1="14" y1="14" x2="14" y2="7.5" stroke="url(#acaiGradient)" stroke-width="2.5" stroke-linecap="round"/>
-    <line x1="14" y1="14" x2="20.5" y2="14" stroke="url(#acaiGradient)" stroke-width="3" stroke-linecap="round"/>
-    
-    <!-- Center dot -->
-    <circle cx="14" cy="14" r="1.5" fill="url(#acaiGradient)"/>
+    <!-- Center dot only (no clock hands as requested) -->
+    <circle cx="15" cy="15" r="2" fill="url(#acaiGradient)"/>
     
     <!-- Grocery basket integrated with clock -->
-    <path d="M7 11 L21 11 L19.5 21 L8.5 21 Z" fill="none" stroke="url(#primaryGradient)" stroke-width="1.5" opacity="0.85"/>
-    <path d="M10 11 L10 8 M18 11 L18 8" stroke="url(#primaryGradient)" stroke-width="1.5" stroke-linecap="round" opacity="0.85"/>
+    <path d="M6 12 L24 12 L22 24 L8 24 Z" fill="none" stroke="url(#primaryGradient)" stroke-width="2" opacity="0.85"/>
+    <path d="M10 12 L10 8 M20 12 L20 8" stroke="url(#primaryGradient)" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
     
   </g>
 </svg>

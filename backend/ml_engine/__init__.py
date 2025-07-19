@@ -281,11 +281,10 @@ class TifuKnnEngine:
                 if neighbor_id in self.recommender_vectors:
                     merged_vector += self.recommender_vectors[neighbor_id] * neighbor_weight
         
-        # Convert to top-k item list
-        # First get top 100 candidates, then return top K
-        top_items = merged_vector.argsort()[::-1][:TOP_CANDIDATES].tolist()
+        # Convert to item list
+        item_list_result = merged_vector.argsort()[::-1].tolist()
         
-        return top_items
+        return item_list_result
     
     def predict_basket(self, user_id: str, use_csv_data: bool = False) -> Dict:
         """
