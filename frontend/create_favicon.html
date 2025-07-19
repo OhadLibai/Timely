@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Timely Favicon Generator</title>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 20px; 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background: #f8fafc;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        canvas { 
+            border: 2px solid #e2e8f0; 
+            margin: 10px; 
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        canvas:hover {
+            border-color: #8B5CF6;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+        }
+        .instructions {
+            background: linear-gradient(135deg, #8B5CF6, #06B6D4);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .favicon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+        .favicon-item {
+            text-align: center;
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .download-btn {
+            background: linear-gradient(135deg, #8B5CF6, #06B6D4);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            margin-top: 10px;
+            transition: transform 0.2s ease;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+        }
+        h1 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕐 Timely Favicon Generator</h1>
+        <p class="subtitle">Generate clean, transparent favicon files for the Timely app</p>
+        
+        <div class="instructions">
+            <h3>📋 Instructions:</h3>
+            <ol>
+                <li><strong>Click on any canvas</strong> to download the PNG file</li>
+                <li><strong>Use the download buttons</strong> for batch downloads</li>
+                <li><strong>Convert to ICO:</strong> Use tools like <a href="https://convertio.co/png-ico/" target="_blank" style="color: #fbbf24;">convertio.co</a> for ICO conversion</li>
+                <li><strong>Replace existing favicon.ico</strong> in the project</li>
+            </ol>
+        </div>
+        
+        <div class="favicon-grid">
+            <div class="favicon-item">
+                <h3>16×16 (Small)</h3>
+                <canvas id="favicon16" width="16" height="16"></canvas>
+                <br>
+                <button class="download-btn" onclick="downloadCanvas(document.getElementById('favicon16'), 'timely-favicon-16.png')">
+                    Download 16×16
+                </button>
+            </div>
+            
+            <div class="favicon-item">
+                <h3>32×32 (Standard)</h3>
+                <canvas id="favicon32" width="32" height="32"></canvas>
+                <br>
+                <button class="download-btn" onclick="downloadCanvas(document.getElementById('favicon32'), 'timely-favicon-32.png')">
+                    Download 32×32
+                </button>
+            </div>
+            
+            <div class="favicon-item">
+                <h3>48×48 (Windows)</h3>
+                <canvas id="favicon48" width="48" height="48"></canvas>
+                <br>
+                <button class="download-btn" onclick="downloadCanvas(document.getElementById('favicon48'), 'timely-favicon-48.png')">
+                    Download 48×48
+                </button>
+            </div>
+            
+            <div class="favicon-item">
+                <h3>64×64 (High-res)</h3>
+                <canvas id="favicon64" width="64" height="64"></canvas>
+                <br>
+                <button class="download-btn" onclick="downloadCanvas(document.getElementById('favicon64'), 'timely-favicon-64.png')">
+                    Download 64×64
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function drawTimelyFavicon(canvas, size) {
+            const ctx = canvas.getContext('2d');
+            const scale = size / 32;
+            const center = size / 2;
+            
+            // Clear canvas with transparent background
+            ctx.clearRect(0, 0, size, size);
+            
+            // Create brand gradients
+            const primaryGradient = ctx.createLinearGradient(0, 0, size, size);
+            primaryGradient.addColorStop(0, '#8B5CF6');
+            primaryGradient.addColorStop(1, '#06B6D4');
+            
+            const acaiGradient = ctx.createLinearGradient(0, 0, size, size);
+            acaiGradient.addColorStop(0, '#7C3AED');
+            acaiGradient.addColorStop(1, '#4C1D95');
+            
+            // Outer glow for visibility
+            if (size >= 32) {
+                ctx.fillStyle = primaryGradient;
+                ctx.globalAlpha = 0.1;
+                ctx.beginPath();
+                ctx.arc(center, center, center - 2*scale, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+            
+            // Main clock circle
+            ctx.strokeStyle = primaryGradient;
+            ctx.lineWidth = Math.max(1.5 * scale, 1);
+            ctx.beginPath();
+            ctx.arc(center, center, center - 4*scale, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Clock face
+            ctx.fillStyle = 'rgba(255,255,255,0.95)';
+            ctx.strokeStyle = acaiGradient;
+            ctx.lineWidth = Math.max(1 * scale, 0.5);
+            ctx.beginPath();
+            ctx.arc(center, center, center - 6*scale, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Clock hands (pointing to 3 o'clock for "timely")
+            ctx.strokeStyle = acaiGradient;
+            ctx.lineCap = 'round';
+            
+            // Hour hand (pointing up)
+            ctx.lineWidth = Math.max(2 * scale, 1);
+            ctx.beginPath();
+            ctx.moveTo(center, center);
+            ctx.lineTo(center, center - 7*scale);
+            ctx.stroke();
+            
+            // Minute hand (pointing right)
+            ctx.lineWidth = Math.max(2.5 * scale, 1.5);
+            ctx.beginPath();
+            ctx.moveTo(center, center);
+            ctx.lineTo(center + 9*scale, center);
+            ctx.stroke();
+            
+            // Center dot
+            ctx.fillStyle = acaiGradient;
+            ctx.beginPath();
+            ctx.arc(center, center, Math.max(1.5*scale, 1), 0, 2 * Math.PI);
+            ctx.fill();
+            
+            // Grocery basket (only for larger sizes)
+            if (size >= 24) {
+                ctx.strokeStyle = primaryGradient;
+                ctx.lineWidth = Math.max(1.2 * scale, 0.8);
+                ctx.globalAlpha = 0.85;
+                
+                // Basket body
+                const basketTop = center - 2*scale;
+                const basketBottom = center + 7*scale;
+                const basketLeft = center - 7*scale;
+                const basketRight = center + 7*scale;
+                
+                ctx.beginPath();
+                ctx.moveTo(basketLeft, basketTop);
+                ctx.lineTo(basketRight, basketTop);
+                ctx.lineTo(basketRight - 1.5*scale, basketBottom);
+                ctx.lineTo(basketLeft + 1.5*scale, basketBottom);
+                ctx.closePath();
+                ctx.stroke();
+                
+                // Basket handles
+                ctx.beginPath();
+                ctx.moveTo(center - 4*scale, basketTop);
+                ctx.lineTo(center - 4*scale, basketTop - 3*scale);
+                ctx.moveTo(center + 4*scale, basketTop);
+                ctx.lineTo(center + 4*scale, basketTop - 3*scale);
+                ctx.stroke();
+                
+                ctx.globalAlpha = 1.0;
+            }
+            
+            // Fresh leaf accent (only for larger sizes)
+            if (size >= 32) {
+                ctx.fillStyle = acaiGradient;
+                ctx.globalAlpha = 0.9;
+                const leafX = center + 10*scale;
+                const leafY = center - 10*scale;
+                ctx.beginPath();
+                ctx.ellipse(leafX, leafY, 2.5*scale, 1.5*scale, Math.PI/4, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.globalAlpha = 1.0;
+            }
+        }
+        
+        // Generate all favicon sizes
+        const sizes = [16, 32, 48, 64];
+        sizes.forEach(size => {
+            const canvas = document.getElementById(`favicon${size}`);
+            drawTimelyFavicon(canvas, size);
+            
+            // Add click handler
+            canvas.addEventListener('click', () => {
+                downloadCanvas(canvas, `timely-favicon-${size}.png`);
+            });
+        });
+        
+        // Download functionality
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // Batch download all sizes
+        function downloadAll() {
+            sizes.forEach(size => {
+                setTimeout(() => {
+                    const canvas = document.getElementById(`favicon${size}`);
+                    downloadCanvas(canvas, `timely-favicon-${size}.png`);
+                }, size * 10); // Stagger downloads
+            });
+        }
+    </script>
+</body>
+</html>

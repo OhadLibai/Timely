@@ -79,11 +79,11 @@ fi
 
 # Pre-compute user vectors
 if [ ! -f "$VECTORS_FLAG" ]; then
-    echo "🧮 Pre-computing training user vectors..."
+    echo "🧮 Pre-computing recommender user vectors..."
     if python -c "
 from ml_engine import get_engine
 engine = get_engine()
-engine.precompute_training_vectors()
+engine.precompute_recommender_vectors()
 "; then
     echo "✅ Vector pre-computation complete!"
     touch "$VECTORS_FLAG"

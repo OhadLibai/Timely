@@ -8,7 +8,7 @@ Step 1: Raw Data Processing. The preprocess.py script is run to process the orig
 
 Step 2: Data Structuring. The create_model_data.py script takes the processed instacart.csv and splits it into the instacart_history.csv and instacart_future.csv files. It also generates the crucial data_history.json file, which formats the purchase history for each user in a way the TIFU-KNN model can read.
 
-Step 3: User Segmentation. The keyset_fold.py script is run to divide the users from the history and future CSVs into training, validation, and test sets. This creates the instacart_keyset_0.json file.
+Step 3: User Segmentation. The keyset_fold.py script is run to divide the users from the history and future CSVs into recommender, validation, and test sets. This creates the instacart_keyset_0.json file.
 
 Step 4: Pre-computation of User Vectors. When the ML microservice starts up, it should immediately load the data_history.json and run the temporal_decay_sum_history function for every user. This pre-computes all user vectors and holds them in memory for fast access.
 

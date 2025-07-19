@@ -13,8 +13,15 @@ import os
 DATA_DIR = "/app/data/dataset"  # Local copy in backend container
 OUTPUT_DIR = "/app/data/dataset"
 
-USER_LOAD_FRACTION = float(os.getenv("USER_LOAD_FRACTION")) 
-RANDOM = True if os.getenv("RANDOM")=="1" else False
+# For simplicity we take the first N users from the dataset, to enable 
+# Comparison basket demo feature included in the app.
+# The dataset by itself already contains random user purchase history,
+# So we do not inflict or avert anything.
+# Of course if we take only a fraction of the users due to deployment issues,
+# We could pick random user from all over the dataset itself, but since the
+# Instacart dataset itself deemed to be random by nature, there is just some level
+# Of redundancy here (apperantly).
+USER_ORDER_LOAD_FRACTION = float(os.getenv("USER_ORDER_LOAD_FRACTION")) # How many users to load
 
 def preprocess_instacart():
     """
@@ -44,21 +51,18 @@ def preprocess_instacart():
     
     # Take a sample of orders
     unique_users = orders['user_id'].unique()
-    if RANDOM:
-        sample_users = pd.Series(unique_users).sample(frac=USER_LOAD_FRACTION, random_state=42)
-    else:
-        n_users = math.ceil(len(unique_users) * USER_LOAD_FRACTION)
-        sample_users = pd.Series(unique_users).iloc[:n_users]
-    sample_orders = orders[orders['user_id'].isin(sample_users)]
+    n_users = math.ceil(len(unique_users) * USER_ORDER_LOAD_FRACTION)
+    sampled_users = pd.Series(unique_users).iloc[:n_users]
+    sampled_orders = orders[orders['user_id'].isin(sampled_users)]
     
-    print(f"Sampled {len(sample_orders)} orders from {len(sample_users)} users")
+    print(f"Sampled {len(sampled_orders)} orders from {len(sampled_users)} users")
     
     # Filter order products to only include sampled orders
-    sample_order_ids = set(sample_orders['order_id'])
+    sampled_order_ids = set(sampled_orders['order_id'])
     
     print("Filtering order products...")
-    order_products_prior_sample = order_products_prior[order_products_prior['order_id'].isin(sample_order_ids)]
-    order_products_train_sample = order_products_train[order_products_train['order_id'].isin(sample_order_ids)]
+    order_products_prior_sample = order_products_prior[order_products_prior['order_id'].isin(sampled_order_ids)]
+    order_products_train_sample = order_products_train[order_products_train['order_id'].isin(sampled_order_ids)]
     
     print(f"Filtered to {len(order_products_prior_sample)} prior + {len(order_products_train_sample)} train order products")
     
@@ -78,7 +82,7 @@ def preprocess_instacart():
     # Merge with orders to get user and order information
     print("Merging with orders data...")
     # Use suffixes to avoid column conflicts
-    merged = all_order_products.merge(sample_orders, on='order_id', how='left', suffixes=('', '_order'))
+    merged = all_order_products.merge(sampled_orders, on='order_id', how='left', suffixes=('', '_order'))
     
     print(f"After merging: {len(merged)} records")
     

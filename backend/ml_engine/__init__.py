@@ -19,18 +19,18 @@ from sklearn.neighbors import NearestNeighbors
 import pandas as pd
 
 # TIFUKNN Configuration (hardcoded as per paper)
-KNN_K = 900
 WITHIN_DECAY_RATE = 0.9
 GROUP_DECAY_RATE = 0.7
-ALPHA = 0.9
 GROUP_SIZE = 3
+KNN_K = 900
+ALPHA = 0.9
 
 # Basket size 
-TOPK = int(os.getenv("PREDICTED_BASKET_SIZE", 10)) 
+TOPK = int(os.getenv("PREDICTED_BASKET_SIZE")) 
 
 # Production and Runtime Optimizations
-TOP_CANDIDATES = 100  # Top candidates (products) before final selection
-KNN_NEIGHBOR_SEARCH_LIMIT = int(os.getenv("KNN_NEIGHBOR_SEARCH_LIMIT"))  # KNN search optimization, controls the real-time prediction speed
+TOP_CANDIDATES = 100  # Top candidates (products) before final selection, facilitate the size of the final user vector
+MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT = int(os.getenv("MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT"))  # KNN search optimization, affects the size of the the vector matrix in real time calculation.
 MAX_VECTORS = int(os.getenv("MAX_VECTORS")) # Limit to avoid memory issues, managed during the build process
 
 # Updated paths for new structure
@@ -50,16 +50,17 @@ DATABASE_CONFIG = {
 
 class TifuKnnEngine:
     """
-    TIFUKNN implementation optimized for production use
-    Maintains exact algorithm logic while supporting both DB and CSV data
-    STRICT: Fails immediately if required data files are missing
+    TIFUKNN implementation adapted to the app:
+        - optimized for production use
+        - supporting both DB and CSV data
+        - maintain same logic
     """
     
     def __init__(self):
         self.csv_data_history = None  # Original Instacart data
         self.keyset = None
         self.item_count = None
-        self.training_vectors = {}  # Pre-computed training vectors cache
+        self.recommender_vectors = {}  # Pre-computed recommender vectors cache
         
         """Load essential data files - STRICT: fails immediately if files missing"""
         print("🔧 Loading ML engine base data...")
@@ -80,38 +81,38 @@ class TifuKnnEngine:
         print(f"   Val users: {len(self.keyset.get('val', []))}")
         print(f"   Test users: {len(self.keyset.get('test', []))}")
         
-        # Load pre-computed training vectors from disk
-        vectors_file = VECTORS_PATH / 'training_vectors.pkl'
+        # Load pre-computed recommender vectors from disk
+        vectors_file = VECTORS_PATH / 'recommender_vectors.pkl'
         if vectors_file.exists():
             with open(vectors_file, 'rb') as f:
-                self.training_vectors = pickle.load(f)
-                print(f"✅ Loaded {len(self.training_vectors)} pre-computed training vectors")
+                self.recommender_vectors = pickle.load(f)
+                print(f"✅ Loaded {len(self.recommender_vectors)} pre-computed recommender vectors")
         else:
-            print(f"⚠️  No pre-computed training vectors found at {vectors_file}. Need to precompute vectors first")
+            print(f"⚠️  No pre-computed recommender vectors found at {vectors_file}. Need to precompute vectors first")
         
-    def precompute_training_vectors(self):
+    def precompute_recommender_vectors(self):
         """
-        Pre-compute vectors for all training users
+        Pre-compute vectors for all recommender users
         This enables fast KNN search during predictions
         """
         print("⚒️  Start precompute vectors")
 
-        training_users = [str(uid) for uid in self.keyset.get('train', [])]
+        recommender_users = [str(uid) for uid in self.keyset.get('train', [])]
         
-        if len(training_users) > MAX_VECTORS:
-            training_users = random.sample(training_users, MAX_VECTORS) # Choose them in random
+        if len(recommender_users) > MAX_VECTORS:
+            recommender_users = random.sample(recommender_users, MAX_VECTORS) # Choose recommendors in random
             print(f"⚡ Limiting vector computation to {MAX_VECTORS} users for feasible memory load")
         
-        print(f"🧮 Pre-computing vectors for {len(training_users)} training users...")
+        print(f"🧮 Pre-computing vectors for {len(recommender_users)} recommender users...")
 
         VECTORS_PATH.mkdir(parents=True, exist_ok=True)
-        vectors_file = VECTORS_PATH / 'training_vectors.pkl'
+        vectors_file = VECTORS_PATH / 'recommender_vectors.pkl'
         
         computed_vectors = {}
         computed = 0
         skipped = 0
         
-        for user_id in training_users:
+        for user_id in recommender_users:
             if user_id in self.csv_data_history:
                 user_history = self.csv_data_history[user_id]
                 
@@ -128,13 +129,13 @@ class TifuKnnEngine:
                 skipped += 1
             
             if (computed + skipped) % 1000 == 0:
-                print(f"Progress: {computed + skipped}/{len(training_users)}")
+                print(f"Progress: {computed + skipped}/{len(recommender_users)}")
         
         # Save all computed vectors at the end
         try:
             with open(vectors_file, 'wb') as f:
                 pickle.dump(computed_vectors, f)    
-            self.training_vectors = computed_vectors
+            self.recommender_vectors = computed_vectors
             print(f"✅ Pre-computation complete: {computed} vectors saved, {skipped} skipped")
             print(f"📁 Vectors saved to: {vectors_file}")
             
@@ -154,7 +155,6 @@ class TifuKnnEngine:
     def _temporal_decay_sum_history(self, user_history: List[List[int]]) -> np.ndarray:
         """
         Compute user vector using temporal decay and within-basket grouping
-        Implements exact TIFUKNN algorithm
         """
         if not user_history or len(user_history) < 2:  # Need at least user_id + 1 basket
             return np.zeros(self.item_count)
@@ -239,19 +239,19 @@ class TifuKnnEngine:
         Find k nearest neighbors for query vector
         """
         
-        if not self.training_vectors:
+        if not self.recommender_vectors:
             return [], np.array([])
         
-        # Convert training vectors to matrix
-        user_ids = list(self.training_vectors.keys())
+        # Convert recommender vectors to matrix
+        user_ids = list(self.recommender_vectors.keys())
         
         # Limit search space for performance (random sampling)
-        if len(user_ids) > KNN_NEIGHBOR_SEARCH_LIMIT:
-            sampled_ids = random.sample(user_ids, KNN_NEIGHBOR_SEARCH_LIMIT)
+        if len(user_ids) > MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT:
+            sampled_ids = random.sample(user_ids, MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT)
         else:
             sampled_ids = user_ids
         
-        vectors_matrix = np.array([self.training_vectors[uid] for uid in sampled_ids])
+        vectors_matrix = np.array([self.recommender_vectors[uid] for uid in sampled_ids])
         
         # Use sklearn NearestNeighbors for efficiency
         k_actual = min(k, len(sampled_ids))
@@ -279,8 +279,8 @@ class TifuKnnEngine:
             neighbor_weight = (1 - alpha) / len(neighbor_ids)
             
             for neighbor_id in neighbor_ids:
-                if neighbor_id in self.training_vectors:
-                    merged_vector += self.training_vectors[neighbor_id] * neighbor_weight
+                if neighbor_id in self.recommender_vectors:
+                    merged_vector += self.recommender_vectors[neighbor_id] * neighbor_weight
         
         # Convert to top-k item list
         # First get top 100 candidates, then return top K

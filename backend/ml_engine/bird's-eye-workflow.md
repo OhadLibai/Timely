@@ -13,7 +13,6 @@ This will use instacart.csv to create:
     dataset/data_history.json
 Run during docker build
 
-
 ### 3 -> Run keyset_fold.py
 Creates train/val/test user splits.
 Finds the history and future CSVs it needs and will create the instacart_keyset_0.json file.

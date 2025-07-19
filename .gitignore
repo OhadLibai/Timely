@@ -81,33 +81,11 @@ docker-compose.local.yml
 **/package-lock.json
 yarn.lock
 
-#################
 # Temporary files
 *.tmp
 .tmp/
 TODO
-Gemini.md
-.claude
-laughing.txt
-CLAUDE.md
-Deploy claude.md
-Other CLAUDE.md
-questions.txt
-Remove Files.txt
-Remove Functions.txt
-Demand1_Backend_Partial_Flow_Validation.txt
 
-# Information details dont want to disclose 
-README2.md
-Project Architecture.md
-System Architecture.md
-README.md
+# Others 
 /testing-scripts
-App demands.xlsx
-Possible Enhancements
-Predicted Basket Flow
-Validating-3-demands.md
-/ml-service/src/models/Model Brief Explanation.txt
-/ml-service/Some Files Explained.txt
-/ml-service/Tier Structure.md
-########################
+good_users.txt

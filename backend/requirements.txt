@@ -1,6 +1,5 @@
 # backend/requirements.txt
-# Backend dependencies for Timely ML-powered grocery platform
-# COMPLETE: All required packages for 4 core demands
+# Backend dependencies
 
 # Flask and Web Framework
 Flask==2.3.3
@@ -8,7 +7,6 @@ Flask-CORS==4.0.0
 
 # Database
 psycopg2-binary==2.9.7
-SQLAlchemy==2.0.21
 
 # Password Hashing
 passlib==1.7.4

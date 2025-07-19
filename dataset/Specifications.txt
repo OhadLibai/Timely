@@ -6,7 +6,7 @@ orders.csv: This file is the backbone of the dataset, chronicling every order pl
 order_id: A unique identifier for each order.
 user_id: A unique identifier for each customer.
 eval_set: This crucial column specifies which of the three data splits the order belongs to:
-prior: Represents a user's past orders. This is the largest set and contains the bulk of the historical data for training and analysis.
+prior: Represents a user's past orders. This is the largest set and contains the bulk of the historical data for recommender and analysis.
 train: Contains the most recent order for a subset of users. The goal of the Kaggle competition and many recommendation models is to predict the items in this "future" order based on their "prior" order history.
 test: Contains the most recent order for another subset of users, for which the items are not provided. This set is used for evaluating the performance of a model on unseen data.
 order_number: The sequence number of the order for a particular user (e.g., 1st order, 2nd order).
@@ -42,6 +42,6 @@ department: The name of the department (e.g., "produce," "dairy eggs").
 How They Work Together: The Big Picture
 Imagine you are trying to predict what a user will buy next. You would start with orders.csv to identify a user and their sequence of past orders (the prior set). Then, for each of those past orders, you would look into order_products__prior.csv to see exactly which products they bought. To get more information about those products, you would join this data with products.csv, and further with aisles.csv and departments.csv to understand the types of products the user prefers.
 
-The research paper "A Next-Basket Recommendation Reality Check" utilizes this structure to evaluate and compare different next-basket recommendation algorithms. The order_products__prior.csv file is essential for training these models on user's historical purchase sequences. The order_products__train.csv file then serves as the ground truth to test how well the models can predict the contents of the next basket. The paper's analysis delves into the performance of models in predicting both "repeat" items (products the user has bought before, identified by the reordered flag) and "explore" items (new products for the user).
+The research paper "A Next-Basket Recommendation Reality Check" utilizes this structure to evaluate and compare different next-basket recommendation algorithms. The order_products__prior.csv file is essential for recommender these models on user's historical purchase sequences. The order_products__train.csv file then serves as the ground truth to test how well the models can predict the contents of the next basket. The paper's analysis delves into the performance of models in predicting both "repeat" items (products the user has bought before, identified by the reordered flag) and "explore" items (new products for the user).
 
 In essence, the Instacart dataset is a relational database spread across these CSV files. By linking them together, one can reconstruct the entire shopping history of each user and leverage this information to build powerful predictive models for a variety of analytical tasks, with next-basket recommendation being a prominent and challenging one.
