@@ -1,5 +1,5 @@
 // frontend/src/pages/PredictedBasket.tsx
-// REFACTORED: New architecture with local-first editing and bulk cart operations
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation } from 'react-query';
@@ -455,27 +455,3 @@ const PredictedBasket: React.FC = () => {
 };
 
 export default PredictedBasket;
-
-// ============================================================================
-// ARCHITECTURE NOTES:
-// 
-// ✅ NEW ARCHITECTURE: Uses local-first stores with persistence
-// ✅ SINGLE API CALL: Only calls predictionService.getPredictedBasket()
-// ✅ LOCAL EDITING: All edits are instant with no API calls
-// ✅ PLACARD SYSTEM: Confidence scores + product badges (limit 3-4)
-// ✅ BULK OPERATIONS: addAcceptedToCart() adds multiple items at once
-// ✅ EXISTING COMPONENTS: Uses EmptyState, AnimatedContainer, etc.
-// ✅ AUTO-LOAD: Generates prediction on first visit
-// ✅ MANUAL GENERATION: Generate button for new predictions
-// ✅ REAL-TIME STATS: Dynamic statistics based on selections
-// ✅ UNSAVED EDITS: Warns user about unsaved changes
-// ✅ DEMAND 4: Smooth, responsive user experience
-// ✅ DRY PRINCIPLE: Reusable placard components
-// ✅ CODE REUSABILITY: Leverages existing components and utilities
-// 
-// This component achieves all 4 core app demands:
-// 1. DEMAND 1: Demonstrates ML predictions from seeded user data
-// 2. DEMAND 2: Shows confidence scores and ML performance
-// 3. DEMAND 3: Individual user prediction performance 
-// 4. DEMAND 4: Excellent user experience with instant edits
-// ============================================================================

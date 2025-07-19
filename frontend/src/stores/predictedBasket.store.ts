@@ -1,5 +1,5 @@
 // frontend/src/stores/predictedBasket.store.ts
-// NEW: Local state manager for predicted basket editing with persistence
+
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { Product } from '@/services/product.service';
@@ -304,26 +304,3 @@ export const usePredictedBasketActions = () => {
     hasAcceptedItems: getAcceptedItems().length > 0
   };
 };
-
-// ============================================================================
-// ARCHITECTURE NOTES:
-// 
-// ✅ ZUSTAND PERSIST: Predicted basket edits survive page refresh
-// ✅ LOCAL FIRST: All editing is instant with no API calls
-// ✅ CONFIDENCE PLACARDS: Mock values for display (0.6-1.0 range)
-// ✅ EDIT TRACKING: Tracks which items user has modified
-// ✅ BULK OPERATIONS: Easy integration with cart store
-// ✅ COMPUTED VALUES: Real-time stats for UI display
-// ✅ SEPARATION OF CONCERNS: Predicted basket ≠ shopping cart
-// ✅ DRY PRINCIPLE: Single source of truth for prediction edits
-// ✅ CODE REUSABILITY: Can be used across components
-// ✅ DEMAND 4: Smooth editing experience
-// 
-// This store handles the "experimentation" phase where users:
-// 1. View AI predictions
-// 2. Edit quantities, accept/reject items
-// 3. Add custom items
-// 4. See real-time stats
-// 5. Bulk add accepted items to cart
-// 6. All edits are persisted locally
-// ============================================================================

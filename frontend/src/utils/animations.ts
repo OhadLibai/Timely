@@ -1,3 +1,4 @@
+// frontend/src/utils/animations.ts
 // Common animation presets for Framer Motion
 
 export const animationPresets = {

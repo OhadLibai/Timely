@@ -1,4 +1,5 @@
 // frontend/src/components/search/SearchModal.tsx
+
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Search, X, Clock, TrendingUp, Package, ArrowRight } from 'lucide-react';

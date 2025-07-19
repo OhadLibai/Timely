@@ -15,7 +15,7 @@ from typing import List, Set
 
 evaluations_bp = Blueprint('evaluations', __name__)
 
-EVALUATE_AT = int(os.getenv("EVALUATE_AT")) # Fixed `K` value
+EVALUATE_AT = int(os.getenv("EVALUATE_AT")) # Fixed `K` value, classically used for evaluating per basket size recommendation
 
 @evaluations_bp.route('/metrics/<int:sample_size>', methods=['POST'])
 def evaluate_metrics(sample_size):
@@ -77,7 +77,7 @@ def evaluate_metrics(sample_size):
             true_items = set(user_future['product_id'].unique())
 
             # basket_limit_size param:
-            # For simplicity now, override the EVALUATE_AT env var. 
+            # For simplicity now, override the EVALUATE_AT env var.
             # This softens the requirements a bit but it is OK.
             basket_limit_size = min(len(true_items), len(predicted_items))
             predicted_items = predicted_items[:basket_limit_size]

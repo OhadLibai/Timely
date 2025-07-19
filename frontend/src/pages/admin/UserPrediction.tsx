@@ -1,6 +1,4 @@
 // frontend/src/pages/admin/UserPrediction.tsx
-// DEMAND 3: Test Individual User Prediction - Compare ML predictions vs ground truth
-// UPDATED: Aligned with new routing structure and service architecture
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';

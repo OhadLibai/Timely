@@ -1,7 +1,4 @@
 // frontend/src/main.tsx
-// UPDATED: Aligned with 4 core demands and development/testing requirements
-// ENHANCED: Better error handling, performance monitoring, and accessibility
-// FIXED: Parcel-specific configurations (removed Vite assumptions)
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';

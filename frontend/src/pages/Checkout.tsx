@@ -1,6 +1,4 @@
 // frontend/src/pages/Checkout.tsx
-// CLEANED: Removed savings calculation and display logic
-// FOCUSED: Clean checkout flow for ML prediction demonstrations
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';

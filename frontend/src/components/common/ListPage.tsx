@@ -1,3 +1,5 @@
+// frontend/src/components/common/ListPage.tsx
+
 import { ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, X, Grid, List, LucideIcon } from 'lucide-react';

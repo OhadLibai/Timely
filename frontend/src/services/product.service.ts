@@ -1,5 +1,4 @@
 // frontend/src/services/product.service.ts
-// CLEANED: Removed admin CRUD methods that backend doesn't support
 
 import { api } from '@/services/api.client';
 

@@ -1,6 +1,4 @@
 // frontend/src/App.tsx
-// CLEANED: Removed old admin routes and updated to use new structure
-// CONSTRAINT: Using existing services without modification
 
 import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';

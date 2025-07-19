@@ -1,5 +1,5 @@
 // frontend/src/stores/cart.store.ts
-// REFACTORED: Pure local state with Zustand persist - No backend calls until checkout
+
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { Product } from '@/services/product.service';

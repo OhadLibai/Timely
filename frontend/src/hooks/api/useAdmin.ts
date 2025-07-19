@@ -1,6 +1,4 @@
 // frontend/src/hooks/api/useAdmin.ts
-// UPDATED: Using existing services and direct API calls where needed
-// CONSTRAINT: Cannot modify services in services directory
 
 import { useQueryClient } from 'react-query';
 import { useMutationWithToast } from './useMutationWithToast';

@@ -29,7 +29,6 @@ ALPHA = 0.9
 TOPK = int(os.getenv("PREDICTED_BASKET_SIZE")) 
 
 # Production and Runtime Optimizations
-TOP_CANDIDATES = 100  # Top candidates (products) before final selection, facilitate the size of the final user vector
 MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT = int(os.getenv("MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT"))  # KNN search optimization, affects the size of the the vector matrix in real time calculation.
 MAX_RECOMMENDER_VECTORS_LOAD = int(os.getenv("MAX_RECOMMENDER_VECTORS_LOAD")) # Limit to avoid memory issues, managed during the build process
 
@@ -339,18 +338,14 @@ class TifuKnnEngine:
             
             if not neighbor_ids:
                 # No neighbors found, use user's own history
-                top_items = user_vector.argsort()[::-1][:TOP_CANDIDATES].tolist()
+                top_items = user_vector.argsort()[::-1][:TOPK].tolist()
             else:
                 # Merge histories
-                top_items = self._merge_histories(user_vector, neighbor_ids, ALPHA)
-            
-            # Filter out invalid product IDs and return top K items
-            valid_items = [item for item in top_items if 0 <= item < self.item_count]
-            final_items = valid_items[:TOPK]
+                top_items = self._merge_histories(user_vector, neighbor_ids, ALPHA)[:TOPK]
             
             return {
                 'success': True,
-                'items': final_items,
+                'items': top_items,
                 'metadata': {
                     'algorithm': 'TIFU-KNN',
                     'data_source': 'csv' if use_csv_data else 'database',

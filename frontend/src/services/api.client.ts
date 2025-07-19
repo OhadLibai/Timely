@@ -1,5 +1,4 @@
 // frontend/src/services/api.client.ts
-// FIXED: Removed mlApiClient - Frontend only communicates with backend gateway
 
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosRequestConfig } from 'axios';
 import toast from 'react-hot-toast';

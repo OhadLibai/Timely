@@ -1,6 +1,4 @@
 // frontend/src/pages/admin/ModelPerformance.tsx
-// DEMAND 2: Model Performance Evaluation - Dedicated detailed page
-// UPDATED: Removed duplicate metrics, focus on detailed evaluation interface
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
