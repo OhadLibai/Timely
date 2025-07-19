@@ -31,7 +31,7 @@ TOPK = int(os.getenv("PREDICTED_BASKET_SIZE"))
 # Production and Runtime Optimizations
 TOP_CANDIDATES = 100  # Top candidates (products) before final selection, facilitate the size of the final user vector
 MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT = int(os.getenv("MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT"))  # KNN search optimization, affects the size of the the vector matrix in real time calculation.
-MAX_VECTORS = int(os.getenv("MAX_VECTORS")) # Limit to avoid memory issues, managed during the build process
+MAX_RECOMMENDER_VECTORS_LOAD = int(os.getenv("MAX_RECOMMENDER_VECTORS_LOAD")) # Limit to avoid memory issues, managed during the build process
 
 # Updated paths for new structure
 DATA_PATH = Path('/app/data')
@@ -99,9 +99,9 @@ class TifuKnnEngine:
 
         recommender_users = [str(uid) for uid in self.keyset.get('train', [])]
         
-        if len(recommender_users) > MAX_VECTORS:
-            recommender_users = random.sample(recommender_users, MAX_VECTORS) # Choose recommendors in random
-            print(f"⚡ Limiting vector computation to {MAX_VECTORS} users for feasible memory load")
+        if len(recommender_users) > MAX_RECOMMENDER_VECTORS_LOAD:
+            recommender_users = random.sample(recommender_users, MAX_RECOMMENDER_VECTORS_LOAD) # Choose recommendors in random
+            print(f"⚡ Limiting vector computation to {MAX_RECOMMENDER_VECTORS_LOAD} users for feasible memory load")
         
         print(f"🧮 Pre-computing vectors for {len(recommender_users)} recommender users...")
 

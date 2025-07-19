@@ -3,7 +3,7 @@
 ## Recommended Optimization Parameters
 The ideal values for these parameters depend on a trade-off between speed, accuracy, and available resources (CPU/RAM).
 * MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT: This parameter controls the real-time prediction speed.
-* max_vectors (in precompute_all_vectors): This parameter is about managing memory during the build process.
+* MAX_RECOMMENDER_VECTORS_LOAD (in precompute_all_vectors): This parameter is about managing memory during the build process.
 
 ## Optimization 1: K-NN Search Sampling
 In the _knn_search function, instead of loading all possible recommender vectors to find neighbors, it randomly samples a smaller subset. This drastically reduces the search space and speeds up prediction time.
@@ -41,9 +41,9 @@ def precompute_all_vectors(self):
     recommender_users = [str(uid) for uid in self.keyset.get('train', [])]
     
     # THIS IS THE OPTIMIZATION BLOCK
-    max_vectors = 10000  # A hard limit on vectors to compute
-    if len(recommender_users) > max_vectors:
-        recommender_users = random.sample(recommender_users, max_vectors)
-        print(f"⚡ Limiting vector computation to {max_vectors} users for performance")
+    MAX_RECOMMENDER_VECTORS_LOAD = 10000  # A hard limit on vectors to compute
+    if len(recommender_users) > MAX_RECOMMENDER_VECTORS_LOAD:
+        recommender_users = random.sample(recommender_users, MAX_RECOMMENDER_VECTORS_LOAD)
+        print(f"⚡ Limiting vector computation to {MAX_RECOMMENDER_VECTORS_LOAD} users for performance")
     # ...
 ```

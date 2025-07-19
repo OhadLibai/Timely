@@ -76,12 +76,12 @@ def evaluate_metrics(sample_size):
                 continue
             true_items = set(user_future['product_id'].unique())
 
-            # Evalute At
-            # For simplicity now, override the EVALUATE_AT 
-            # Env var. This softens the requirements a bit.
-            evaluate_at = min(len(true_items), len(predicted_items))
-            predicted_items = predicted_items[:evaluate_at]
-            true_items = predicted_items[:evaluate_at]
+            # basket_limit_size param:
+            # For simplicity now, override the EVALUATE_AT env var. 
+            # This softens the requirements a bit but it is OK.
+            basket_limit_size = min(len(true_items), len(predicted_items))
+            predicted_items = predicted_items[:basket_limit_size]
+            true_items = predicted_items[:basket_limit_size]
             
             if not true_items:
                 continue
@@ -118,7 +118,7 @@ def evaluate_metrics(sample_size):
                     dcg += 1.0 / math.log2(i + 2)  # i+2 because position starts at 0
             
             # Ideal DCG: all relevant items at top positions
-            idcg = sum(1.0 / math.log2(i + 2) for i in range(min(len(true_items), evaluate_at)))
+            idcg = sum(1.0 / math.log2(i + 2) for i in range(min(len(true_items), basket_limit_size)))
             
             ndcg = dcg / idcg if idcg > 0 else 0.0
             ndcg_scores.append(ndcg)
