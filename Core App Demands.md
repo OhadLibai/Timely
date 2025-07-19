@@ -1,7 +1,5 @@
 # `Current demands from the app:`
 
-`Timely is a full-stack e-commerce application that automates weekly grocery shopping using advanced machine learning algorithms. The platform predicts users' next basket based on historical purchase data, preferences, and shopping patterns.`
-
 ## #1 - Illustrate that the app is functioning:
 We will demonstrate like this:
 - Admin creates a user (being able to choose ANY Instacart's ID). There will be a designated section where he could write a number.
