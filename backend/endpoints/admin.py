@@ -29,8 +29,10 @@ def seed_demo_user(instacart_user_id):
         ml_engine = current_app.ml_engine
         if instacart_user_id not in ml_engine.csv_data_history:
             return jsonify({
-                'error': f'Instacart user {instacart_user_id} not found in dataset'
-            }), 404
+                'success': False,
+                'message': 'user id is not exist in loaded user dataset, try other user ids',
+                'userId': instacart_user_id
+            }), 200
         
         instacart_user_id_int = int(instacart_user_id)
         
@@ -103,8 +105,10 @@ def get_user_prediction_comparison(user_id):
         
         if not prediction['success']:
             return jsonify({
-                'error': prediction.get('error', 'Prediction failed')
-            }), 400
+                'success': False,
+                'error': prediction.get('error', 'Prediction failed'),
+                'userId': str(user_id)
+            }), 200
 
         with get_db_cursor() as cur:
             # Predicted products

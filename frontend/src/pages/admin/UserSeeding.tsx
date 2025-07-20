@@ -36,23 +36,24 @@ const UserSeeding: React.FC = () => {
 
   const { seedUser, isSeeding } = useDemoUserSeeding();
 
-  // Popular Instacart user IDs for quick testing
+  // Suggestions for quick testing of Instacart users
   const popularUserIds = [
     { id: '1', description: 'Heavy grocery shopper', orderCount: '40+ orders', category: 'Regular' },
-    { id: '29', description: 'Frequent organic buyer', orderCount: '35+ orders', category: 'Organic' },
-    { id: '64', description: 'Family bulk shopper', orderCount: '50+ orders', category: 'Family' },
-    { id: '80', description: 'Health-conscious buyer', orderCount: '30+ orders', category: 'Health' },
-    { id: '90', description: 'Weekend bulk buyer', orderCount: '25+ orders', category: 'Bulk' },
-    { id: '91', description: 'Diverse preferences', orderCount: '45+ orders', category: 'Diverse' },
-    { id: '105', description: 'Premium brand lover', orderCount: '20+ orders', category: 'Premium' },
-    { id: '123', description: 'Quick convenience shopper', orderCount: '55+ orders', category: 'Convenience' },
-    { id: '125', description: 'International cuisine fan', orderCount: '35+ orders', category: 'International' },
-    { id: '195', description: 'Meal prep specialist', orderCount: '30+ orders', category: 'Meal Prep' }
+    { id: '7', description: 'Frequent organic buyer', orderCount: '35+ orders', category: 'Organic' },
+    { id: '13', description: 'Family bulk shopper', orderCount: '50+ orders', category: 'Family' },
+    { id: '25', description: 'Health-conscious buyer', orderCount: '30+ orders', category: 'Health' },
+    { id: '31', description: 'Weekend bulk buyer', orderCount: '25+ orders', category: 'Bulk' },
+    { id: '42', description: 'Diverse preferences', orderCount: '45+ orders', category: 'Diverse' },
+    { id: '55', description: 'Premium brand lover', orderCount: '20+ orders', category: 'Premium' },
+    { id: '60', description: 'Quick convenience shopper', orderCount: '55+ orders', category: 'Convenience' },
+    { id: '78', description: 'International cuisine fan', orderCount: '35+ orders', category: 'International' },
+    { id: '92', description: 'Meal prep specialist', orderCount: '30+ orders', category: 'Meal Prep' }
   ];
 
   const handleSeedUser = (userId: string) => {
     seedUser.mutate(userId, {
       onSuccess: (result) => {
+        // Add result to seeding results (handles both success and failure cases)
         setSeedingResults(prev => [result, ...prev]);
         setInstacartUserId('');
         // Scroll to results section after a short delay
@@ -331,11 +332,34 @@ const UserSeeding: React.FC = () => {
             <div className="space-y-6">
               <AnimatePresence>
                 {seedingResults.map((result, index) => {
-                  const isSuccess = result.success !== false;
-                  const bgColor = isSuccess ? "bg-green-50/30 border-green-200" : "bg-yellow-50/30 border-yellow-200";
-                  const iconColor = isSuccess ? "text-green-600" : "text-yellow-600";
-                  const textColor = isSuccess ? "text-green-900" : "text-yellow-900";
-                  const Icon = isSuccess ? CheckCircle : Info;
+                  const isSuccess = result.success === true;
+                  const isWarning = result.success === false && result.message?.includes('already');
+                  const isError = result.success === false && !isWarning;
+                  
+                  let bgColor, iconColor, textColor, Icon;
+                  
+                  if (isSuccess) {
+                    bgColor = "bg-green-50/30 border-green-200";
+                    iconColor = "text-green-600";
+                    textColor = "text-green-900";
+                    Icon = CheckCircle;
+                  } else if (isWarning) {
+                    bgColor = "bg-yellow-50/30 border-yellow-200";
+                    iconColor = "text-yellow-600";
+                    textColor = "text-yellow-900";
+                    Icon = Info;
+                  } else if (isError) {
+                    bgColor = "bg-red-50/30 border-red-200";
+                    iconColor = "text-red-600";
+                    textColor = "text-red-900";
+                    Icon = Info;
+                  } else {
+                    // Default case
+                    bgColor = "bg-gray-50/30 border-gray-200";
+                    iconColor = "text-gray-600";
+                    textColor = "text-gray-900";
+                    Icon = Info;
+                  }
                   
                   return (
                     <motion.div
@@ -349,7 +373,9 @@ const UserSeeding: React.FC = () => {
                         <Icon className={`w-8 h-8 ${iconColor} flex-shrink-0 mt-1`} />
                         <div className="flex-1">
                           <h3 className={`text-xl font-bold ${textColor} mb-4`}>
-                            {isSuccess ? 'Demo User Created Successfully' : 'User Already Exists'}
+                            {isSuccess ? 'Demo User Created Successfully' : 
+                             isWarning ? 'User Already Exists' : 
+                             'Seeding Failed'}
                           </h3>
                           
                           {isSuccess ? (
@@ -442,9 +468,9 @@ const UserSeeding: React.FC = () => {
                                 </div>
                               </div>
                               
-                              <div className="p-4 bg-yellow-100/40 rounded-xl">
-                                <p className="text-base text-yellow-800">
-                                  ⚠️ <strong>{result.message}</strong>
+                              <div className={`p-4 rounded-xl ${isWarning ? 'bg-yellow-100/40' : 'bg-red-100/40'}`}>
+                                <p className={`text-base ${isWarning ? 'text-yellow-800' : 'text-red-800'}`}>
+                                  {isWarning ? '⚠️' : '❌'} <strong>{result.message}</strong>
                                 </p>
                               </div>
                             </>

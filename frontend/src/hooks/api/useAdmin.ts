@@ -6,6 +6,7 @@ import { adminService } from '@/services/admin.service';
 import { useApiQuery } from './useApiQuery';
 import { QUERY_KEYS } from '@/utils/queryKeys';
 import { ModelMetrics } from '@/services/evaluation.service';
+import toast from 'react-hot-toast';
 
 // ============================================================================
 // DASHBOARD OVERVIEW HUB HOOKS
@@ -57,15 +58,23 @@ export const useDemoUserSeeding = () => {
   const seedUser = useMutationWithToast({
     mutationFn: (instacartUserId: string) => adminService.seedDemoUser(instacartUserId),
     successMessage: (data: any) => {
-      return data.success !== false ? 'Demo user seeded successfully' : '';
+      return data.success === true ? 'Demo user seeded successfully' : '';
     },
     warningMessage: (data: any) => {
-      return data.success === false ? 'User already exists' : '';
+      return data.success === false && data.message?.includes('already') ? 'User already exists' : '';
     },
     errorMessage: 'Failed to seed demo user',
-    onSuccess: () => {
+    showSuccessToast: true,
+    showWarningToast: true,
+    showErrorToast: false, // We'll handle error toasts manually
+    onSuccess: (data: any) => {
+      // Handle error cases that come as successful responses
+      if (data.success === false && !data.message?.includes('already')) {
+        // This is an error case (like invalid user ID)
+        toast.error(data.message || 'Failed to seed demo user');
+      }
       // Invalidate related queries
-      queryClient.invalidateQueries(QUERY_KEYS.adminDemoStats()); // currently does not really handling the user management system so...
+      queryClient.invalidateQueries(QUERY_KEYS.adminDemoStats());
     }
   });
 

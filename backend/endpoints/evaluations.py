@@ -17,7 +17,7 @@ evaluations_bp = Blueprint('evaluations', __name__)
 
 EVALUATE_AT = int(os.getenv("EVALUATE_AT")) # Fixed `K` value, classically used for evaluating per basket size recommendation
 
-@evaluations_bp.route('/metrics/<int:sample_size>', methods=['POST'])
+@evaluations_bp.route('/metrics/<sample_size>', methods=['POST'])
 def evaluate_metrics(sample_size):
     """
     Evaluate model performance with 5 key metrics at K=EVALUATE_AT
@@ -30,9 +30,15 @@ def evaluate_metrics(sample_size):
     - JaccardSimilarity: Set overlap between predicted and actual
     """
     try:
-        # Validate sample size
-        if sample_size < 1:
-            return jsonify({'error': 'Sample size must be at least 1'}), 400
+        # Convert sample_size to integer and validate
+        try:
+            sample_size = int(sample_size)
+        except (ValueError, TypeError):
+            return jsonify({'error': 'Sample size must be a valid integer'}), 400
+            
+        # Validate sample size (-1 means "all users")
+        if sample_size < 1 and sample_size != -1:
+            return jsonify({'error': 'Sample size must be at least 1 or -1 for all users'}), 400
         
         # Get ML engine and data
         ml_engine = current_app.ml_engine
@@ -49,6 +55,10 @@ def evaluate_metrics(sample_size):
         # We use both val users and test users for testing 
         # Predictions results
         all_eval_users = test_users + val_users
+        
+        # Handle "all users" case
+        if sample_size == -1:
+            sample_size = len(all_eval_users)
         
         # Initialize metric accumulators
         precisions = []

@@ -12,7 +12,7 @@ const API_URL = (typeof process !== 'undefined' && process.env.API_URL) || 'http
 
 export const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
-  timeout: 60 * 1000,
+  timeout: 120 * 1000,
   headers: {
     'Content-Type': 'application/json'
   }

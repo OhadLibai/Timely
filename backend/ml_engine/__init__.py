@@ -296,7 +296,7 @@ class TifuKnnEngine:
                 if not self.csv_data_history or user_id not in self.csv_data_history:
                     return {
                         'success': False,
-                        'error': f'User {user_id} not found in CSV data',
+                        'error': 'user id is not exist in loaded user dataset, try other user ids',
                         'items': []
                     }
                 user_history = self.csv_data_history[user_id]

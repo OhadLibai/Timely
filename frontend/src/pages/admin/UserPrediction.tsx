@@ -35,15 +35,15 @@ const UserPrediction: React.FC = () => {
   // Enhanced user ID suggestions with descriptions
   const userSuggestions = [
     { id: '1', description: 'Heavy grocery shopper', orders: '40+ orders', accuracy: '92%' },
-    { id: '7', description: 'Organic food enthusiast', orders: '35+ orders', accuracy: '88%' },
-    { id: '13', description: 'Family bulk buyer', orders: '50+ orders', accuracy: '95%' },
-    { id: '25', description: 'Health-conscious shopper', orders: '30+ orders', accuracy: '87%' },
-    { id: '31', description: 'Weekend regular', orders: '25+ orders', accuracy: '83%' },
-    { id: '42', description: 'Diverse preferences', orders: '45+ orders', accuracy: '91%' },
-    { id: '55', description: 'Premium brand lover', orders: '20+ orders', accuracy: '85%' },
-    { id: '60', description: 'Quick convenience shopper', orders: '55+ orders', accuracy: '93%' },
-    { id: '78', description: 'International cuisine fan', orders: '35+ orders', accuracy: '89%' },
-    { id: '92', description: 'Meal prep specialist', orders: '30+ orders', accuracy: '86%' }
+    { id: '29', description: 'Organic food enthusiast', orders: '35+ orders', accuracy: '88%' },
+    { id: '64', description: 'Family bulk buyer', orders: '50+ orders', accuracy: '95%' },
+    { id: '80', description: 'Health-conscious shopper', orders: '30+ orders', accuracy: '87%' },
+    { id: '90', description: 'Weekend regular', orders: '25+ orders', accuracy: '83%' },
+    { id: '91', description: 'Diverse preferences', orders: '45+ orders', accuracy: '91%' },
+    { id: '105', description: 'Premium brand lover', orders: '20+ orders', accuracy: '85%' },
+    { id: '123', description: 'Quick convenience shopper', orders: '55+ orders', accuracy: '93%' },
+    { id: '125', description: 'International cuisine fan', orders: '35+ orders', accuracy: '89%' },
+    { id: '195', description: 'Meal prep specialist', orders: '30+ orders', accuracy: '86%' }
   ];
 
   const handleUserIdSubmit = () => {
@@ -79,13 +79,22 @@ const UserPrediction: React.FC = () => {
   React.useEffect(() => {
     if (predictionData && selectedUserId) {
       toast.dismiss('analysis');
-      toast.success(`🎉 Analysis complete for User ${selectedUserId}!`, {
-        duration: 4000
-      });
+      // Check if the response indicates success or failure
+      if (predictionData.success === false) {
+        const errorMessage = predictionData.error || `Analysis failed for User ${selectedUserId}`;
+        toast.error(`❌ ${errorMessage}`, {
+          duration: 6000
+        });
+      } else {
+        toast.success(`🎉 Analysis complete for User ${selectedUserId}!`, {
+          duration: 4000
+        });
+      }
     }
     if (predictionError) {
       toast.dismiss('analysis');
-      toast.error(`❌ Analysis failed for User ${selectedUserId}`, {
+      const errorMessage = (predictionError as any)?.response?.data?.error || `Analysis failed for User ${selectedUserId}`;
+      toast.error(`❌ ${errorMessage}`, {
         duration: 6000
       });
     }
@@ -402,14 +411,16 @@ const UserPrediction: React.FC = () => {
         )}
 
         {/* Error State */}
-        {predictionError && selectedUserId && (
+        {((predictionError && selectedUserId) || (predictionData && predictionData.success === false)) && (
           <div className="bg-white rounded-lg shadow-sm p-8 text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Analysis Failed
             </h3>
             <p className="text-gray-600 mb-6">
-              Unable to analyze User {selectedUserId}. This user may not exist in the dataset.
+              {predictionData?.success === false 
+                ? predictionData.error
+                : (predictionError as any)?.response?.data?.error || `Unable to analyze User ${selectedUserId}. This user may not exist in the dataset.`}
             </p>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -430,7 +441,7 @@ const UserPrediction: React.FC = () => {
         )}
 
         {/* Results */}
-        {predictionData && !isAnalyzing && (
+        {predictionData && !isAnalyzing && predictionData.success !== false && (
           <>
             {/* Product Comparison */}
             {renderProductComparison()}

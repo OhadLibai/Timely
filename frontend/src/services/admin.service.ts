@@ -9,8 +9,10 @@ import { Product } from '@/services/product.service';
 
 export interface DemoPredictionComparison {
   userId: string;
-  predictedBasket: Product[]; // A simple list of predicted products
-  groundTruthBasket: Product[]; // A simple list of the actual products
+  predictedBasket?: Product[]; // A simple list of predicted products
+  groundTruthBasket?: Product[]; // A simple list of the actual products
+  success?: boolean; // Indicates if the prediction was successful
+  error?: string; // Error message if success is false
 }
 
 class AdminService {

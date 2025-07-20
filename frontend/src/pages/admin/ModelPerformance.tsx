@@ -40,7 +40,12 @@ const ModelPerformance: React.FC = () => {
   // UPDATED: The mutation now updates the dashboard's cache on success
   const evaluationMutation = useMutationWithToast({
     mutationFn: (size: number) => evaluationService.getModelMetricsScores(size),
-    successMessage: (data, size) => `🎉 Evaluation for ${size} users complete!`,
+    successMessage: (data, size) => {
+      if (size === -1) {
+        return `🎉 Evaluation for all users complete! (${data.sampleSize} users evaluated)`;
+      }
+      return `🎉 Evaluation for ${size} users complete!`;
+    },
     errorMessage: (error: any) => `❌ Evaluation failed: ${error.message}`,
     onSuccess: (newData, size) => {
       // Manually update the data for the dashboard's query key.
@@ -60,7 +65,10 @@ const ModelPerformance: React.FC = () => {
     mutationOptions: {
       onMutate: (size) => {
         setIsEvaluating(true);
-        toast.loading(`🧠 Running model evaluation on ${size} users...`, { id: 'evaluation' });
+        const message = size === -1 
+          ? '🧠 Running model evaluation on all users...' 
+          : `🧠 Running model evaluation on ${size} users...`;
+        toast.loading(message, { id: 'evaluation' });
       }
     }
   });
