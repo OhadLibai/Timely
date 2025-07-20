@@ -1,4 +1,4 @@
-# `Current demands from the app:`
+# `Core demands from the app:`
 
 ## #1 - Illustrate that the app is functioning:
 We will demonstrate like this:
