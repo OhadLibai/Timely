@@ -1,11 +1,12 @@
 import React from 'react';
 import { Loader2, LucideIcon } from 'lucide-react';
+import { IconType } from 'react-icons';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger' | 'ghost' | 'outline';
   size?: 'sm' | 'md' | 'lg' | 'xl';
   loading?: boolean;
-  icon?: LucideIcon;
+  icon?: LucideIcon | IconType;
   iconPosition?: 'left' | 'right';
   fullWidth?: boolean;
 }

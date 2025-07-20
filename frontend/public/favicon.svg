@@ -1,35 +1,54 @@
-<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- Primary gradient: Fresh purple to soft light blue -->
-    <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#8B5CF6"/>
-      <stop offset="100%" stop-color="#06B6D4"/>
+    <!-- Luxurious gradient -->
+    <linearGradient id="luxuryGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="30%" stop-color="#7c3aed"/>
+      <stop offset="70%" stop-color="#a855f7"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
     </linearGradient>
     
-    <!-- Acai accent gradient -->
-    <linearGradient id="acaiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#7C3AED"/>
-      <stop offset="100%" stop-color="#4C1D95"/>
+    <!-- Gold accent gradient -->
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="50%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
     </linearGradient>
+    
+    <!-- Premium glow filter -->
+    <filter id="premiumGlow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feOffset dx="2" dy="2" result="offsetBlur"/>
+      <feMerge>
+        <feMergeNode in="offsetBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Inner shadow -->
+    <filter id="innerShadow">
+      <feOffset dx="0" dy="0"/>
+      <feGaussianBlur stdDeviation="3" result="offset-blur"/>
+      <feFlood flood-color="#000000" flood-opacity="0.3"/>
+      <feComposite in2="offset-blur" operator="atop"/>
+    </filter>
   </defs>
   
-  <!-- Larger icon filling more of the space -->
-  <g transform="translate(1, 1)">
-    <!-- Outer glow effect for visibility on dark backgrounds -->
-    <circle cx="15" cy="15" r="14.5" fill="url(#primaryGradient)" opacity="0.1"/>
+  <!-- Solid high-contrast background -->
+  <rect x="0" y="0" width="512" height="512" fill="#7c3aed"/>
+  
+  <!-- TIMELY logo - distinctive T + shopping bag -->
+  <g transform="translate(256, 256)">
+    <!-- Large letter "T" for Timely -->
+    <rect x="-150" y="-200" width="300" height="60" fill="white"/>
+    <rect x="-30" y="-200" width="60" height="350" fill="white"/>
     
-    <!-- Main clock circle -->
-    <circle cx="15" cy="15" r="13.5" fill="none" stroke="url(#primaryGradient)" stroke-width="2.5"/>
+    <!-- Shopping bag integrated with the T -->
+    <rect x="-120" y="20" width="240" height="180" rx="20" fill="white" stroke="#7c3aed" stroke-width="20"/>
     
-    <!-- Clock face with subtle transparency -->
-    <circle cx="15" cy="15" r="11" fill="rgba(255,255,255,0.95)" stroke="url(#acaiGradient)" stroke-width="1.2"/>
-    
-    <!-- Center dot only (no clock hands as requested) -->
-    <circle cx="15" cy="15" r="2" fill="url(#acaiGradient)"/>
-    
-    <!-- Grocery basket integrated with clock -->
-    <path d="M6 12 L24 12 L22 24 L8 24 Z" fill="none" stroke="url(#primaryGradient)" stroke-width="2" opacity="0.85"/>
-    <path d="M10 12 L10 8 M20 12 L20 8" stroke="url(#primaryGradient)" stroke-width="2" stroke-linecap="round" opacity="0.85"/>
-    
+    <!-- Bag handles on the T -->
+    <rect x="-80" y="-40" width="30" height="80" rx="15" fill="white"/>
+    <rect x="50" y="-40" width="30" height="80" rx="15" fill="white"/>
+    <rect x="-65" y="-60" width="130" height="30" rx="15" fill="white"/>
   </g>
 </svg>

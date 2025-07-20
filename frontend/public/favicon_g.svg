@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 216 216" width="216" height="216">
+  <!-- Deep tech background -->
+  <rect width="216" height="216" rx="54" fill="#6b46c1"/>
+  
+  <!-- Main geometric "T" with predictive flow design -->
+  <g fill="#ffffff">
+    <!-- Horizontal bar of T -->
+    <rect x="40.5" y="54" width="135" height="20.25" rx="10.125"/>
+    <!-- Vertical stem of T -->
+    <rect x="97.875" y="54" width="20.25" height="108" rx="10.125"/>
+  </g>
+  
+  <!-- Predictive algorithm visualization -->
+  <g>
+    <!-- Past data points (left side) -->
+    <circle cx="60.75" cy="40.5" r="6.75" fill="#a855f7" opacity="0.6"/>
+    <circle cx="81" cy="33.75" r="6.75" fill="#a855f7" opacity="0.7"/>
+    
+    <!-- Current state (center) -->
+    <circle cx="108" cy="27" r="10.125" fill="#a855f7"/>
+    
+    <!-- Predicted future (right side) -->
+    <circle cx="135" cy="33.75" r="6.75" fill="#c084fc" opacity="0.8"/>
+    <circle cx="155.25" cy="40.5" r="6.75" fill="#c084fc" opacity="0.6"/>
+    
+    <!-- Neural connection lines showing temporal flow -->
+    <path d="M67.5,40.5 Q108,13.5 148.5,40.5" 
+          fill="none" 
+          stroke="#a855f7" 
+          stroke-width="6.75" 
+          opacity="0.5"/>
+  </g>
+  
+  <!-- KNN algorithm indicators (bottom) -->
+  <g opacity="0.7">
+    <circle cx="67.5" cy="175.5" r="5.4" fill="#a855f7"/>
+    <circle cx="87.75" cy="168.75" r="5.4" fill="#a855f7"/>
+    <circle cx="108" cy="175.5" r="6.75" fill="#a855f7"/>
+    <circle cx="128.25" cy="168.75" r="5.4" fill="#a855f7"/>
+    <circle cx="148.5" cy="175.5" r="5.4" fill="#a855f7"/>
+    
+    <!-- Subtle connection lines -->
+    <path d="M67.5,170.1 L108,168.75 L148.5,170.1" 
+          stroke="#a855f7" 
+          stroke-width="3.375" 
+          fill="none" 
+          opacity="0.6"/>
+  </g>
+</svg>

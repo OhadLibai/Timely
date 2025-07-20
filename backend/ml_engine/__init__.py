@@ -22,7 +22,6 @@ import pandas as pd
 WITHIN_DECAY_RATE = 0.9
 GROUP_DECAY_RATE = 0.7
 GROUP_SIZE = 3
-KNN_K = 900
 ALPHA = 0.9
 
 # Basket size 
@@ -31,6 +30,7 @@ TOPK = int(os.getenv("PREDICTED_BASKET_SIZE"))
 # Production and Runtime Optimizations
 MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT = int(os.getenv("MATRIX_NEIGHBOR_KNN_SEARCH_LIMIT"))  # KNN search optimization, affects the size of the the vector matrix in real time calculation.
 MAX_RECOMMENDER_VECTORS_LOAD = int(os.getenv("MAX_RECOMMENDER_VECTORS_LOAD")) # Limit to avoid memory issues, managed during the build process
+KNN_K = int(os.getenv("KNN_K")) # must be proportional to MAX_RECOMMENDER_VECTORS_LOAD
 
 # Updated paths for new structure
 DATA_PATH = Path('/app/data')
@@ -74,11 +74,11 @@ class TifuKnnEngine:
         keyset_path = DATASET_PATH / 'instacart_keyset_0.json'
         with open(keyset_path, 'r') as f:
             self.keyset = json.load(f)
-            self.item_count = self.keyset.get('item_num', 49688)  # Default to Instacart product count
+            self.item_count = self.keyset.get('item_num', 49688)  # Default to Instacart product count    
         print(f"✅ Loaded keyset with {self.item_count} items")
-        print(f"   Train users: {len(self.keyset.get('train', []))}")
-        print(f"   Val users: {len(self.keyset.get('val', []))}")
-        print(f"   Test users: {len(self.keyset.get('test', []))}")
+        print(f"✅ Train users: {len(self.keyset.get('train', []))}")
+        print(f"✅ Val users: {len(self.keyset.get('val', []))}")
+        print(f"✅ Test users: {len(self.keyset.get('test', []))}")
         
         # Load pre-computed recommender vectors from disk
         vectors_file = VECTORS_PATH / 'recommender_vectors.pkl'
@@ -95,30 +95,26 @@ class TifuKnnEngine:
         This enables fast KNN search during predictions
         """
         print("⚒️  Start precompute vectors")
-
-        recommender_users = [str(uid) for uid in self.keyset.get('train', [])]
-        
-        if len(recommender_users) > MAX_RECOMMENDER_VECTORS_LOAD:
-            recommender_users = random.sample(recommender_users, MAX_RECOMMENDER_VECTORS_LOAD) # Choose recommendors in random
-            print(f"⚡ Limiting vector computation to {MAX_RECOMMENDER_VECTORS_LOAD} users for feasible memory load")
-        
-        print(f"🧮 Pre-computing vectors for {len(recommender_users)} recommender users...")
-
+        print(f"⚡ Limiting vector computation to {MAX_RECOMMENDER_VECTORS_LOAD} users for feasible memory load")
         VECTORS_PATH.mkdir(parents=True, exist_ok=True)
         vectors_file = VECTORS_PATH / 'recommender_vectors.pkl'
         
+        all_recommender_users = [str(uid) for uid in self.keyset.get('train', [])]
         computed_vectors = {}
         computed = 0
         skipped = 0
+
+        while computed < MAX_RECOMMENDER_VECTORS_LOAD and len(all_recommender_users)>0:
+            random_index = random.randrange(len(all_recommender_users))
+            random_user_id = all_recommender_users.pop(random_index)       
         
-        for user_id in recommender_users:
-            if user_id in self.csv_data_history:
-                user_history = self.csv_data_history[user_id]
+            if random_user_id in self.csv_data_history:
+                user_history = self.csv_data_history[random_user_id]
                 
                 if len(user_history) >= 3:  # user_id + at least 2 baskets
                     vector = self._compute_user_vector(user_history)
                     if vector is not None and np.sum(vector) > 0:
-                        computed_vectors[user_id] = vector
+                        computed_vectors[random_user_id] = vector
                         computed += 1
                     else:
                         skipped += 1
@@ -128,7 +124,7 @@ class TifuKnnEngine:
                 skipped += 1
             
             if (computed + skipped) % 1000 == 0:
-                print(f"Progress: {computed + skipped}/{len(recommender_users)}")
+                print(f"Progress: {computed + skipped}/{len(all_recommender_users)}")
         
         # Save all computed vectors at the end
         try:
@@ -155,7 +151,7 @@ class TifuKnnEngine:
         """
         Compute user vector using temporal decay and within-basket grouping
         """
-        if not user_history or len(user_history) < 2:  # Need at least user_id + 1 basket
+        if not user_history or len(user_history) < 3:  # Need at least user_id + 2 basket
             return np.zeros(self.item_count)
         
         # Initialize vector
@@ -274,12 +270,11 @@ class TifuKnnEngine:
         merged_vector = user_vector * alpha
         
         # Add neighbors' vectors weighted by (1-alpha)
-        if neighbor_ids:
-            neighbor_weight = (1 - alpha) / len(neighbor_ids)
-            
-            for neighbor_id in neighbor_ids:
-                if neighbor_id in self.recommender_vectors:
-                    merged_vector += self.recommender_vectors[neighbor_id] * neighbor_weight
+        neighbor_weight = (1 - alpha) / len(neighbor_ids)
+
+        for neighbor_id in neighbor_ids:
+            if neighbor_id in self.recommender_vectors:
+                merged_vector += self.recommender_vectors[neighbor_id] * neighbor_weight
         
         # Convert to item list
         item_list_result = merged_vector.argsort()[::-1].tolist()
@@ -337,7 +332,7 @@ class TifuKnnEngine:
             
             if not neighbor_ids:
                 # No neighbors found, use user's own history
-                top_items = user_vector.argsort()[::-1][:TOPK].tolist()
+                top_items = user_vector.argsort()[::-1].tolist()[:TOPK]
             else:
                 # Merge histories
                 top_items = self._merge_histories(user_vector, neighbor_ids, ALPHA)[:TOPK]
@@ -368,32 +363,6 @@ class TifuKnnEngine:
                 'error': f'Prediction failed: {str(e)}',
                 'items': []
             }
-    
-    
-    
-    def get_ground_truth_for_user(self, user_id: str) -> List[int]:
-        """
-        Get ground truth next basket for evaluation (Demand #3)
-        """
-        try:
-            # Load future data
-            future_path = DATASET_PATH / 'instacart_future.csv'
-            if not future_path.exists():
-                return []
-            
-            future_df = pd.read_csv(future_path)
-            user_future = future_df[future_df['user_id'] == int(user_id)]
-            
-            if user_future.empty:
-                return []
-            
-            # Return list of product IDs in ground truth
-            return user_future['product_id'].tolist()
-            
-        except Exception as e:
-            print(f"Error getting ground truth: {e}")
-            return []
-
 
 # Singleton instance
 _engine_instance = None

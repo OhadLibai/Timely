@@ -11,6 +11,7 @@ import {
   Atom
 } from 'lucide-react';
 import { TbTargetArrow } from "react-icons/tb";
+import { LuCircleArrowOutUpRight } from "react-icons/lu";
 import { useUserPredictionAnalysis } from '@/hooks/api/useAdmin';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ProductImage from '@/components/products/ProductImage';
@@ -267,14 +268,16 @@ const UserPrediction: React.FC = () => {
           }
           actions={
             selectedUserId && (
-              <Button
-                variant="primary"
-                onClick={handleReset}
-                icon={Plane}
-                size="lg"
-              >
-                Try More Users!
-              </Button>
+              <div className="flex justify-center">
+                <Button
+                  variant="primary"
+                  onClick={handleReset}
+                  icon={LuCircleArrowOutUpRight}
+                  size="lg"
+                >
+                  Try More Users!
+                </Button>
+              </div>
             )
           }
         />

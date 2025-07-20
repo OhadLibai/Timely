@@ -69,7 +69,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
             onNavigate('/predicted-basket');
           }
         } else if (response.error) {
-          // FIXED: Display specific backend error (e.g., "User needs at least 3 orders for predictions")
+          // FIXED: Display specific backend error (e.g., "User needs at least 2 orders for predictions")
           toast.error(response.error, {
             duration: 5000, // No time limit as requested
             icon: '⚠️'
@@ -190,7 +190,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
             </h2>
           </div>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-            Experience the future of grocery shopping with our revolutionary AI that learns your patterns and creates perfect baskets instantly.
+            Experience the future of grocery shopping with our sophisticated ML engine that defines correctly user habits and creates perfect baskets instantly.
           </p>
         </motion.div>
 
@@ -230,7 +230,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
                   </div>
                 </div>
                 <p className="text-gray-700 text-lg max-w-2xl mx-auto">
-                  Our cutting-edge machine learning algorithms analyze your shopping history, preferences, and trends to create the perfect basket for you.
+                  With unprecedented prediction capacity, our model was built to identify shopping patterns and classify the needs of out customers.
                 </p>
               </div>
 

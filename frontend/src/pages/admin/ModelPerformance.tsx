@@ -47,10 +47,14 @@ const ModelPerformance: React.FC = () => {
       // This ensures the dashboard now shows these new results.
       queryClient.setQueryData(QUERY_KEYS.mlMetrics(), newData);
 
+      // Dismiss the loading toast
+      toast.dismiss('evaluation');
       // No need to invalidate - data is already updated via setQueryData
       setIsEvaluating(false);
     },
     onError: () => {
+      // Dismiss the loading toast
+      toast.dismiss('evaluation');
       setIsEvaluating(false);
     },
     mutationOptions: {

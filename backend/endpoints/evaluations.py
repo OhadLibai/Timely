@@ -59,7 +59,7 @@ def evaluate_metrics(sample_size):
         valid_users = 0
         
         # Evaluate each user
-        while valid_users < sample_size:
+        while valid_users < sample_size and len(all_eval_users) > 0:
             random_index = random.randrange(len(all_eval_users))
             random_eval_user_id = all_eval_users.pop(random_index)       
         
@@ -71,8 +71,8 @@ def evaluate_metrics(sample_size):
             
             # Get ground truth
             user_future = future_df[future_df['user_id'] == int(random_eval_user_id)]
-            true_items = user_future['product_id']
-            if true_items.empty:
+            true_items = user_future['product_id'].tolist()
+            if not true_items:
                 continue
 
             valid_users += 1
@@ -94,7 +94,7 @@ def evaluate_metrics(sample_size):
             
             # Calculate Recall@
             # Recall = |predicted ∩ actual| / |actual|
-            recall = len(predicted_items_set & true_items_set) / len(true_items)
+            recall = len(predicted_items_set & true_items_set) / len(true_items_set)
             recalls.append(recall)
             
             # Calculate F1-Score

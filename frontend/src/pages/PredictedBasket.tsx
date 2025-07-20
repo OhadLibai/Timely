@@ -206,7 +206,7 @@ const PredictedBasket: React.FC = () => {
           <EmptyState
             icon={Sparkles}
             title="Ready for Your AI-Powered Basket?"
-            description="Let our AI analyze your shopping patterns to predict and create your next grocery list in seconds."
+            description="Let our model assist you with your weekly routines, get your home equipped with goods exactly as you want it"
             action={{
               label: generateMutation.isLoading ? "Generating..." : "Generate My Basket",
               onClick: () => generateMutation.mutate(),
