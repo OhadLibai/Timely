@@ -39,15 +39,15 @@ const UserSeeding: React.FC = () => {
   // Popular Instacart user IDs for quick testing
   const popularUserIds = [
     { id: '1', description: 'Heavy grocery shopper', orderCount: '40+ orders', category: 'Regular' },
-    { id: '7', description: 'Frequent organic buyer', orderCount: '35+ orders', category: 'Organic' },
-    { id: '13', description: 'Family bulk shopper', orderCount: '50+ orders', category: 'Family' },
-    { id: '25', description: 'Health-conscious buyer', orderCount: '30+ orders', category: 'Health' },
-    { id: '31', description: 'Weekend bulk buyer', orderCount: '25+ orders', category: 'Bulk' },
-    { id: '42', description: 'Diverse preferences', orderCount: '45+ orders', category: 'Diverse' },
-    { id: '55', description: 'Premium brand lover', orderCount: '20+ orders', category: 'Premium' },
-    { id: '60', description: 'Quick convenience shopper', orderCount: '55+ orders', category: 'Convenience' },
-    { id: '78', description: 'International cuisine fan', orderCount: '35+ orders', category: 'International' },
-    { id: '92', description: 'Meal prep specialist', orderCount: '30+ orders', category: 'Meal Prep' }
+    { id: '29', description: 'Frequent organic buyer', orderCount: '35+ orders', category: 'Organic' },
+    { id: '64', description: 'Family bulk shopper', orderCount: '50+ orders', category: 'Family' },
+    { id: '80', description: 'Health-conscious buyer', orderCount: '30+ orders', category: 'Health' },
+    { id: '90', description: 'Weekend bulk buyer', orderCount: '25+ orders', category: 'Bulk' },
+    { id: '91', description: 'Diverse preferences', orderCount: '45+ orders', category: 'Diverse' },
+    { id: '105', description: 'Premium brand lover', orderCount: '20+ orders', category: 'Premium' },
+    { id: '123', description: 'Quick convenience shopper', orderCount: '55+ orders', category: 'Convenience' },
+    { id: '125', description: 'International cuisine fan', orderCount: '35+ orders', category: 'International' },
+    { id: '195', description: 'Meal prep specialist', orderCount: '30+ orders', category: 'Meal Prep' }
   ];
 
   const handleSeedUser = (userId: string) => {

@@ -124,22 +124,20 @@ const Checkout: React.FC = () => {
     setIsProcessing(true);
     
     try {
+      if (!cart || !cart.id) {
+        throw new Error('Cart is missing or invalid');
+      }
+      
+      if (!cart.items || cart.items.length === 0) {
+        throw new Error('Cart is empty');
+      }
+      
       // Simulate payment processing
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const orderData = {
-        cartId: cart.id,
-        paymentMethod: 'credit_card',
-        deliveryAddress: {
-          firstName: data.firstName || 'Demo',
-          lastName: data.lastName || 'User',
-          address: data.address || 'Demo Address',
-          city: data.city || 'Demo City',
-          state: data.state || 'Demo State',
-          zipCode: data.zipCode || '12345',
-          phone: data.phone || '555-0123'
-        },
-        notes: 'Demo order from Timely checkout'
+        items: cart.items,
+        paymentMethod: 'card'
       };
 
       const order = await orderService.createOrder(orderData);
@@ -150,7 +148,7 @@ const Checkout: React.FC = () => {
       toast.success('Order placed successfully! 🎉');
       navigate(`/orders/${order.id}`);
       
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error);
       toast.error('Failed to process order. Please try again.');
     } finally {

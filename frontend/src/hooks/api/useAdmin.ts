@@ -16,10 +16,8 @@ import { ModelMetrics } from '@/services/evaluation.service';
  * Returns zero defaults until first evaluation is run
  */
 export const useMetricsOverview = (): ModelMetrics => {
-  console.log('useMetricsOverview hook called');
   try {
     const queryClient = useQueryClient();
-    console.log('queryClient:', queryClient);
     
     const defaultData: ModelMetrics = {
       PrecisionAt: 0.000,
@@ -30,26 +28,19 @@ export const useMetricsOverview = (): ModelMetrics => {
     };
     
     const queryKey = QUERY_KEYS.mlMetrics();
-    console.log('queryKey:', queryKey);
-    
     const cachedData = queryClient.getQueryData<ModelMetrics>(queryKey);
-    console.log('cachedData:', cachedData);
-    
     const data = cachedData || defaultData;
-    console.log('final data:', data);
     
     return data;
   } catch (error) {
     console.error('useMetricsOverview hook error:', error);
-    const fallbackData: ModelMetrics = {
+    return {
       PrecisionAt: 0.000,
       RecallAt: 0.000,
       F1ScoreAt: 0.000,
       NDCGAt: 0.000,
       JaccardSimilarity: 0.000
     };
-    console.log('returning fallback data:', fallbackData);
-    return fallbackData;
   }
 };
 

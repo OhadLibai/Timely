@@ -21,20 +21,14 @@ import { formatPrice } from '@/utils/formatters';
 
 
 const AdminHub: React.FC = () => {
-  console.log('AdminHub component starting...');
-  
   const navigate = useNavigate();  
 
   // ============================================================================
   // CONSOLIDATED DATA CONSUMPTION - USING DASHBOARD OVERVIEW HOOK
   // ============================================================================
 
-  console.log('About to call useMetricsOverview...');
-  
   // Get metrics data directly (cached data or default zeros)
   const metricsData = useMetricsOverview();
-
-  console.log('Hub Debug:', { metricsData });
 
   // ============================================================================
   // OVERVIEW HUB SECTIONS

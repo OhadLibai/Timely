@@ -40,7 +40,7 @@ export interface Order {
 
 // Simplified order creation
 export interface CreateOrderData {
-  cartId: string;
+  items: any[];
   paymentMethod: string;
 }
 

@@ -278,7 +278,9 @@ const initializeTimely = async (): Promise<void> => {
       initializationLoader.hide();
     }, 1000);
 
-    console.log('✅ Timely app initialized successfully');
+    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('✅ Timely app initialized successfully');
+    }
     
   } catch (error) {
     console.error('💥 Failed to initialize Timely app:', error);
