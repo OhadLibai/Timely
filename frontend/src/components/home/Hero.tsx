@@ -68,7 +68,7 @@ const Hero: React.FC = () => {
             
             <p className="text-xl text-slate-700 mb-8 max-w-2xl hover:text-slate-800 transition-colors duration-300 cursor-default font-medium">
               We define the new experience of buying goods, with groundbreaking AI agents designed to tackle
-              you grocery tasks with breeze.
+              your grocery tasks with breeze.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
@@ -116,7 +116,7 @@ const Hero: React.FC = () => {
                   <div className="relative w-32 h-32 mx-auto mb-8 flex items-center justify-center">
                     <TimelyBrandLogo size="xl" variant="signature" animated={true} />
                   </div>
-                  <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-violet-600 mb-6 hover:from-purple-600 hover:to-violet-500 transition-all duration-300">Smart Recommendations</h3>
+                  <h3 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-700 to-violet-600 mb-6 hover:from-purple-600 hover:to-violet-500 transition-all duration-300">Predicting Tomorrow's Cart. Today.</h3>
                   <p className="text-lg text-gray-700 font-medium hover:text-gray-800 transition-colors duration-300">Be Productive. Delegate Timely. Embrace Timely.</p>
                 </div>
               </div>

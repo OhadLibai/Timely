@@ -230,7 +230,7 @@ const AutoGenerateBasket: React.FC<AutoGenerateBasketProps> = ({
                   </div>
                 </div>
                 <p className="text-gray-700 text-lg max-w-2xl mx-auto">
-                  With unprecedented prediction capacity, our model was built to identify shopping patterns and classify the needs of out customers.
+                  With unprecedented prediction capacity, our model was built to identify shopping patterns and classify the needs of our customers.
                 </p>
               </div>
 
