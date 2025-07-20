@@ -99,7 +99,7 @@ class TifuKnnEngine:
         VECTORS_PATH.mkdir(parents=True, exist_ok=True)
         vectors_file = VECTORS_PATH / 'recommender_vectors.pkl'
         
-        all_recommender_users = [str(uid) for uid in self.keyset.get('train', [])]
+        all_recommender_users = [str(uid) for uid in self.keyset.get('train', [])] ; len_all_recommender_users = len(all_recommender_users)
         computed_vectors = {}
         computed = 0
         skipped = 0
@@ -124,7 +124,7 @@ class TifuKnnEngine:
                 skipped += 1
             
             if (computed + skipped) % 1000 == 0:
-                print(f"Progress: {computed + skipped}/{len(all_recommender_users)}")
+                print(f"Progress: {computed + skipped}/{len_all_recommender_users}")
         
         # Save all computed vectors at the end
         try:

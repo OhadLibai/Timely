@@ -1,0 +1,60 @@
+<svg width="200" height="250" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Main gradient: Purple to cyan -->
+    <linearGradient id="mainGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#D946EF"/>
+      <stop offset="100%" stop-color="#06B6D4"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Alarm clock bells -->
+  <ellipse cx="130" cy="85" rx="20" ry="28" fill="url(#mainGradient)" transform="rotate(-25 130 85)"/>
+  <ellipse cx="270" cy="85" rx="20" ry="28" fill="url(#mainGradient)" transform="rotate(25 270 85)"/>
+  
+  <!-- Main clock circle -->
+  <circle cx="200" cy="140" r="90" fill="white" stroke="url(#mainGradient)" stroke-width="6"/>
+  
+  <!-- Clock hour markers -->
+  <circle cx="200" cy="65" r="5" fill="url(#mainGradient)"/>
+  <circle cx="253" cy="90" r="5" fill="url(#mainGradient)"/>
+  <circle cx="275" cy="140" r="5" fill="url(#mainGradient)"/>
+  <circle cx="253" cy="190" r="5" fill="url(#mainGradient)"/>
+  <circle cx="200" cy="215" r="5" fill="url(#mainGradient)"/>
+  <circle cx="147" cy="190" r="5" fill="url(#mainGradient)"/>
+  <circle cx="125" cy="140" r="5" fill="url(#mainGradient)"/>
+  <circle cx="147" cy="90" r="5" fill="url(#mainGradient)"/>
+  
+  <!-- Additional hour markers -->
+  <rect x="196" y="75" width="8" height="15" rx="4" fill="url(#mainGradient)"/>
+  <rect x="165" y="100" width="12" height="6" rx="3" fill="url(#mainGradient)" transform="rotate(-30 171 103)"/>
+  <rect x="223" y="100" width="12" height="6" rx="3" fill="url(#mainGradient)" transform="rotate(30 229 103)"/>
+  
+  <!-- Clock hands -->
+  <!-- Hour hand pointing to 2 -->
+  <rect x="198" y="115" width="4" height="30" rx="2" fill="url(#mainGradient)" transform="rotate(60 200 140)"/>
+  <!-- Minute hand pointing to 12 -->
+  <rect x="198" y="95" width="3" height="45" rx="1.5" fill="url(#mainGradient)"/>
+  
+  <!-- Center dot -->
+  <circle cx="200" cy="140" r="6" fill="url(#mainGradient)"/>
+  
+  <!-- Shopping basket -->
+  <g transform="translate(240, 180) scale(1.8)">
+    <!-- Basket body -->
+    <path d="M0 20 L80 20 L75 70 L5 70 Z" fill="url(#mainGradient)" stroke="url(#mainGradient)" stroke-width="2"/>
+    
+    <!-- Basket handle -->
+    <path d="M10 20 Q40 0 70 20" fill="none" stroke="url(#mainGradient)" stroke-width="6" stroke-linecap="round"/>
+    
+    <!-- Basket items/groceries -->
+    <ellipse cx="25" cy="35" rx="8" ry="12" fill="url(#mainGradient)" opacity="0.8"/>
+    <ellipse cx="45" cy="40" rx="6" ry="10" fill="url(#mainGradient)" opacity="0.8"/>
+    <ellipse cx="60" cy="38" rx="7" ry="11" fill="url(#mainGradient)" opacity="0.8"/>
+    
+    <!-- Basket vertical lines -->
+    <line x1="15" y1="25" x2="12" y2="65" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <line x1="30" y1="25" x2="27" y2="65" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <line x1="45" y1="25" x2="42" y2="65" stroke="white" stroke-width="3" stroke-linecap="round"/>
+    <line x1="60" y1="25" x2="57" y2="65" stroke="white" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>
