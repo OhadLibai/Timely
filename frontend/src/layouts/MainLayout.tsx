@@ -46,7 +46,7 @@ const MainLayout: React.FC = () => {
 
   const navLinks = [
     { path: '/', label: 'Home', icon: Home },
-    { path: '/products', label: 'Shop', icon: ShoppingBasket },
+    { path: '/products', label: 'Grocery', icon: ShoppingBasket },
     { path: '/predicted-basket', label: 'Predicted Basket', icon: Brain, authRequired: true },
   ];
 

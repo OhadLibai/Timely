@@ -116,7 +116,7 @@ const Products: React.FC = () => {
 
   return (
     <ListPage
-      title="Grocery"
+      title="Grocery Store"
       subtitle="Discover our collection of fresh groceries and everyday essentials"
       icon={ShoppingBasket}
       data={products}
